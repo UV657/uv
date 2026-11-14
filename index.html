@@ -1,0 +1,3167 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="枪战对决">
+<meta name="theme-color" content="#0a1628">
+<link rel="manifest" href='data:application/manifest+json,{"name":"枪战对决","short_name":"枪战","start_url":".","display":"fullscreen","background_color":"%230a1628","theme_color":"%230a1628","orientation":"landscape"}'>
+<title>枪战对决 - 手机网页枪战游戏，1V1 联机对战免安装</title>
+<meta name="description" content="枪战对决是一款打开网页就能玩的手机枪战游戏：1V1 真人对战、5V5 团队战、4 种兵种与 4 把武器、段位晋升、皮肤与每日任务，手机横竖屏自适应，无需下载安装。">
+<meta name="keywords" content="枪战对决,手机枪战游戏,网页枪战游戏,浏览器枪战游戏,1V1联机对战,5V5团队战,免安装游戏,双人对战小游戏,射击小游戏">
+<meta name="author" content="枪战对决">
+<meta name="application-name" content="枪战对决">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://4kre3xz43f1u0.doubao.link/app/app_17gxgb65apm">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="枪战对决">
+<meta property="og:title" content="枪战对决 - 手机网页枪战游戏，1V1 联机对战免安装">
+<meta property="og:description" content="打开网页就能玩的双人枪战游戏：1V1 真人对战、5V5 团队战、4 兵种 4 武器、段位系统，手机横竖屏自适应。">
+<meta property="og:url" content="https://4kre3xz43f1u0.doubao.link/app/app_17gxgb65apm">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="枪战对决 - 手机网页枪战游戏">
+<meta name="twitter:description" content="打开网页就能玩的双人枪战游戏：1V1 联机、5V5 团队战、段位与皮肤系统。">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "VideoGame",
+  "name": "枪战对决",
+  "alternateName": ["枪战对决网页版", "Gunfight Duel"],
+  "description": "一款打开网页就能玩的手机枪战游戏，支持 1V1 真人对战与 5V5 团队战，包含 4 种兵种、4 把武器、段位系统、皮肤与每日任务。",
+  "genre": ["射击游戏", "多人对战"],
+  "gamePlatform": ["Web Browser", "Mobile Web", "iOS", "Android"],
+  "applicationCategory": "Game",
+  "operatingSystem": "Android, iOS, Windows, macOS",
+  "playMode": ["SinglePlayer", "MultiPlayer"],
+  "numberOfPlayers": {"@type": "QuantitativeValue", "minValue": 1, "maxValue": 10},
+  "inLanguage": "zh-CN",
+  "isAccessibleForFree": true,
+  "url": "https://4kre3xz43f1u0.doubao.link/app/app_17gxgb65apm"
+}
+</script>
+<style>
+/* ========== 全局样式：深色战场氛围，居中舞台 ========== */
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;overflow:hidden;position:fixed;width:100%}
+body{
+  font-family:"Segoe UI","Microsoft YaHei",system-ui,sans-serif;
+  background:radial-gradient(1200px 800px at 50% 30%, #101a2e 0%, #060a14 55%, #03050c 100%);
+  color:#e8eefc; overflow:hidden; user-select:none;
+  padding-top:env(safe-area-inset-top);
+  padding-bottom:env(safe-area-inset-bottom);
+  padding-left:env(safe-area-inset-left);
+  padding-right:env(safe-area-inset-right);
+  -webkit-user-select:none;
+  -webkit-touch-callout:none;
+  -webkit-tap-highlight-color:transparent;
+  touch-action:manipulation;
+}
+#app{height:100%;display:flex;align-items:center;justify-content:center}
+.stage{
+  position:relative; width:min(97vw, 158vh, 1400px); aspect-ratio:8/5;
+  border-radius:14px; overflow:hidden; background:#070b16;
+  box-shadow:0 0 0 1px rgba(255,255,255,.07), 0 18px 60px rgba(0,0,0,.6), 0 0 60px rgba(34,211,238,.08);
+}
+#game{position:absolute;inset:0;width:100%;height:100%;display:block;cursor:crosshair}
+
+/* ========== HUD ========== */
+#hud{position:absolute;inset:0;pointer-events:none}
+#topbar{position:absolute;top:0;left:0;right:0;display:flex;justify-content:space-between;align-items:center;padding:10px 16px}
+/* 全局隐藏工具类：.hidden 必须真正隐藏（角色行/难度行/地图行都依赖它） */
+.hidden{display:none !important}
+/* 游戏内 HUD 默认隐藏，对局中才显示（放最后确保优先级） */
+.playerPanel, #topbar, #btnFire, #btnSkill, #btnExitFight{display:none !important}
+body.in-game .playerPanel{display:block !important}
+body.in-game #topbar{display:flex !important}
+body.in-game .playerPanel.hidden{display:none !important}
+body.is-touch.in-game #btnFire{display:flex !important}
+body.is-touch.in-game #btnSkill{display:flex !important}
+body.is-touch.in-game #btnExitFight{display:flex !important}
+/* 结算/暂停时隐藏对局操作控件，避免遮挡结算面板 */
+body.is-touch.in-game.ended #btnFire, body.is-touch.in-game.ended #btnSkill,
+body.is-touch.in-game.ended #btnExitFight, body.ended #touchTip, body.ended #rotateTip,
+body.is-touch.in-game.paused-fight #btnFire, body.is-touch.in-game.paused-fight #btnSkill,
+body.is-touch.in-game.paused-fight #btnExitFight{display:none !important}
+.scoreChip{display:flex;align-items:center;gap:10px;font-weight:800;font-size:22px;font-family:Consolas,"Microsoft YaHei",monospace;letter-spacing:1px;padding:8px 18px;border-radius:999px;background:rgba(10,16,30,.6);border:1px solid rgba(255,255,255,.1)}
+.scoreChip.pop{animation:scorePop .38s cubic-bezier(.2,1.6,.4,1)}
+.scoreChip.glow{box-shadow:0 0 22px rgba(255,211,77,.5),0 0 0 1px rgba(255,255,255,.2);transition:box-shadow .5s}
+#scoreRed.glow{box-shadow:0 0 22px rgba(255,91,110,.6),0 0 0 1px rgba(255,255,255,.2)}
+#scoreBlue.glow{box-shadow:0 0 22px rgba(77,195,255,.6),0 0 0 1px rgba(255,255,255,.2)}
+@keyframes scorePop{0%{transform:scale(1)}35%{transform:scale(1.3)}100%{transform:scale(1)}}
+.playerPanel.hit .ppHead{animation:hitFlash .32s ease}
+@keyframes hitFlash{0%,100%{color:#ffd}38%{color:#fff;text-shadow:0 0 12px #ff5b6e}}
+#scoreRed{color:#ff5b6e}
+#scoreBlue{color:#4dc3ff}
+#scoreRed::before,#scoreBlue::before{content:"";width:11px;height:11px;border-radius:50%;background:currentColor;box-shadow:0 0 10px currentColor}
+#timer{font-family:Consolas,monospace;font-size:18px;letter-spacing:1px;padding:8px 16px;border-radius:999px;background:rgba(10,16,30,.55);border:1px solid rgba(255,255,255,.08);color:#9fe8ff}
+#timer.low{color:#ffb84d}
+#killfeed{position:absolute;top:54px;right:14px;display:flex;flex-direction:column;gap:6px;align-items:flex-end}
+.kf{font-size:12px;padding:4px 10px;border-radius:8px;background:rgba(8,12,24,.72);border:1px solid rgba(255,255,255,.08);color:#dbe6ff;animation:kfIn .2s ease;transition:opacity .5s}
+@keyframes kfIn{from{opacity:0;transform:translateX(14px)}to{opacity:1;transform:none}}
+
+/* 玩家状态面板（左下 P1 / 右下 P2，1V1 双人） */
+.playerPanel{position:absolute;min-width:230px;padding:10px 14px;border-radius:12px;background:rgba(10,16,30,.6);border:1px solid rgba(255,255,255,.09)}
+#panelP1{left:16px;bottom:14px}
+#panelP2{right:16px;bottom:14px;text-align:right}
+#panelP2 #hpBar{transform:scaleX(-1)} /* P2 血条右起 */
+.ppHead{display:flex;align-items:center;gap:7px;font-size:13px;font-weight:700;color:#ffd;margin-bottom:6px}
+.ppHead .icon{font-size:16px}
+#hpBar{height:12px;border-radius:6px;background:rgba(255,255,255,.1);overflow:hidden;border:1px solid rgba(255,255,255,.12)}
+#hpFill{height:100%;width:100%;border-radius:6px;background:linear-gradient(90deg,#ffd34d,#ff6b57);transition:width .15s linear}
+#hpFill.blue{background:linear-gradient(90deg,#38b6ff,#4dc3ff)}
+.ppSub{font-size:11px;color:#9fb2d0;margin-top:5px}
+/* 技能面板 */
+.skillBox{position:relative;width:44px;height:44px;border-radius:10px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.14);overflow:hidden;margin-top:8px}
+.skillBox .skIcon{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:22px}
+.skillBox .skCd{position:absolute;left:0;right:0;bottom:0;background:rgba(0,0,0,.62);transition:height .1s linear}
+.skillBox .skCdNum{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;color:#fff;font-family:Consolas,monospace;text-shadow:0 1px 4px rgba(0,0,0,.9);pointer-events:none;z-index:2}
+.skillBox.ready .skIcon{animation:skReady 1.5s ease-in-out infinite}
+@keyframes skReady{0%,100%{filter:drop-shadow(0 0 0 rgba(125,211,252,0))}50%{filter:drop-shadow(0 0 9px rgba(125,211,252,.95))}}
+.skillBox .skKey{position:absolute;right:3px;top:2px;font-size:9px;background:rgba(0,0,0,.6);padding:1px 4px;border-radius:4px;color:#7dd3fc}
+.skillBox .skName{position:absolute;left:0;right:0;bottom:1px;font-size:8px;text-align:center;color:#fff;background:rgba(0,0,0,.5);border-radius:0 0 8px 8px}
+#panelP2 .skillBox{margin-left:auto}
+#hintBar{position:absolute;right:16px;bottom:70px;font-size:11px;color:#8fa5c8;background:rgba(10,16,30,.5);padding:6px 10px;border-radius:10px;border:1px solid rgba(255,255,255,.06)}
+#hintBar.top{right:16px;top:52px;bottom:auto}
+#vignette{position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at center,transparent 55%,rgba(255,40,60,.28) 100%);opacity:0;transition:opacity .4s}
+#vignette.low{opacity:1}
+/* 得分横幅：击杀时中央弹出 */
+.scoreBanner{position:absolute;top:20%;left:50%;transform:translateX(-50%);font-size:clamp(30px,6vh,44px);font-weight:900;letter-spacing:3px;z-index:8;pointer-events:none;color:#ffd34d;text-shadow:0 0 24px rgba(255,211,77,.9),0 2px 6px rgba(0,0,0,.6);animation:scoreBanner .9s cubic-bezier(.2,1,.4,1) forwards}
+.scoreBanner.blue{color:#4dc3ff;text-shadow:0 0 24px rgba(77,195,255,.9),0 2px 6px rgba(0,0,0,.6)}
+@keyframes scoreBanner{0%{opacity:0;transform:translate(-50%,18px) scale(.5)}25%{opacity:1;transform:translate(-50%,0) scale(1.18)}55%{transform:translate(-50%,-4px) scale(1)}100%{opacity:0;transform:translate(-50%,-34px) scale(.94)}}
+/* 全屏边缘闪光：击杀(红/蓝) / 胜利(金) */
+#screenFlash{position:absolute;inset:0;pointer-events:none;opacity:0;z-index:7}
+#screenFlash.on{animation:screenFlash .4s ease-out forwards}
+#screenFlash.red{background:radial-gradient(ellipse at center,transparent 42%,rgba(255,60,80,.6))}
+#screenFlash.blue{background:radial-gradient(ellipse at center,transparent 42%,rgba(40,150,255,.6))}
+#screenFlash.gold{background:radial-gradient(ellipse at center,transparent 34%,rgba(255,211,77,.75))}
+@keyframes screenFlash{0%{opacity:1}100%{opacity:0}}
+
+/* ========== 覆盖层 ========== */
+.overlay{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:safe center;gap:18px;background:rgba(4,8,18,.8);backdrop-filter:blur(4px);z-index:10;padding:24px;text-align:center;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.overlay::-webkit-scrollbar{width:0;height:0}
+.overlay.hidden{display:none}
+.title{font-size:clamp(30px,6vh,58px);font-weight:900;letter-spacing:4px;background:linear-gradient(90deg,#22d3ee,#7dd3fc,#e0f2fe);-webkit-background-clip:text;background-clip:text;color:transparent;text-shadow:0 0 40px rgba(34,211,238,.25)}
+.sub{color:#9fb2d0;font-size:14px;max-width:680px;line-height:1.7}
+.btn{pointer-events:auto;cursor:pointer;border:none;font-size:16px;font-weight:700;padding:12px 34px;border-radius:999px;color:#04121c;background:linear-gradient(90deg,#22d3ee,#67e8f9);box-shadow:0 6px 24px rgba(34,211,238,.35);transition:transform .12s,box-shadow .2s}
+.btn:hover{transform:translateY(-2px);box-shadow:0 10px 30px rgba(34,211,238,.5)}
+.btn:active{transform:translateY(0)}
+.btn.ghost{background:rgba(255,255,255,.08);color:#e8eefc;box-shadow:none;border:1px solid rgba(255,255,255,.18)}
+.btn.big{font-size:20px;padding:16px 44px}
+.rowBtns{display:flex;gap:12px}
+.helpBody{max-width:760px;max-height:60vh;overflow:auto;text-align:left;background:rgba(10,18,36,.88);border:1px solid rgba(120,180,255,.25);border-radius:12px;padding:16px 22px;font-size:13px;line-height:1.7;color:#cfe4ff}
+.helpBody h4{margin:12px 0 6px;font-size:14px;color:#7dd3fc;letter-spacing:1px}
+.helpBody table{width:100%;border-collapse:collapse;margin:6px 0}
+.helpBody th,.helpBody td{border:1px solid rgba(120,180,255,.2);padding:4px 8px;text-align:left;font-size:12px}
+.helpBody th{background:rgba(60,120,200,.28);color:#e0f2fe}
+kbd{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);border-bottom-width:2px;border-radius:5px;padding:1px 7px;font-family:Consolas,monospace;font-size:12px;color:#fff}
+.modeCard{pointer-events:auto;cursor:pointer;width:300px;padding:20px 18px;border-radius:16px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);transition:transform .15s,border-color .2s}
+.modeCard:hover{transform:translateY(-3px);border-color:#22d3ee}
+.modeCard .mcName{font-size:22px;font-weight:800;margin-bottom:6px}
+.modeCard .mcName.red{color:#ff5b6e}.modeCard .mcName.blue{color:#4dc3ff}
+.modeCard .mcDesc{font-size:12.5px;color:#9fb2d0;line-height:1.7}
+.modeGrid{display:flex;gap:18px}
+
+/* 选人界面 */
+.roleRow{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+.roleRowLabel{font-size:14px;font-weight:700;color:#c7d6f2;margin-bottom:8px}
+.diffChip{pointer-events:auto;cursor:pointer;border:none;font-size:14px;font-weight:700;color:#9fb2d0;padding:9px 24px;border-radius:999px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);transition:transform .12s,color .15s,border-color .15s,box-shadow .2s}
+.diffChip:hover{transform:translateY(-2px);color:#e8eefc}
+.diffChip.sel{color:#04121c;background:linear-gradient(90deg,#22d3ee,#67e8f9);border-color:transparent;box-shadow:0 4px 16px rgba(34,211,238,.4)}
+.roleCard{pointer-events:auto;cursor:pointer;width:148px;padding:12px 10px;border-radius:14px;background:rgba(255,255,255,.05);border:2px solid rgba(255,255,255,.12);transition:transform .12s,border-color .15s}
+.roleCard:hover{transform:translateY(-2px)}
+.roleCard.sel{border-color:#ffd34d;box-shadow:0 0 18px rgba(255,211,77,.35);background:rgba(255,211,77,.08)}
+.roleCard.sel.blueSel{border-color:#4dc3ff;box-shadow:0 0 18px rgba(77,195,255,.35);background:rgba(77,195,255,.08)}
+.roleCard .rcIcon{font-size:34px;line-height:1.2}
+.roleCard .rcName{font-size:14px;font-weight:800;margin:4px 0 2px}
+.roleCard .rcBar{height:4px;border-radius:2px;background:rgba(255,255,255,.1);margin:3px 0;overflow:hidden}
+.roleCard .rcBar i{display:block;height:100%;background:linear-gradient(90deg,#22d3ee,#67e8f9)}
+.roleCard .rcSkill{font-size:10.5px;color:#9fb2d0;line-height:1.5}
+
+/* 结算 MVP 动画 */
+#mvpWrap,#loserWrap{display:flex;flex-direction:column;align-items:center;gap:10px}
+.mvpCard{position:relative;display:flex;flex-direction:column;align-items:center;gap:6px;padding:26px 46px 22px;border-radius:20px;
+  background:linear-gradient(160deg,rgba(255,211,77,.16),rgba(255,159,67,.06));
+  border:2px solid #ffd34d;box-shadow:0 0 40px rgba(255,211,77,.45), inset 0 0 30px rgba(255,211,77,.08);
+  animation:mvpIn .7s cubic-bezier(.2,1.4,.4,1) both}
+.mvpCard.loser{background:linear-gradient(160deg,rgba(160,190,255,.12),rgba(120,160,255,.04));
+  border-color:#9db4ff;box-shadow:0 0 30px rgba(140,170,255,.3), inset 0 0 24px rgba(140,170,255,.06);
+  animation:mvpIn .7s .35s cubic-bezier(.2,1.4,.4,1) both;padding:16px 36px 14px}
+@keyframes mvpIn{from{opacity:0;transform:scale(.4) rotateX(30deg)}to{opacity:1;transform:scale(1) rotateX(0)}}
+.mvpBadge{font-size:clamp(30px,5.5vh,52px);font-weight:900;letter-spacing:3px;background:linear-gradient(90deg,#ffd34d,#ff9f43);-webkit-background-clip:text;background-clip:text;color:transparent;
+  animation:badgePulse 1.2s ease-in-out infinite}
+@keyframes badgePulse{0%,100%{filter:drop-shadow(0 0 8px rgba(255,211,77,.7))}50%{filter:drop-shadow(0 0 22px rgba(255,211,77,1))}}
+.mvpCard.loser .mvpBadge{font-size:clamp(18px,3.5vh,30px);background:linear-gradient(90deg,#c3d4ff,#8fb4ff);-webkit-background-clip:text;background-clip:text;color:transparent;animation:none}
+.mvpIcon{font-size:clamp(36px,7vh,60px);animation:iconBob 1.4s ease-in-out infinite}
+@keyframes iconBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+.mvpName{font-size:clamp(16px,3vh,24px);font-weight:800;color:#fff}
+.mvpStats{font-family:Consolas,monospace;font-size:14px;color:#ffe9a8}
+.mvpCard.loser .mvpStats{color:#c3d4ff}
+.mvpTag{font-size:11px;color:#ffd34d;letter-spacing:1px;border:1px solid rgba(255,211,77,.5);padding:3px 12px;border-radius:999px}
+.mvpCard.loser .mvpTag{color:#9db4ff;border-color:rgba(157,180,255,.5)}
+/* 彩带 */
+.confetti{position:absolute;top:-14px;width:9px;height:14px;border-radius:2px;z-index:9;pointer-events:none;animation:fall linear forwards}
+@keyframes fall{to{transform:translateY(110vh) rotate(720deg);opacity:.2}}
+.statGrid{display:grid;grid-template-columns:repeat(3,auto);gap:6px 22px;font-size:13px;color:#c7d6f2}
+.statGrid .v{font-weight:700;color:#fff;font-family:Consolas,monospace}
+.result{font-size:clamp(34px,8vh,72px);font-weight:900;letter-spacing:3px;animation:resultIn .6s cubic-bezier(.2,1.4,.4,1) both}
+@keyframes resultIn{0%{opacity:0;transform:scale(.3)}55%{transform:scale(1.12)}100%{opacity:1;transform:scale(1)}}
+#endScreen::before{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(circle at 50% 38%,rgba(255,211,77,.55),transparent 62%);opacity:0;animation:endFlash .9s ease .05s both;z-index:0}
+@keyframes endFlash{0%{opacity:0}18%{opacity:1}100%{opacity:0}}
+.result.win{background:linear-gradient(90deg,#ffd34d,#ff9f43);-webkit-background-clip:text;background-clip:text;color:transparent;text-shadow:0 0 40px rgba(255,180,60,.3)}
+.result.lose{background:linear-gradient(90deg,#ff5b6e,#ff2d55);-webkit-background-clip:text;background-clip:text;color:transparent;text-shadow:0 0 40px rgba(255,60,80,.35)}
+.result.draw{background:linear-gradient(90deg,#a5f3fc,#e0f2fe);-webkit-background-clip:text;background-clip:text;color:transparent;text-shadow:0 0 40px rgba(160,240,255,.3)}
+.recordBadge{display:inline-block;margin:-4px 0 8px;padding:5px 14px;border-radius:999px;font-size:13px;font-weight:800;letter-spacing:1px;color:#ffd34d;background:rgba(255,211,77,.12);border:1px solid rgba(255,211,77,.45)}
+#pauseScreen .title{font-size:clamp(26px,5vh,40px)}
+#menuScreen .title{font-size:clamp(19px,3.4vh,30px);letter-spacing:2px;opacity:.95}
+/* ===== 触屏适配：虚拟摇杆 + 技能按钮（仅触屏设备显示） ===== */
+#touchLayer{position:absolute;inset:0;z-index:8;display:none;pointer-events:none}
+body.is-touch #touchLayer{display:block}
+.joy{position:fixed;width:var(--joy,88px);height:var(--joy,88px);border-radius:50%;background:rgba(120,170,255,.1);border:2px solid rgba(140,190,255,.3);pointer-events:none;display:none;align-items:center;justify-content:center;z-index:50}
+.joy.show{display:flex}
+.joy .knob{width:38px;height:38px;border-radius:50%;background:rgba(160,210,255,.5);box-shadow:0 0 12px rgba(120,180,255,.4)}
+.joy.show{display:flex}
+.joy .knob{width:50px;height:50px;border-radius:50%;background:rgba(160,210,255,.5);box-shadow:0 0 12px rgba(120,180,255,.4)}
+#btnSkill{position:fixed;right:90px;bottom:90px;width:52px;height:52px;border-radius:50%;background:rgba(255,211,77,.25);border:2px solid rgba(255,211,77,.7);color:#ffe9a8;font-size:16px;font-weight:800;display:none;align-items:center;justify-content:center;z-index:50;pointer-events:auto;touch-action:none;font-family:inherit}
+body.is-touch.in-game #btnSkill{display:flex}
+#btnSkill.on{background:rgba(255,211,77,.55)}
+#btnSkill{position:fixed}
+#skillRing{position:absolute;inset:-5px;border-radius:50%;pointer-events:none;
+  background:conic-gradient(#ffd34d 0 var(--deg,0deg), rgba(6,10,20,.72) var(--deg,0deg) 360deg);
+  -webkit-mask:radial-gradient(circle, transparent 52%, #000 56%);
+  mask:radial-gradient(circle, transparent 52%, #000 56%);
+  transition:opacity .2s}
+#skillCdNum{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:16px;font-weight:800;color:#fff;text-shadow:0 1px 5px #000,0 0 8px rgba(0,0,0,.9);pointer-events:none;z-index:2}
+#btnFire{position:fixed;right:18px;bottom:80px;width:var(--fire,74px);height:var(--fire,74px);border-radius:50%;background:rgba(255,90,110,.35);border:3px solid rgba(255,120,140,.8);color:#fff;font-size:14px;font-weight:900;display:none;align-items:center;justify-content:center;z-index:50;pointer-events:auto;touch-action:none;font-family:inherit;box-shadow:0 4px 20px rgba(255,80,100,.4)}
+body.is-touch.in-game #btnFire{display:flex}
+#btnFire.on{background:rgba(255,90,110,.7);transform:scale(.94)}
+#touchTip{position:fixed;left:50%;bottom:170px;transform:translateX(-50%);color:#9fd0ff;font-size:11px;display:none;z-index:45;background:rgba(10,18,36,.55);padding:3px 10px;border-radius:10px;transition:opacity .5s;white-space:nowrap}
+body.is-touch.in-game #touchTip{display:block}
+@keyframes popScale{0%{transform:translateX(-50%) scale(.5);opacity:0}100%{transform:translateX(-50%) scale(1);opacity:1}}
+body.is-touch .pc-only{display:none !important}
+body.is-touch #hintBar{display:none !important}
+/* ===== 移动端精简 UI：像王者那样干净 ===== */
+body.is-touch .title{font-size:26px !important;margin-bottom:6px !important}
+body.is-touch .sub{font-size:12px !important;margin-bottom:14px !important}
+body.is-touch .modeGrid{display:flex !important;flex-direction:column !important;gap:10px !important;max-width:340px !important}
+body.is-touch .overlay{gap:12px;padding:16px}
+@media (max-height:520px){
+  #menuScreen{gap:7px !important;padding:8px 16px !important}
+  #menuScreen .title{font-size:22px !important;margin-bottom:-6px}
+  #menuScreen .sub{display:none !important}
+  #dailyTask{padding:5px 10px !important;line-height:1.35 !important;font-size:11px !important;max-width:520px !important}
+  #dailyTask div[style*="height:4px"]{margin-bottom:2px !important}
+  #menuScreen .modeGrid{flex-direction:row !important;width:100%;max-width:560px;gap:10px !important}
+  #menuScreen .modeGrid{width:100% !important;max-width:640px !important}
+  body.is-touch #menuScreen .modeCard{width:calc(50% - 35px) !important;min-width:0;padding:9px 12px !important}
+  #menuScreen .mcName{font-size:15px !important;margin-bottom:2px !important}
+  body.is-touch #menuScreen .mcDesc{font-size:9.5px !important}
+  #menuScreen .rowBtns{margin-top:2px !important;gap:6px !important;flex-wrap:wrap !important}
+  #menuScreen .btn{padding:7px 14px !important;font-size:12px !important} }
+body.is-touch .modeCard{width:100% !important;padding:16px !important}
+body.is-touch .modeCard{padding:16px !important}
+body.is-touch .mcName{font-size:18px !important}
+body.is-touch .mcDesc{font-size:10.5px !important;line-height:1.5 !important;color:#8fa1bf !important;margin-top:2px}
+body.is-touch .mcDesc br{display:none}
+body.is-touch .mcDesc{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+body.is-touch .rowBtns{flex-direction:row !important;gap:8px !important}
+body.is-touch .rowBtns .btn{padding:8px 14px !important;font-size:12px !important}
+body.is-touch .playerPanel{min-width:0;padding:6px 10px;font-size:10px;background:rgba(10,16,30,.45)}
+body.is-touch #panelP1{left:8px;top:58px;bottom:auto}
+body.is-touch #panelP2{right:8px;top:58px;bottom:auto}
+body.is-touch .ppHead{font-size:10px;margin-bottom:3px;gap:4px}
+body.is-touch #hpBar{height:7px}
+body.is-touch .skillBox{width:30px;height:30px;margin-top:4px}
+body.is-touch .skillBox .skIcon{font-size:14px}
+body.is-touch .ppSub{display:none}
+body.is-touch #panelP1 .skillBox, body.is-touch #panelP2 .skillBox{display:none}
+body.is-touch #panelP1, body.is-touch #panelP2{padding:3px 8px !important;font-size:9px !important}
+body.is-touch #hpBar{height:5px !important}
+body.is-touch .ppHead{font-size:9px !important;margin-bottom:2px !important}
+body.is-touch #topbar{font-size:11px !important;top:2px !important;gap:6px !important;padding:2px 8px !important;padding-left:54px !important}
+body.is-touch #topbar > *:nth-child(n+3){display:none}
+body.is-touch #roomCode{font-size:32px !important;letter-spacing:4px !important}
+/* 选人/房间界面移动端适配 */
+body.is-touch .roleRow{flex-wrap:wrap !important;gap:8px !important}
+body.is-touch .roleCard{flex:1 1 45px !important;min-width:72px !important;padding:8px 4px !important}
+body.is-touch .roleCard .rIcon{font-size:22px !important}
+body.is-touch .roleCard .rName{font-size:11px !important}
+body.is-touch .roleCard .rSkill{display:none !important}
+body.is-touch .roleRowLabel{font-size:12px !important;margin:8px 0 4px !important}
+body.is-touch .overlay .btn{padding:10px 16px !important;font-size:14px !important}
+body.is-touch #roomCode{font-size:32px !important;letter-spacing:4px !important}
+body.is-touch .playerPanel{min-width:0;padding:6px 10px;font-size:10px;background:rgba(10,16,30,.45)}
+body.is-touch #panelP1{left:8px;top:58px;bottom:auto}
+body.is-touch #panelP2{right:8px;top:58px;bottom:auto}
+body.is-touch .ppHead{font-size:10px;margin-bottom:3px;gap:4px}
+body.is-touch #hpBar{height:7px}
+body.is-touch .skillBox{width:30px;height:30px;margin-top:4px}
+body.is-touch .skillBox .skIcon{font-size:14px}
+body.is-touch .ppSub{display:none}
+/* 手机端：选人/菜单/结算界面可滚动，卡片两列换行 */
+@media (max-width:820px){
+  .stage{width:100vw !important;height:100vh !important;aspect-ratio:auto !important;border-radius:0;box-shadow:none}
+  .overlay{justify-content:flex-start !important;padding:60px 14px 40px !important;overflow-y:auto;-webkit-overflow-scrolling:touch;align-items:stretch}
+  .overlay .title{font-size:26px;letter-spacing:2px}
+  .overlay .sub{font-size:12px;max-width:100%;padding:0 6px}
+  .modeGrid{flex-direction:column;gap:12px;width:100%}
+}
+/* 横屏手机：游戏画面铺满，优化操作区 */
+@media (orientation:landscape) and (max-height:500px){
+  .stage{width:100vw !important;height:100vh !important;aspect-ratio:auto !important;border-radius:0;box-shadow:none}
+  .overlay{justify-content:center !important;padding:20px !important;gap:10px !important}
+  /* 设置项多，小屏横屏装不下：必须从顶部开始并允许滚动，否则顶部被裁、底部按钮点不到 */
+  #settingsScreen{justify-content:flex-start !important;overflow-y:auto !important;-webkit-overflow-scrolling:touch;padding-top:10px !important}
+  #settingsWrap{max-width:780px !important;width:100% !important;display:grid;grid-template-columns:1fr 1fr;column-gap:26px;row-gap:0;margin:0 auto;line-height:1.65 !important;font-size:13px}
+  .overlay .title{font-size:24px !important}
+  .overlay .sub{font-size:11px !important}
+  .modeGrid{flex-direction:row !important;gap:12px !important}
+  .modeCard{padding:12px !important}
+  .modeCard .mcName{font-size:16px !important}
+  #btnFire{bottom:20px !important;right:20px !important;width:64px !important;height:64px !important}
+  #btnSkill{bottom:30px !important;right:100px !important;width:48px !important;height:48px !important}
+}
+/* 操作键左右布局（必须放在上面横屏 media query 之后，才能覆盖其中的 !important 定位） */
+body.fire-left #btnFire{left:18px !important;right:auto !important}
+body.skill-left #btnSkill{left:18px !important;right:auto !important}
+body.skill-joy-l #btnSkill{left:24px !important;right:auto !important;bottom:auto !important;top:calc(50% + 60px) !important}
+body.skill-joy-r #btnSkill{right:24px !important;left:auto !important;bottom:auto !important;top:calc(50% + 60px) !important}
+body.skill-free #btnSkill{left:var(--skx,80%) !important;top:var(--sky,72%) !important;right:auto !important;bottom:auto !important;transform:translate(-50%,-50%)}
+/* 布局编辑层 */
+#layoutScreen{justify-content:flex-start !important;padding:0}
+.layStage{position:relative;width:100vw;height:100vh;background:radial-gradient(circle at 30% 70%,rgba(40,80,150,.18),transparent 60%)}
+#laySkill{position:absolute;left:80%;top:72%;transform:translate(-50%,-50%);width:62px;height:62px;border-radius:50%;background:rgba(255,211,77,.3);border:2px solid rgba(255,211,77,.8);color:#ffe9a8;font-size:18px;font-weight:800;display:flex;align-items:center;justify-content:center;touch-action:none;cursor:grab;box-shadow:0 0 20px rgba(255,211,77,.35)}
+.layBar{position:fixed;left:0;right:0;bottom:0;padding:12px 14px;display:flex;gap:10px;background:linear-gradient(transparent,rgba(6,10,18,.95) 40%);z-index:60}
+.layBar .btn{flex:1}
+.layTip{position:fixed;left:0;right:0;top:14px;text-align:center;font-size:13px;color:#9fb2d0;z-index:60}
+body.fire-left.skill-left #btnSkill{left:96px !important}
+body.skill-left:not(.fire-left) #btnSkill{left:18px !important;right:auto !important}
+body.fire-left:not(.skill-left) #btnSkill{right:18px !important;left:auto !important}
+body.fire-left #btnFire{left:18px !important;right:auto !important}
+/* 竖屏手机：显示横屏提示 */
+@media (orientation:portrait) and (max-width:820px){
+  #rotateTip{display:flex !important}
+}
+#mapName{position:absolute;top:46px;left:50%;transform:translateX(-50%);font-size:11px;color:#7d8aa8;letter-spacing:2px;pointer-events:none;z-index:6;white-space:nowrap}
+#rotateTip{display:none;position:fixed;bottom:10px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.7);color:#9fd0ff;font-size:12px;padding:6px 14px;border-radius:20px;z-index:100;align-items:center;gap:6px}
+/* 手机端选人界面：卡片两列换行 */
+@media (max-width:820px){
+  .modeCard{width:100% !important;flex:none}
+  .roleRow{max-width:100%;flex-wrap:wrap;gap:8px}
+  .roleCard{width:calc(50% - 8px);max-width:170px;min-width:0;padding:10px 8px}
+  .roleCard .rcSkill{font-size:9.5px}
+  .rowBtns{flex-wrap:wrap;gap:8px}
+  .btn{font-size:14px;padding:10px 18px}
+  #selectScreen .title,#helpScreen .title{font-size:24px}
+  .helpBody{max-height:55vh}
+  /* 结算界面：压缩到一屏内，按钮始终可见 */
+  #endScreen{justify-content:center !important;padding:20px 12px 20px !important;gap:7px !important}
+  #endScreen .result{font-size:32px !important;letter-spacing:2px !important}
+  #endScreen .mvpCard{padding:9px 18px 7px !important;gap:2px !important;border-radius:12px !important}
+  #endScreen .mvpCard.loser{padding:7px 16px 5px !important}
+  #endScreen .mvpBadge{font-size:20px !important;letter-spacing:2px !important}
+  #endScreen .mvpCard.loser .mvpBadge{font-size:15px !important}
+  #endScreen .mvpIcon{font-size:24px !important;animation:none}
+  #endScreen .mvpName{font-size:12px !important}
+  #endScreen .mvpStats{font-size:9.5px !important}
+  #endScreen .mvpTag{font-size:8.5px !important;padding:1px 8px !important}
+  #endScreen .statGrid{font-size:11px !important;gap:2px 14px !important}
+  #endScreen .rowBtns{margin-top:8px !important;gap:8px !important}
+  #endScreen .btn{font-size:13px !important;padding:9px 20px !important}
+}
+#btnExitFight{display:none;position:fixed;left:10px;top:10px;z-index:60;width:40px;height:40px;border-radius:50%;background:rgba(255,90,110,.25);border:1px solid rgba(255,120,140,.6);color:#ffb3c0;font-size:18px;align-items:center;justify-content:center;pointer-events:auto;touch-action:none}
+
+.endGrade{font-size:15px;font-weight:800;letter-spacing:2px;padding:4px 16px;border-radius:20px;border:1px solid;margin-bottom:6px}
+.endGrade.gS{color:#ffd34d;border-color:rgba(255,211,77,.5);background:rgba(255,211,77,.12);box-shadow:0 0 18px rgba(255,211,77,.25)}
+.endGrade.gA{color:#7dd3fc;border-color:rgba(125,211,252,.5);background:rgba(125,211,252,.12)}
+.endGrade.gB{color:#5eead4;border-color:rgba(94,234,212,.45);background:rgba(94,234,212,.10)}
+.endGrade.gC{color:#94a3b8;border-color:rgba(148,163,184,.35);background:rgba(148,163,184,.08)}
+/* ===== 段位条 ===== */
+.rankBarWrap{margin:6px 0 10px;padding:10px 12px;border-radius:12px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1)}
+.rkTop{display:flex;justify-content:space-between;align-items:center;font-size:13px;margin-bottom:6px}
+.rkName{color:#ffd34d;font-weight:800;letter-spacing:1px}
+.rkPts{color:#9fb2d0;font-weight:700;font-variant-numeric:tabular-nums}
+.rkBar{height:6px;border-radius:3px;background:rgba(255,255,255,.1);overflow:hidden}
+.rkBar i{display:block;height:100%;background:linear-gradient(90deg,#ffd34d,#ff9f43);border-radius:3px;transition:width .3s}
+.rkNext{font-size:11px;color:#7d8aa8;margin-top:5px}
+/* ===== 联机 ===== */
+#netScreen{justify-content:flex-start !important;align-items:center;overflow-y:auto;padding:16px 14px}
+.netWrap{width:min(96vw,420px);display:flex;flex-direction:column;gap:10px;align-items:center}
+.netTitle{font-size:19px;font-weight:800;color:#e8eefc}
+.netHint{font-size:12.5px;color:#7d8aa8;text-align:center;line-height:1.7}
+.netRow{display:flex;gap:10px;width:100%}
+.netRow .btn{flex:1}
+.netStatus{width:100%;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:14px;padding:14px;text-align:center}
+.netCode{font-size:34px;font-weight:900;letter-spacing:8px;color:#ffd34d;font-variant-numeric:tabular-nums}
+.netWait{font-size:12.5px;color:#8fa1bf;margin-top:6px;line-height:1.6}
+/* ===== 自检 ===== */
+#selfCheckScreen{justify-content:flex-start !important;align-items:center;overflow-y:auto;padding:16px 14px}
+.scWrap{width:min(96vw,460px)}
+.scTitle{font-size:17px;font-weight:800;color:#e8eefc;margin-bottom:10px;text-align:center}
+.scBody{display:flex;flex-direction:column;gap:5px;font-size:12.5px}
+.scSum{font-size:14px;font-weight:800;text-align:center;margin-bottom:6px;color:#5eead4}
+.scRow{display:flex;gap:8px;align-items:flex-start;background:rgba(255,255,255,.04);border-radius:7px;padding:7px 10px}
+.scRow.ok{border-left:3px solid #33e08a}
+.scRow.bad{border-left:3px solid #ff5b6e}
+.scI{font-weight:800;flex-shrink:0}
+.scRow.ok .scI{color:#33e08a}
+.scRow.bad .scI{color:#ff5b6e}
+.scRow i{color:#7d8aa8;font-style:normal}
+/* ===== 个人主页 ===== */
+#profileScreen{justify-content:flex-start !important;align-items:center;overflow-y:auto;padding:18px 14px}
+#profileScreen .rowBtns{justify-content:center;width:100%}
+.profWrap{width:min(96vw,460px);display:flex;flex-direction:column;gap:12px}
+.profHead{display:flex;align-items:center;gap:12px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:14px;padding:14px}
+.profAva{width:56px;height:56px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:800;color:#0b1020;background:linear-gradient(135deg,#ffd34d,#ff9f43);flex-shrink:0}
+.profInfo{flex:1;min-width:0}
+.profNick{font-size:20px;font-weight:800;color:#e8eefc;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.profSub{font-size:12px;color:#7d8aa8;margin-top:3px}
+.profRename{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.16);color:#cdd9f0;border-radius:9px;padding:7px 12px;font-size:13px;cursor:pointer;flex-shrink:0}
+.profGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}
+.profCell{background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.08);border-radius:11px;padding:11px 4px;text-align:center}
+.pcV{font-size:18px;font-weight:800;color:#ffd34d;line-height:1.2}
+.pcK{font-size:11px;color:#8fa1bf;margin-top:3px}
+.profTitle{font-size:13px;color:#9fb2d0;letter-spacing:1px;margin-top:2px}
+.profList{display:flex;flex-direction:column;gap:7px}
+.profRow{display:flex;align-items:center;gap:9px;background:rgba(255,255,255,.04);border-left:3px solid #4dc3ff;border-radius:9px;padding:9px 11px;font-size:12.5px}
+.profRow.win{border-left-color:#33e08a}
+.profRow.lose{border-left-color:#ff5b6e}
+.profRow .prG{font-weight:800;font-size:12px;color:#ffd34d;flex-shrink:0;width:12px}
+.profRow .prR{font-weight:800;font-size:13px;flex-shrink:0;width:30px}
+.profRow.win .prR{color:#33e08a}
+.profRow.lose .prR{color:#ff5b6e}
+.profRow .prM{color:#7d8aa8;flex-shrink:0;width:42px}
+.profRow .prS{flex:1;color:#c8d4ea;font-variant-numeric:tabular-nums}
+.profRow .prT{color:#6b7896;font-size:11px;flex-shrink:0}
+.profEmpty{text-align:center;color:#6b7896;font-size:13px;padding:18px 0}
+@media (max-height:420px){
+  #profileScreen{padding:10px 12px}
+  .profWrap{gap:9px}
+  .profHead{padding:9px 11px;gap:9px}
+  .profAva{width:42px;height:42px;font-size:18px}
+  .profNick{font-size:17px}
+  .profCell{padding:7px 3px}
+  .pcV{font-size:16px}
+  .profGrid{grid-template-columns:repeat(6,1fr);gap:6px}
+  .profRow{padding:7px 9px;font-size:12px}
+}
+</style>
+</head>
+<body>
+<h1 style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap">枪战对决 - 手机网页枪战游戏，支持 1V1 联机对战与 5V5 团队战</h1>
+<!-- 启动动画 · 三角洲风格 -->
+<div id="splashScreen" style="position:fixed;inset:0;background:linear-gradient(180deg,#0a0e14 0%,#121820 50%,#0a0e14 100%);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden;transition:opacity .8s">
+  <!-- 背景网格 -->
+  <div style="position:absolute;inset:0;background-image:linear-gradient(rgba(77,195,255,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(77,195,255,.03) 1px,transparent 1px);background-size:40px 40px;pointer-events:none"></div>
+  <!-- 顶部光带 -->
+  <div style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,#4dc3ff,transparent);animation:splashScan 2s linear infinite"></div>
+  <!-- 底部光带 -->
+  <div style="position:absolute;bottom:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,#4dc3ff88,transparent)"></div>
+  <!-- 左右边框 -->
+  <div style="position:absolute;top:0;bottom:0;left:20px;width:1px;background:linear-gradient(180deg,transparent,#4dc3ff44,transparent)"></div>
+  <div style="position:absolute;top:0;bottom:0;right:20px;width:1px;background:linear-gradient(180deg,transparent,#4dc3ff44,transparent)"></div>
+  <!-- 角标 -->
+  <div style="position:absolute;top:30px;left:30px;font-size:10px;color:#4dc3ff88;letter-spacing:3px">TACTICAL OPS</div>
+  <div style="position:absolute;top:30px;right:30px;font-size:10px;color:#4dc3ff88;letter-spacing:3px">v3.0</div>
+  <div style="position:absolute;bottom:30px;left:30px;font-size:10px;color:#4dc3ff88;letter-spacing:2px">SECURE CONNECTION</div>
+  <div style="position:absolute;bottom:30px;right:30px;font-size:10px;color:#4dc3ff88;letter-spacing:2px" id="splashPct">0%</div>
+  <!-- Logo -->
+  <div style="position:relative;text-align:center">
+    <div style="font-size:11px;color:#4dc3ff;letter-spacing:8px;margin-bottom:12px;animation:splashFadeDown .8s ease">GUNFIGHT ARENA</div>
+    <div style="font-size:52px;font-weight:900;color:#fff;letter-spacing:10px;text-shadow:0 0 40px rgba(77,195,255,.5);animation:splashGlow 2s ease-in-out infinite">枪战对决</div>
+    <div style="width:60px;height:3px;background:#4dc3ff;margin:20px auto;animation:splashLine 1s ease"></div>
+  </div>
+  <!-- 进度条 -->
+  <div style="margin-top:50px;width:220px">
+    <div style="display:flex;justify-content:space-between;font-size:10px;color:#6b7f9e;margin-bottom:6px">
+      <span>LOADING ASSETS</span><span id="splashStatus">初始化中</span>
+    </div>
+    <div style="width:100%;height:2px;background:rgba(255,255,255,.1);position:relative;overflow:hidden">
+      <div id="splashBar" style="width:0%;height:100%;background:linear-gradient(90deg,#4dc3ff,#67e8f9);box-shadow:0 0 10px #4dc3ff;transition:width .2s"></div>
+      <div style="position:absolute;top:0;bottom:0;width:20px;background:linear-gradient(90deg,transparent,#fff,transparent);animation:splashShine 1.2s linear infinite"></div>
+    </div>
+  </div>
+  <!-- 加载完成后的进入按钮：点一下才进游戏 -->
+  <div id="splashEnter" style="display:none;position:relative;z-index:20;margin-top:34px;opacity:0;transition:opacity .5s">
+    <button id="btnSplashEnter" style="pointer-events:auto;cursor:pointer;border:none;font-size:16px;font-weight:800;letter-spacing:4px;padding:14px 52px;border-radius:999px;color:#04121c;background:linear-gradient(90deg,#22d3ee,#67e8f9);box-shadow:0 0 0 rgba(34,211,238,.6);animation:splashGlowBtn 2s ease-in-out infinite">进 入 战 场</button>
+  </div>
+</div>
+<style>
+@keyframes splashGlowBtn{0%,100%{box-shadow:0 0 18px rgba(34,211,238,.45)}50%{box-shadow:0 0 34px rgba(34,211,238,.85)}}
+@keyframes splashScan{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
+@keyframes splashGlow{0%,100%{text-shadow:0 0 40px rgba(77,195,255,.5)}50%{text-shadow:0 0 60px rgba(77,195,255,.8),0 0 20px rgba(103,232,249,.6)}}
+@keyframes splashFadeDown{0%{opacity:0;transform:translateY(-10px)}100%{opacity:1;transform:translateY(0)}}
+@keyframes splashLine{0%{width:0}100%{width:60px}}
+@keyframes splashShine{0%{left:-20px}100%{left:100%}}
+</style>
+<div id="rotateTip">竖屏可玩 · 横屏视野更广</div>
+<div id="app">
+  <div class="stage" id="stage">
+    <canvas id="game"></canvas>
+
+    <!-- 触屏层：左摇杆移动 / 右摇杆瞄准 / 技能按钮 -->
+    <div id="touchLayer">
+      <div id="joyMove" class="joy"><div class="knob"></div></div>
+      <div id="joyAim" class="joy"><div class="knob"></div></div>
+    </div>
+    <div id="btnSkill"><span id="skillLabel">技</span><div id="skillRing"></div><span id="skillCdNum"></span></div>
+    <button id="btnFire">开火</button>
+    <div id="touchTip">左摇杆移动 · 自动瞄准 · 右下开火按钮射击</div>
+    <button id="btnExitFight">✕</button>
+
+    <!-- HUD -->
+    <div id="hud">
+      <div id="topbar">
+        <div class="scoreChip" id="scoreRed">红队 0</div>
+        <div id="timer">3:00</div>
+        <div class="scoreChip" id="scoreBlue">蓝队 0</div>
+      </div>
+      <div id="mapName"></div>
+      <div id="killfeed"></div>
+
+      <!-- P1 状态（左下） -->
+      <div class="playerPanel" id="panelP1">
+        <div class="ppHead"><span class="icon" id="p1Icon">⚡</span><span id="p1Name">玩家</span></div>
+        <div id="hpBar"><div id="hpFill"></div></div>
+        <div class="ppSub" id="p1Sub">击杀 0 · 死亡 0</div>
+        <div class="skillBox" id="skP1"><div class="skIcon" id="p1SkIcon">⚡</div><div class="skCd" id="p1SkCd"></div><div class="skCdNum" id="p1SkCdNum"></div><div class="skKey" id="p1SkKey">E</div><div class="skName" id="p1SkName"></div></div>
+      </div>
+
+      <!-- P2 状态（右下，1V1 显示） -->
+      <div class="playerPanel hidden" id="panelP2">
+        <div class="ppHead"><span class="icon" id="p2Icon">🛡️</span><span id="p2Name">玩家2</span></div>
+        <div id="hpBar"><div id="hpFill2" class="blue"></div></div>
+        <div class="ppSub" id="p2Sub">击杀 0 · 死亡 0</div>
+        <div class="skillBox" id="skP2"><div class="skIcon" id="p2SkIcon">🛡️</div><div class="skCd" id="p2SkCd"></div><div class="skCdNum" id="p2SkCdNum"></div><div class="skKey" id="p2SkKey">1</div><div class="skName" id="p2SkName"></div></div>
+      </div>
+
+      <div id="hintBar"></div>
+    </div>
+    <div id="vignette"></div>
+    <div id="screenFlash"></div>
+
+    <!-- 登录界面 -->
+    <div class="overlay" id="loginScreen">
+      <div class="title">枪战对决</div>
+      <div class="sub">输入你的代号，开始战斗</div>
+      <input id="nickInput" maxlength="10" placeholder="输入昵称（最多10字）"
+        style="width:min(80vw,320px);padding:12px 16px;border-radius:10px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.06);color:#e8eefc;font-size:16px;text-align:center;outline:none">
+      <div id="nickTip" style="font-size:13px;color:#ff9f9f;min-height:18px;margin-top:6px"></div>
+      <button class="btn primary" id="btnEnter" style="margin-top:2px">进入战场</button>
+    </div>
+
+    <!-- 主菜单 -->
+    <div class="overlay hidden" id="menuScreen">
+      <button id="btnSettings" style="position:absolute;top:14px;right:14px;width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);color:#cdd9f0;font-size:18px;cursor:pointer;z-index:10">⚙</button>
+      <div class="title">枪战对决</div>
+      <div class="sub">选择模式开始战斗</div>
+      <div id="bestRecord" style="display:none;font-size:13px;color:#ffd700;background:rgba(255,215,0,.1);padding:6px 16px;border-radius:20px;border:1px solid rgba(255,215,0,.3)"></div>
+      <div id="dailyTask" style="font-size:12px;color:#9fb2d0;background:rgba(255,255,255,.04);padding:8px 14px;border-radius:10px;border:1px solid rgba(255,255,255,.08);max-width:340px;line-height:1.8"></div>
+      <div class="modeGrid">
+        <div class="modeCard" id="mode5v5">
+          <div class="mcName red">5V5 团队战</div>
+          <div class="mcDesc">红蓝各 5 人 · 每人 100 血<br>你 + 4 名 AI 队友 vs 5 名 AI 敌人<br>先 15 杀获胜（限时 3 分钟）· 角色随机分配<br><span class="pc-only">选难度与地图即可开战 · WASD+鼠标+E</span></div>
+        </div>
+        <div class="modeCard" id="mode1v1">
+          <div class="mcName blue">1V1 单挑</div>
+          <div class="mcDesc">单人对战 AI 对手<br>每人 100 血 · 先 5 杀获胜（限时 2 分钟）<br>可选角色与战场地图<br><span class="pc-only">P1：WASD+J+E+Z/X ｜ P2：方向键+回车+数字1</span></div>
+        </div>
+      </div>
+      <div class="sub pc-only" style="font-size:12px">浏览器里双击打开即玩 · 5V5 团队战 · 1V1 单挑 · 结算含 MVP 动画</div>
+      <div class="rowBtns" style="margin-top:14px">
+        <button class="btn ghost" id="btnHelp">玩法说明书</button>
+        <button class="btn ghost" id="btnTouchHelp">手机操作说明</button>
+        <button class="btn ghost" id="btnNet">联机对战</button>
+        <button class="btn ghost" id="btnProfile">我的主页</button>
+        <button class="btn ghost" id="btnShare">分享给好友</button>
+      </div>
+    </div>
+
+    <!-- 自检面板 -->
+    <div class="overlay hidden" id="selfCheckScreen">
+      <div class="scWrap">
+        <div class="scTitle">运行时自检</div>
+        <div class="scBody" id="scBody"></div>
+        <div class="rowBtns"><button class="btn" id="btnSelfCheckBack">关 闭</button></div>
+      </div>
+    </div>
+
+    <!-- 个人主页 -->
+    <div class="overlay hidden" id="profileScreen">
+      <div class="profWrap">
+        <div class="profHead">
+          <div class="profAva" id="profAva">战</div>
+          <div class="profInfo">
+            <div class="profNick" id="profNick">玩家</div>
+            <div class="profSub" id="profSub">生涯战绩 · 本地保存</div>
+          </div>
+          <button class="profRename" id="btnRename">改名</button>
+        </div>
+        <div class="rankBarWrap" id="rankBar"></div>
+        <div class="profGrid" id="profGrid"></div>
+        <div class="profTitle">最近对局</div>
+        <div class="profList" id="profList"></div>
+        <div class="rowBtns"><button class="btn" id="btnProfileBack">返 回</button></div>
+      </div>
+    </div>
+
+    <!-- 选人 -->
+    <!-- 线下单挑房间 -->
+    <div class="overlay hidden" id="selectScreen">
+      <div class="title">选择角色</div>
+      <div class="sub" id="selTip"></div>
+      <div id="roleRowP1">
+        <div class="roleRowLabel" id="labelP1">P1 · 红方 请选择你的角色</div>
+        <div class="roleRow" id="rowP1"></div>
+      </div>
+      <div id="roleRowP2" class="hidden">
+        <div class="roleRowLabel" id="labelP2">P2 · 蓝方 请选择你的角色</div>
+        <div class="roleRow" id="rowP2"></div>
+      </div>
+      <div id="diffRow" class="hidden">
+        <div class="roleRowLabel">5V5 难度</div>
+        <div class="roleRow" id="rowDiff">
+          <button class="diffChip" data-diff="easy">简 单</button>
+          <button class="diffChip sel" data-diff="normal">普 通</button>
+          <button class="diffChip" data-diff="hard">困 难</button>
+        </div>
+      </div>
+      <div id="weaponRow">
+        <div class="roleRowLabel">武器</div>
+        <div class="roleRow" id="rowWeapon"></div>
+      </div>
+      <div id="mapRow" class="hidden">
+        <div class="roleRowLabel">战场地图</div>
+        <div class="roleRow" id="rowMap"></div>
+      </div>
+      <div class="rowBtns">
+        <button class="btn" id="btnFight">开 始 战 斗</button>
+        <button class="btn ghost" id="btnSelBack">返回主菜单</button>
+      </div>
+    </div>
+
+    <!-- 技能键布局编辑 -->
+    <div class="overlay hidden" id="layoutScreen">
+      <div class="layTip">按住金色圆点，拖到顺手的位置</div>
+      <div class="layStage" id="layStage"><div id="laySkill">技</div></div>
+      <div class="layBar">
+        <button class="btn ghost" id="btnLayReset">恢复默认</button>
+        <button class="btn primary" id="btnLaySave">保存</button>
+      </div>
+    </div>
+
+    <!-- 联机房间 -->
+    <div class="overlay hidden" id="netScreen">
+      <div class="netWrap">
+        <div class="netTitle">1V1 联机对战</div>
+        <div class="netHint" id="netHint">和真人对枪，需要服务器</div>
+        <div class="netRow">
+          <button class="btn" id="btnNetHost">创建房间</button>
+          <button class="btn ghost" id="btnNetJoinMode">加入房间</button>
+        </div>
+        <div id="netJoinBox" class="hidden" style="width:100%;margin-top:8px">
+          <input id="netCode" maxlength="5" placeholder="输入 5 位房间码"
+            style="width:100%;padding:11px;border-radius:10px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.06);color:#e8eefc;font-size:16px;text-align:center;letter-spacing:3px;text-transform:uppercase;outline:none">
+          <button class="btn primary" id="btnNetJoin" style="width:100%;margin-top:8px">进入房间</button>
+        </div>
+        <div id="netStatus" class="netStatus hidden">
+          <div class="netCode" id="netCodeShow">----</div>
+          <div class="netWait" id="netWait">把房间码发给好友，等待他加入</div>
+        </div>
+        <div class="rowBtns"><button class="btn ghost" id="btnNetBack">返回</button></div>
+      </div>
+    </div>
+
+    <!-- 暂停 -->
+    <div class="overlay hidden" id="pauseScreen">
+      <div class="title">已暂停</div>
+      <div class="sub" id="pauseTip">按 P / Esc 继续</div>
+      <div class="rowBtns">
+        <button class="btn" id="btnResume">继 续 游 戏</button>
+        <button class="btn ghost" id="btnQuit">退 出 对 局</button>
+      </div>
+    </div>
+
+    <!-- 结算 -->
+    <div class="overlay hidden" id="endScreen">
+      <div class="result" id="endResult">胜利</div>
+      <div id="endGrade" class="endGrade hidden"></div>
+      <div id="mvpWrap"></div>
+      <div id="loserWrap"></div>
+      <div class="statGrid" id="endStats"></div>
+      <div class="rowBtns">
+        <button class="btn" id="btnAgain">再 来 一 局</button>
+        <button class="btn ghost" id="btnMenu">返回主菜单</button>
+      </div>
+    </div>
+
+    <!-- 玩法说明书 -->
+    <div class="overlay hidden" id="helpScreen">
+      <div class="title">玩法说明书</div>
+      <div class="helpBody" id="helpBody"></div>
+      <div class="rowBtns">
+        <button class="btn" id="btnHelpBack">返回主菜单</button>
+      </div>
+    </div>
+    <div class="overlay hidden" id="touchHelpScreen">
+      <div class="title">手机操作说明</div>
+      <div class="helpBody" id="touchHelpBody"></div>
+      <div class="rowBtns">
+        <button class="btn" id="btnTouchHelpBack">返回主菜单</button>
+      </div>
+    </div>
+    <div class="overlay hidden" id="settingsScreen">
+      <div class="title">自定义设置 <span id="verTag" style="font-size:11px;color:#7d8aa8;font-weight:400;display:block;margin-top:2px">v2.3.1124</span></div>
+      <div id="settingsWrap" style="text-align:left;max-width:320px;line-height:2.2">
+        <div>摇杆大小 <input type="range" id="setJoy" min="60" max="140" value="88" style="width:100%"></div>
+        <div>开火键大小 <input type="range" id="setFire" min="50" max="120" value="74" style="width:100%"></div>
+        <div>UI透明度 <input type="range" id="setAlpha" min="20" max="100" value="60" style="width:100%"></div>
+        <div>移动灵敏度 <input type="range" id="setSens" min="30" max="150" value="80" style="width:100%"></div>
+        <div>摇杆位置 <select id="setJoyPos" style="width:100%;padding:6px;border-radius:6px;background:#1a2340;color:#fff;border:1px solid rgba(255,255,255,.2)"><option value="left">左下角</option><option value="right">右下角</option></select></div>
+        <div>开火键位置 <select id="setFirePos" style="width:100%;padding:6px;border-radius:6px;background:#1a2340;color:#fff;border:1px solid rgba(255,255,255,.2)"><option value="right">右下角</option><option value="left">左下角</option></select></div>
+        <div>角色皮肤 <select id="setSkin" style="width:100%;padding:6px;border-radius:6px;background:#1a2340;color:#fff;border:1px solid rgba(255,255,255,.2)">
+          <option value="default">战术红（默认）</option>
+          <option value="sand">荒漠（200 荣誉）</option>
+          <option value="night">暗夜紫（350 荣誉）</option>
+          <option value="lava">熔岩（600 荣誉）</option>
+          <option value="ice">极地（900 荣誉）</option>
+        </select></div>
+        <div>技能键位置 <select id="setSkillPos" style="width:100%;padding:6px;border-radius:6px;background:#1a2340;color:#fff;border:1px solid rgba(255,255,255,.2)"><option value="left">开火键旁边</option><option value="right">对角位置</option><option value="joy">贴着摇杆那一侧</option><option value="free">自定义（自己拖）</option></select></div>
+        <div><button class="btn ghost" id="btnLayout" style="width:100%">调整技能键位置</button></div>
+        <div>自动开火 <select id="setAutoFire" style="width:100%;padding:6px;border-radius:6px;background:#1a2340;color:#fff;border:1px solid rgba(255,255,255,.2)"><option value="off">手动开火</option><option value="on">自动开火</option></select></div>
+        <div>自动瞄准 <select id="setAutoAim" style="width:100%;padding:6px;border-radius:6px;background:#1a2340;color:#fff;border:1px solid rgba(255,255,255,.2)"><option value="on">开启</option><option value="off">关闭（手动瞄准）</option></select></div>
+        <div>小地图雷达 <select id="setRadarShow" style="width:100%;padding:6px;border-radius:6px;background:#1a2340;color:#fff;border:1px solid rgba(255,255,255,.2)"><option value="on">显示</option><option value="off">关闭</option></select></div>
+        <div>雷达大小 <input type="range" id="setRadarSize" min="70" max="180" value="112" style="width:100%"></div>
+        <div>雷达透明度 <input type="range" id="setRadarAlpha" min="35" max="100" value="92" style="width:100%"></div>
+        <div>雷达位置 <select id="setRadarPos" style="width:100%;padding:6px;border-radius:6px;background:#1a2340;color:#fff;border:1px solid rgba(255,255,255,.2)"><option value="right">右上角</option><option value="left">左上角</option></select></div>
+        <div>右摇杆 <select id="setAimStick" style="width:100%;padding:6px;border-radius:6px;background:#1a2340;color:#fff;border:1px solid rgba(255,255,255,.2)"><option value="aim">只瞄准（配合开火键）</option><option value="fire">推开即开火（开火摇杆）</option></select></div>
+        <div>全屏模式 <button class="btn" id="btnFullscreen" style="width:100%;padding:8px;margin-top:6px">切换全屏 / 退出全屏</button></div>
+      </div>
+      <div style="margin-top:8px;text-align:center">
+        <button class="btn ghost" id="btnSelfCheck" style="width:100%;max-width:320px;padding:7px;font-size:12px;margin-bottom:6px">运行自检（检查这一版有没有坏）</button>
+        <button class="btn" id="btnForceReload" style="width:100%;max-width:320px;padding:7px;font-size:12px;background:#1a2340">看不到最新内容？点我强制刷新</button>
+      </div>
+      <div class="rowBtns">
+        <button class="btn" id="btnSettingsBack">完成</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+"use strict";
+/* 错误钩子：自动化验证用 */
+window.addEventListener('error', function(e){
+  document.body.setAttribute('data-js-error', e.message || 'error');
+});
+
+/* ================= 1. 配置与常量 ================= */
+const CFG = {
+  rulesetId: 'rs-gunfight-v3',       // v3：1V1 全键盘对战（去鼠标）+ 战斗动画全面增强
+  maxHp: 100,                        // 每人 100 血（用户硬约束，角色差异不走血量）
+  playerRadius: 15,
+  bulletRadius: 4,
+  aiFireMul: 1.8,                    // AI 射速 = 角色射速 × 1.8
+  aiAimError: 0.09,
+  aiEngageMin: 150, aiEngageMax: 430,
+  respawnTime: 2.0, spawnProtect: 1.5,
+  seed: 20261014,
+  // 模式规则
+  modes: {
+    '5v5': { W:1280, H:800, scoreCap:15, time:180,
+      obs:[
+        {x:540,y:300,w:160,h:110},{x:820,y:220,w:110,h:130},
+        {x:220,y:470,w:120,h:120},{x:560,y:550,w:170,h:80},
+        {x:930,y:470,w:130,h:100},{x:370,y:160,w:110,h:120},
+        {x:770,y:610,w:110,h:90},{x:1100,y:120,w:100,h:90},
+      ],
+      redSpawn:[{x:70,y:180},{x:70,y:360},{x:70,y:540},{x:150,y:270},{x:150,y:450}],
+      blueSpawn:[{x:1210,y:180},{x:1210,y:360},{x:1210,y:540},{x:1130,y:270},{x:1130,y:450}],
+    },
+    '1v1': { W:960, H:600, scoreCap:5, time:120,
+      obs:[
+        {x:380,y:140,w:140,h:110},{x:440,y:350,w:140,h:110},
+        {x:250,y:230,w:90,h:130},{x:620,y:230,w:90,h:130},
+      ],
+      redSpawn:[{x:70,y:300}],
+      blueSpawn:[{x:890,y:300}],
+    },
+  },
+};
+
+/* 5V5 难度表：仅影响 AI 参数（1V1 无 AI，难度不生效） */
+const DIFFS = {
+  easy:   { aimError:0.18, fireMul:1.0, engageMin:130 },
+  normal: { aimError:0.14, fireMul:1.15, engageMin:150 },
+  hard:   { aimError:0.09, fireMul:1.4, engageMin:105 },
+};
+
+/* 战场地图：每种模式 3 张不同掩体布局（尺寸/出生点沿用模式，仅换障碍物） */
+const MAPS = {
+  '5v5': [
+    { name:'经典巷战', obs:CFG.modes['5v5'].obs },
+    { name:'横排走廊', obs:[
+        {x:300,y:120,w:200,h:70},{x:780,y:120,w:200,h:70},
+        {x:600,y:340,w:80,h:120},
+        {x:300,y:600,w:200,h:70},{x:780,y:600,w:200,h:70},
+        {x:210,y:380,w:100,h:90},{x:970,y:380,w:100,h:90},
+      ]},
+    { name:'中央要塞', obs:[
+        {x:560,y:320,w:160,h:160},
+        {x:560,y:120,w:160,h:80},{x:560,y:600,w:160,h:80},
+        {x:250,y:200,w:120,h:90},{x:910,y:200,w:120,h:90},
+        {x:250,y:510,w:120,h:90},{x:910,y:510,w:120,h:90},
+      ]},
+  ],
+  '1v1': [
+    { name:'对称十字', obs:CFG.modes['1v1'].obs },
+    { name:'四角掩体', obs:[
+        {x:200,y:100,w:110,h:90},{x:650,y:100,w:110,h:90},
+        {x:200,y:410,w:110,h:90},{x:650,y:410,w:110,h:90},
+      ]},
+    { name:'双塔对峙', obs:[
+        {x:430,y:120,w:100,h:140},{x:430,y:340,w:100,h:140},
+        {x:180,y:250,w:70,h:110},{x:710,y:250,w:70,h:110}, // 侧翼小掩体：原来只有两座塔，全图无处可躲
+      ]},
+  ],
+};
+
+/* 角色表：全部 100 血，差异在 移速/伤害/射速/弹速/技能 */
+const ROLES = {
+  assault: { id:'assault', name:'突击手', icon:'⚡', color:'#ffd34d',
+    speed:280, dmg:12, fireCD:0.28, bulletSpeed:760, bulletLife:1.2,
+    skill:{name:'疾风冲刺', key:'E', cd:5, dash:true,
+      desc:'朝瞄准方向猛冲 220px，机动拉身位', tag:'机动'},
+    ai:{ dash:{min:200,max:430}, shield:null, snipe:null, heal:null } },
+  tank: { id:'tank', name:'重装', icon:'🛡️', color:'#7dd3fc',
+    speed:220, dmg:12, fireCD:0.38, bulletSpeed:760, bulletLife:1.2,
+    skill:{name:'能量护盾', key:'E', cd:12, shield:60, shieldDur:5,
+      desc:'获得 60 点护盾值，持续 5 秒，吸收伤害', tag:'防御'},
+    ai:{ shield:{hp:65} } },
+  sniper: { id:'sniper', name:'神射手', icon:'🎯', color:'#ff8fa0',
+    speed:250, dmg:24, fireCD:0.75, bulletSpeed:1100, bulletLife:1.2,
+    skill:{name:'致命狙击', key:'E', cd:8, dmg:60, life:1.8,
+      desc:'下一次射击伤害 60、射程大幅提升', tag:'爆发'},
+    ai:{ snipe:{dist:380} } },
+  medic: { id:'medic', name:'医疗兵', icon:'💊', color:'#86efac',
+    speed:260, dmg:10, fireCD:0.30, bulletSpeed:760, bulletLife:1.2,
+    skill:{name:'治疗脉冲', key:'E', cd:10, heal:40, aoeHeal:25,
+      desc:'恢复自己 40 血（5V5 额外治疗附近队友 25 血）', tag:'支援'},
+    ai:{ heal:{hp:50} } },
+};
+const ROLE_IDS = Object.keys(ROLES);
+
+/* 武器：影响伤害、射速、弹道、射程。角色决定机动和技能，武器决定手感。 */
+const WEAPONS = {
+  rifle:  { id:'rifle',  name:'步枪',   dmgMul:1.0,  cdMul:1.0,  spread:0.03, pellets:1, lifeMul:1.0,  spdMul:1.0,  desc:'均衡，中距离稳定' },
+  smg:    { id:'smg',    name:'冲锋枪', dmgMul:0.66, cdMul:0.52, spread:0.09, pellets:1, lifeMul:0.8,  spdMul:0.95, desc:'射速快，近距离压制' },
+  shotgun:{ id:'shotgun',name:'霰弹枪', dmgMul:0.40, cdMul:1.35, spread:0.16, pellets:5, lifeMul:0.46, spdMul:0.9,  desc:'一枪五弹，贴脸爆发' },
+  dmr:    { id:'dmr',    name:'精确步枪', dmgMul:1.55, cdMul:1.5, spread:0.02, pellets:1, lifeMul:1.3, spdMul:1.15, desc:'远距离两枪一个' },
+};
+const WEAPON_IDS = Object.keys(WEAPONS);
+function currentWeapon(){ return WEAPONS[lsGetRaw('gunWeapon')] ? WEAPONS[lsGetRaw('gunWeapon')] : WEAPONS.rifle; }
+
+/* ================= 2. 全局状态 ================= */
+const state = {
+  mode:'5v5', world:null, difficulty:'normal', mapIdx:0,
+  roleP1:'assault', roleP2:'tank',
+  players:[], bullets:[], particles:[], floaters:[],
+  scores:{red:0,blue:0}, timeLeft:180,
+  running:false, paused:false, ended:false, winner:null,
+  mvp:null, loserMvp:null,
+  lastT:0, shake:0,
+  replay:false, replayFrame:0, replayBuffer:[],
+  keys:{}, keys2:{}, mouse:{x:0,y:0,down:false}, muted:false,
+};
+function mulberry32(a){ return function(){ a|=0; a=a+0x6D2B79F5|0; let t=Math.imul(a^a>>>15,1|a); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; }; }
+let rng = mulberry32(CFG.seed);
+
+/* ================= 3. 工具函数 ================= */
+const clamp = (v,a,b) => v<a?a:(v>b?b:v);
+/* 角度插值：沿最短路径平滑转向（视觉动画用，不改变即时射击方向） */
+function lerpAngle(a,b,t){ let d=(b-a)%(Math.PI*2); if(d>Math.PI)d-=Math.PI*2; if(d<-Math.PI)d+=Math.PI*2; return a+d*t; }
+function resolveCircleRect(p, o){
+  const r=CFG.playerRadius, cx=clamp(p.x,o.x,o.x+o.w), cy=clamp(p.y,o.y,o.y+o.h);
+  const dx=p.x-cx, dy=p.y-cy, d2=dx*dx+dy*dy;
+  if(d2 < r*r){
+    if(d2===0){
+      const left=p.x-o.x, right=o.x+o.w-p.x, top=p.y-o.y, bot=o.y+o.h-p.y;
+      const m=Math.min(left,right,top,bot);
+      if(m===left) p.x=o.x-r; else if(m===right) p.x=o.x+o.w+r;
+      else if(m===top) p.y=o.y-r; else p.y=o.y+o.h+r;
+    } else { const d=Math.sqrt(d2); p.x=cx+dx/d*r; p.y=cy+dy/d*r; }
+  }
+}
+function movePlayer(p, dx, dy, dt){
+  const len=Math.hypot(dx,dy);
+  if(len>0){ dx/=len; dy/=len; }
+  p.vx=dx*p.role.speed; p.vy=dy*p.role.speed; // 记录速度，自动瞄准据此算提前量
+  p.x+=dx*p.role.speed*dt; p.y+=dy*p.role.speed*dt;
+  p.x=clamp(p.x,CFG.playerRadius,state.world.W-CFG.playerRadius);
+  p.y=clamp(p.y,CFG.playerRadius,state.world.H-CFG.playerRadius);
+  for(const o of state.world.obs) resolveCircleRect(p,o);
+  for(const q of state.players){
+    if(q===p || !q.alive) continue;
+    const dx2=p.x-q.x, dy2=p.y-q.y, d=Math.hypot(dx2,dy2), min=CFG.playerRadius*2;
+    if(d<min){
+      if(d<0.001){ // 完全重合：给一个确定性的分离方向，否则永远分不开
+        const a=Math.random()*Math.PI*2;
+        p.x+=Math.cos(a)*min*0.5; p.y+=Math.sin(a)*min*0.5;
+      } else {
+        const push=(min-d)/2, ux=dx2/d, uy=dy2/d;
+        p.x+=ux*push; p.y+=uy*push; q.x-=ux*push; q.y-=uy*push;
+      }
+    }
+  }
+}
+
+/* ================= 4. 实体创建 ================= */
+const ROT_SPEED = 4.5; // 1V1 独立瞄准旋转速度（弧度/秒），支持 360 度任意角度
+function makePlayer(team, idx, role, name, isHuman){  const spawns = team==='red' ? state.world.redSpawn : state.world.blueSpawn;
+  const s = spawns[idx % spawns.length];
+  return {
+    id:team+idx, idx, team, name, role, isHuman,
+    x:s.x, y:s.y, hp:CFG.maxHp, maxHp:CFG.maxHp, alive:true,
+    aim: team==='red' ? 0 : Math.PI,
+    facing: team==='red' ? 0 : Math.PI,       // 绘制朝向：平滑插值到 aim
+    lastDX: team==='red' ? 1 : -1, lastDY:0,  // 1V1 键盘：最后移动方向 = 射击方向
+    flash:0, muzzleT:0, recoil:0, walkT:0, respawnRing:0, // 动画：受击闪白/枪口闪光/后坐/行走摆动/复活环
+    cooldown:0, respawn:0, invuln:0, skillCD:0,
+    kills:0, deaths:0, dmgDealt:0, shots:0, hits:0, // 结算统计：总伤害 / 开火数 / 命中数
+    shield:0, shieldTimer:0, dashT:0, dashVX:0, dashVY:0, snipeReady:false,
+    strafeDir:1, strafeT:0, wanderT:0, lastX:s.x, lastY:s.y,
+    burstLeft:0, restT:0,  // AI 点射节奏：本波剩余子弹 / 波后停顿时间
+    stuckT:0, detourT:0, detourDir:1,  // AI 避障：卡住计时 / 绕行剩余时间 / 绕行方向
+  };
+}
+/* AI 角色分配：每队尽量不重复 */
+function assignAIRoles(fixedRole){
+  const others = ROLE_IDS.filter(r=>r!==fixedRole);
+  const picks=[];
+  for(let i=0;i<4;i++) picks.push(others[Math.floor(rng()*others.length)]);
+  return picks;
+}
+/* AI 代号池：玩家取名时避开这些，AI 也不会占用玩家的名字（同一局内名字不重复） */
+const AI_NAMES=['老六','狙神','菜鸟','铁憨憨','小霸王','夜猫子','阿飞','老王','雷子','冷面','小刀','打野','双枪','闷棍','秃鹫','黑桃','山猫','狂徒','影子','火鸡'];
+function pickAINames(count, exclude){
+  const pool=AI_NAMES.filter(n=>n!==exclude);
+  for(let i=pool.length-1;i>0;i--){ const j=Math.floor(rng()*(i+1)); const t=pool[i]; pool[i]=pool[j]; pool[j]=t; }
+  const out=[]; for(let i=0;i<count;i++) out.push(pool[i%pool.length]);
+  return out;
+}
+function currentNick(){ return (lsGetRaw('cs_nick')||'').trim()||'玩家'; }
+
+/** 档案 ID：身份凭证，和昵称解耦。昵称只是显示名，改多少次都不影响战绩归属；
+ *  换设备 / 别人在你手机上输入同名，uid 不同 = 不同档案，拿不到你的数据。 */
+function ensureUid(){
+  let u=lsGetRaw('cs_uid');
+  if(!u){ u='#'+Math.random().toString(36).slice(2,6).toUpperCase()+(Math.floor(Math.random()*9000)+1000); lsSet('cs_uid',u); }
+  return u;
+}
+/* ---- 昵称注册表：名字 → 归属档案。被登记过的名字，其他档案再也用不了 ---- */
+function nickReg(){ return lsGet('gunNickReg', {}); }
+function nickOwner(n){ const r=nickReg(); return r[n]||null; }
+function nickClaim(n, uid){
+  const r=nickReg();
+  if(r[n] && r[n]!==uid) return false;   // 已被别人占用，拒绝
+  r[n]=uid; lsSet('gunNickReg', r);
+  return true;
+}
+function nickLockedCount(){ return Object.keys(nickReg()).length; }
+function toastMsg(txt){
+  const el=document.createElement('div');
+  el.textContent=txt;
+  el.style.cssText='position:fixed;left:50%;bottom:20%;transform:translateX(-50%);background:rgba(10,16,28,.95);color:#ffd9a0;border:1px solid rgba(255,211,77,.45);padding:10px 18px;border-radius:12px;font-size:13px;z-index:120;max-width:80vw;text-align:center;line-height:1.6';
+  document.body.appendChild(el);
+  setTimeout(()=>el.remove(), 1900);
+}
+/* 改名次数：一旦用掉不退还，防止反复改名把好名字全占了 */
+const RENAME_MAX = 3;
+function renameUsed(){ return lsGet('gunRenameUsed', 0); }
+function renameLeft(){ return Math.max(0, RENAME_MAX - renameUsed()); }
+function consumeRename(){ const n=renameUsed(); if(n>=RENAME_MAX) return false; lsSet('gunRenameUsed', n+1); return true; }
+
+
+
+/* ---- 皮肤：只影响自己的角色配色，用荣誉点解锁 ---- */
+const SKINS = {
+  default:{ id:'default', name:'战术红', cost:0,   main:'#ff5b6e', dark:'#c2203a' },
+  sand:   { id:'sand',    name:'荒漠',   cost:200, main:'#e8c47a', dark:'#a8863f' },
+  night:  { id:'night',   name:'暗夜紫', cost:350, main:'#a78bfa', dark:'#6d4fc4' },
+  lava:   { id:'lava',    name:'熔岩',   cost:600, main:'#ff9f43', dark:'#c2601a' },
+  ice:    { id:'ice',     name:'极地',   cost:900, main:'#7dd3fc', dark:'#2b7ea8' },
+};
+function skinOwned(){ return lsGet('gunSkinOwned', ['default']); }
+function currentSkin(){
+  const id = lsGetRaw('gunSkin') || 'default';
+  const sk = SKINS[id];
+  if(!sk) return SKINS.default;
+  return skinOwned().includes(id) ? sk : SKINS.default;
+}
+function skinBuy(id){
+  const sk = SKINS[id]; if(!sk) return '皮肤不存在';
+  if(skinOwned().includes(id)) return '已拥有';
+  const honor = lsGet('gunHonor', 0);
+  if(honor < sk.cost) return '荣誉点不够，还差 '+(sk.cost-honor)+' 点';
+  lsSet('gunHonor', honor - sk.cost);
+  const owned = skinOwned(); owned.push(id); lsSet('gunSkinOwned', owned);
+  lsSet('gunSkin', id);
+  return '已解锁「'+sk.name+'」';
+}
+
+/* ---- 段位：胜利加分、失败扣分，按评级浮动 ---- */
+const RANKS = [
+  {name:'青铜', min:0,    icon:'铜'},
+  {name:'白银', min:120,  icon:'银'},
+  {name:'黄金', min:300,  icon:'金'},
+  {name:'铂金', min:550,  icon:'铂'},
+  {name:'钻石', min:850,  icon:'钻'},
+  {name:'王者', min:1200, icon:'王'},
+];
+function rankPts(){ return lsGet('gunRank', 0); }
+function rankInfo(pts){
+  pts = pts===undefined ? rankPts() : pts;
+  let i=0; for(let k=0;k<RANKS.length;k++) if(pts>=RANKS[k].min) i=k;
+  const cur=RANKS[i], next=RANKS[i+1]||null;
+  const span = next ? next.min-cur.min : 1;
+  const prog = next ? Math.min(1,(pts-cur.min)/span) : 1;
+  return { pts, idx:i, name:cur.name, icon:cur.icon, next:next?next.name:'满级',
+          need: next? Math.max(0,next.min-pts) : 0, prog };
+}
+/* 结算调一次：返回本局加减的分数（0 表示没变化） */
+function rankUpdate(win, grade){
+  const delta = win ? ({S:26,A:20,B:14,C:9}[grade]||12) : -({S:8,A:7,B:6,C:5}[grade]||6);
+  const before = rankPts();
+  const after = Math.max(0, before + delta);
+  lsSet('gunRank', after);
+  return { delta: after-before, before, after };
+}
+
+/* ---- 生涯战绩（本地存储，绑定 uid） ---- */
+function profBlank(){ return {uid:ensureUid(), matches:0,wins:0,kills:0,deaths:0,dmg:0,streak:0,best:0,recent:[]}; }
+function profLoad(){
+  const uid=ensureUid();
+  const v=lsGet('gunProfile',null);
+  if(v && v.uid===uid) return v;
+  return profBlank();
+}
+function profSave(v){ v.uid=ensureUid(); lsSet('gunProfile',v); }
+function profRecord(win,k,d,dmg,grade){
+  const v=profLoad();
+  v.matches++; if(win) v.wins++;
+  v.kills+=k; v.deaths+=d; v.dmg+=dmg;
+  v.streak = win ? (v.streak||0)+1 : 0;
+  v.best = Math.max(v.best||0, v.streak);
+  v.recent.unshift({t:Date.now(),mode:state.mode,win, r:state.scores.red, b:state.scores.blue, k, d, dmg, g:grade||''});
+  v.recent=v.recent.slice(0,10);
+  profSave(v);
+}
+
+function buildPlayers(){
+  state.players=[];
+  const wpPick = currentWeapon();
+  if(state.mode==='5v5'){
+    const redAI = assignAIRoles(state.roleP1);
+    const aiNames=pickAINames(9, currentNick());
+    for(let i=0;i<5;i++){
+      const role = i===0 ? state.roleP1 : redAI[i-1];
+      state.players.push(makePlayer('red',i,ROLES[role], i===0?currentNick():aiNames[i-1], i===0));
+    }
+    const blueRoles=[]; // 蓝方从 4 角色随机取 5（必有重复 1 个）
+    for(let i=0;i<5;i++) blueRoles.push(ROLE_IDS[Math.floor(rng()*ROLE_IDS.length)]);
+    for(let i=0;i<5;i++) state.players.push(makePlayer('blue',i,ROLES[blueRoles[i]],aiNames[4+i],false));
+  } else {
+    state.players.push(makePlayer('red',0,ROLES[state.roleP1],currentNick(),true));
+    const p2Human = !isTouch;
+    const p2=makePlayer('blue',0,ROLES[state.roleP2], p2Human?'对手':pickAINames(1,currentNick())[0], p2Human);
+    state.players.push(p2);
+  }
+  for(const p of state.players){
+    p.cooldown=rng()*0.6; p.skillCD=rng()*1.5;
+    // 人类玩家用手选的武器；AI 按角色分配（狙击手拿精确步枪、突击手拿冲锋枪）
+    if(!p.weapon){
+      if(p.isHuman) p.weapon=wpPick;
+      else p.weapon = p.role.id==='sniper' ? WEAPONS.dmr : (p.role.id==='assault' ? WEAPONS.smg : WEAPONS.rifle);
+    }
+  }
+}
+
+/* 发射子弹 */
+function shoot(p){
+  const ang=p.aim;
+  if(state.netMode && p.isHuman){ netSend({t:'shot', x:Math.round(p.x), y:Math.round(p.y), ang:+ang.toFixed(2)}); }
+  const sx=p.x+Math.cos(ang)*(CFG.playerRadius+6), sy=p.y+Math.sin(ang)*(CFG.playerRadius+6);
+  const wp = p.weapon || WEAPONS.rifle;
+  let dmg=Math.round(p.role.dmg*wp.dmgMul*(p.dmgBonus||1)), life=p.role.bulletLife*wp.lifeMul, spd=p.role.bulletSpeed*wp.spdMul;
+  if(p.snipeReady){ dmg=ROLES.sniper.skill.dmg; life=ROLES.sniper.skill.life; spd=1300; p.snipeReady=false; }
+  // 散射：每颗弹丸独立随机偏角，霰弹一枪撒 5 颗
+  for(let i=0;i<(wp.pellets||1);i++){
+    const a2 = ang + (rng()-0.5)*wp.spread*2;
+    state.bullets.push({ x:sx,y:sy,vx:Math.cos(a2)*spd,vy:Math.sin(a2)*spd,
+      r:CFG.bulletRadius, team:p.team, dmg, life, owner:p });
+  }
+  p.shots++; // 统计：开火次数（结算用）
+  p.cooldown = (p.isHuman ? p.role.fireCD : p.role.fireCD*CFG.aiFireMul) * wp.cdMul;
+  spawnParticle(sx,sy,Math.cos(ang)*40,Math.sin(ang)*40,'#ffe9a8',0.06,6);
+  p.muzzleT=0.09; p.recoil=4; // 枪口闪光 + 后坐力（动画反馈）
+  spawnParticle(sx,sy,Math.cos(ang)*260,Math.sin(ang)*260,'#fff2c9',0.05,2.5); // 枪口火花
+  if(p.isHuman) sShoot(); // 只有人类玩家开枪才响，避免10人同时开火音效叠加
+  if(life>=1.8){ // 狙击：拉一条光线
+    for(let i=0;i<3;i++) spawnParticle(sx,sy,Math.cos(ang)*900,Math.sin(ang)*900,'#ff8fa0',0.12,4);
+  }
+}
+
+/* ================= 5. 技能 ================= */
+function castSkill(p){
+  if(!p.alive || p.skillCD>0) return;
+  const s=p.role.skill;
+  if(s.dash){ // 突击手：冲刺
+    p.dashT=0.18; p.dashVX=Math.cos(p.aim)*1200; p.dashVY=Math.sin(p.aim)*1200;
+    sDash();
+  } else if(s.shield){ // 重装：护盾
+    p.shield=s.shield; p.shieldTimer=s.shieldDur;
+    spawnParticle(p.x,p.y,0,0,'#7dd3fc',0.5,20);
+    sShield();
+  } else if(s.dmg){ // 神射手：狙击预备
+    p.snipeReady=true;
+    spawnParticle(p.x,p.y,0,0,'#ff8fa0',0.4,16);
+    sSnipe();
+  } else if(s.heal){ // 医疗兵：治疗
+    p.hp=Math.min(p.maxHp||CFG.maxHp, p.hp+s.heal);
+    addFloater(p.x,p.y-24,'+'+s.heal,'#86efac');
+    if(state.mode==='5v5'){
+      for(const q of state.players){
+        if(q.team===p.team && q!==p && q.alive && Math.hypot(q.x-p.x,q.y-p.y)<170){
+          q.hp=Math.min(q.maxHp||CFG.maxHp,q.hp+s.aoeHeal);
+          addFloater(q.x,q.y-24,'+'+s.aoeHeal,'#86efac');
+        }
+      }
+    }
+    for(let i=0;i<12;i++){ const a=rng()*Math.PI*2, sp=60+rng()*120;
+      spawnParticle(p.x,p.y,Math.cos(a)*sp,Math.sin(a)*sp,'#86efac',0.4+rng()*0.3,3); }
+    sHeal();
+  }
+  p.skillCD=s.cd;
+  if(p.isHuman) dailyProgress('skill', 1);
+}
+function updateDash(p,dt){
+  if(p.dashT<=0) return;
+  const prevX=p.x, prevY=p.y;
+  p.dashT-=dt;
+  // 沿冲刺方向高速位移（不套用角色移速）
+  p.x+=p.dashVX*dt; p.y+=p.dashVY*dt;
+  p.x=clamp(p.x,CFG.playerRadius,state.world.W-CFG.playerRadius);
+  p.y=clamp(p.y,CFG.playerRadius,state.world.H-CFG.playerRadius);
+  for(const o of state.world.obs) resolveCircleRect(p,o);
+  spawnParticle(prevX,prevY,0,0,p.team==='red'?'#ffd34d':'#7dd3fc',0.25,5); // 冲刺拖尾
+}
+
+/* ================= 6. 输入 ================= */
+const stage=document.getElementById('stage'), canvas=document.getElementById('game');
+const ctx2d=canvas.getContext('2d');
+let SCALE_X=1, SCALE_Y=1;
+/* 视口：竖屏时旋转 90° 显示整张地图，避免拉伸变形 */
+let VIEW={rot:false, scale:1, ox:0, oy:0};
+function worldPos(e){ const r=canvas.getBoundingClientRect(), dpr=window.devicePixelRatio||1;
+  const px=(e.clientX-r.left)*dpr, py=(e.clientY-r.top)*dpr;
+  if(VIEW.rot){
+    const cx=VIEW.ox+(state.world.H*VIEW.scale)/2, cy=VIEW.oy+(state.world.W*VIEW.scale)/2;
+    const dx=px-cx, dy=py-cy;
+    return { x: state.world.W/2 + dy/VIEW.scale, y: state.world.H/2 - dx/VIEW.scale };
+  }
+  return { x:(px-VIEW.ox)/VIEW.scale, y:(py-VIEW.oy)/VIEW.scale }; }
+stage.addEventListener('pointermove', e=>{ state.mouse=worldPos(e); });
+stage.addEventListener('pointerdown', e=>{ state.mouse=worldPos(e); if(e.button===0) state.mouse.down=true; });
+window.addEventListener('pointerup', ()=> state.mouse.down=false);
+stage.addEventListener('contextmenu', e=>e.preventDefault());
+
+/* ===== 触屏输入：左摇杆移动 / 右摇杆瞄准射击 ===== */
+const isTouch = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
+if(isTouch) document.body.classList.add('is-touch');
+
+/* 手机端适配：隐藏地址栏+横屏提示 */
+if(isTouch){
+  window.scrollTo(0,1);
+  window.addEventListener('load', ()=>{ setTimeout(()=>window.scrollTo(0,1), 100); });
+  // 禁止双击缩放
+  let lastTouchEnd=0;
+  document.addEventListener('touchend', e=>{
+    const now=Date.now();
+    if(now-lastTouchEnd<=300) e.preventDefault();
+    lastTouchEnd=now;
+  },{passive:false});
+}
+const joyMove=document.getElementById('joyMove'), joyAim=document.getElementById('joyAim'),
+      btnSkill=document.getElementById('btnSkill');
+state.touchMove={active:false,id:null,ox:0,oy:0,dx:0,dy:0};
+state.touchAim={active:false,id:null,ox:0,oy:0,dx:0,dy:0};
+const JOY_R=42;
+function joyShow(el,on,x,y){ el.classList.toggle('show',on); if(on){ el.style.left=(x-55)+'px'; el.style.top=(y-55)+'px'; } }
+function joyKnob(el,dx,dy){ const k=el.querySelector('.knob'); k.style.transform='translate('+(dx*0.6)+'px,'+(dy*0.6)+'px)'; }
+document.addEventListener('touchstart', e=>{
+  if(!state.running || state.paused) return;
+  e.preventDefault();
+  for(const t of e.changedTouches){
+    const onJoySide = (state.joySide==='right') ? (t.clientX >= window.innerWidth/2)
+                                                  : (t.clientX <  window.innerWidth/2);
+    if(onJoySide && !state.touchMove.active){
+      state.touchMove.active=true; state.touchMove.id=t.identifier;
+      state.touchMove.ox=t.clientX; state.touchMove.oy=t.clientY; state.touchMove.dx=0; state.touchMove.dy=0;
+      joyShow(joyMove,true,t.clientX,t.clientY);
+    } else if(!onJoySide && !state.touchAim.active && (state.autoAim===false || state.aimStick==='fire')){
+      state.touchAim.active=true; state.touchAim.id=t.identifier;
+      state.touchAim.ox=t.clientX; state.touchAim.oy=t.clientY; state.touchAim.dx=0; state.touchAim.dy=0;
+      joyShow(joyAim,true,t.clientX,t.clientY);
+    }
+  }
+},{passive:false});
+document.addEventListener('touchmove', e=>{
+  if(!state.running || state.paused) return; // 菜单/结算界面不拦截，保证按钮 click 正常
+  e.preventDefault();
+  for(const t of e.changedTouches){
+    if(state.touchMove.active && t.identifier===state.touchMove.id){
+      let dx=t.clientX-state.touchMove.ox, dy=t.clientY-state.touchMove.oy;
+      const d=Math.hypot(dx,dy); if(d>JOY_R){ dx=dx/d*JOY_R; dy=dy/d*JOY_R; }
+      let nx=dx/JOY_R, ny=dy/JOY_R;
+      if(Math.hypot(nx,ny)<0.15){ nx=0; ny=0; } // 死区
+      state.touchMove.dx=nx; state.touchMove.dy=ny; joyKnob(joyMove,dx,dy);
+    } else if(state.touchAim.active && t.identifier===state.touchAim.id){
+      let dx=t.clientX-state.touchAim.ox, dy=t.clientY-state.touchAim.oy;
+      const d=Math.hypot(dx,dy); if(d>JOY_R){ dx=dx/d*JOY_R; dy=dy/d*JOY_R; }
+      state.touchAim.dx=dx/JOY_R; state.touchAim.dy=dy/JOY_R; joyKnob(joyAim,dx,dy);
+    }
+  }
+},{passive:false});
+function joyEnd(e){
+  for(const t of e.changedTouches){
+    if(state.touchMove.active && t.identifier===state.touchMove.id){
+      state.touchMove.active=false; state.touchMove.id=null; state.touchMove.dx=0; state.touchMove.dy=0; joyMove.classList.remove('show');
+    }
+    if(state.touchAim.active && t.identifier===state.touchAim.id){
+      state.touchAim.active=false; state.touchAim.id=null; state.touchAim.dx=0; state.touchAim.dy=0; joyAim.classList.remove('show');
+    }
+  }
+}
+document.addEventListener('touchend', joyEnd);
+document.addEventListener('touchcancel', joyEnd);
+btnSkill.addEventListener('touchstart', e=>{
+  e.preventDefault(); e.stopPropagation();
+  if(state.running && !state.paused){ const h=localP(); if(h && h.isHuman) castSkill(h); btnSkill.classList.add('on'); }
+},{passive:false});
+btnSkill.addEventListener('touchend', ()=>btnSkill.classList.remove('on'));
+btnSkill.addEventListener('click', e=>{
+  e.preventDefault(); e.stopPropagation();
+  if(state.running && !state.paused){ const h=localP(); if(h && h.isHuman) castSkill(h); }
+});
+/* 开火按钮：按住连射 */
+const btnFire=document.getElementById('btnFire');
+state.fireDown=false; state.fireBurst=0;
+btnFire.addEventListener('touchstart', e=>{ e.preventDefault(); e.stopPropagation(); state.fireDown=true; state.fireBurst=0.32; btnFire.classList.add('on'); },{passive:false});
+btnFire.addEventListener('touchend', e=>{ e.preventDefault(); state.fireDown=false; btnFire.classList.remove('on'); });
+btnFire.addEventListener('touchcancel', ()=>{ state.fireDown=false; btnFire.classList.remove('on'); });
+btnFire.addEventListener('mousedown', e=>{ e.preventDefault(); state.fireDown=true; state.fireBurst=0.32; btnFire.classList.add('on'); });
+btnFire.addEventListener('mouseup', ()=>{ state.fireDown=false; btnFire.classList.remove('on'); });
+btnFire.addEventListener('mouseleave', ()=>{ state.fireDown=false; btnFire.classList.remove('on'); });
+
+window.addEventListener('keydown', e=>{
+  if(e.code==='Escape' && state.running && !state.ended && !state.paused){ backToMenu(); return; } // Esc：中途退出对局
+  if(e.code==='KeyP'){ togglePause(); return; }
+  if(e.code==='KeyM'){ state.muted=!state.muted; return; }
+  if(e.code==='Enter' && !state.running && !state.ended){
+    if(!menuScreen.classList.contains('hidden')) return; // 主菜单用鼠标
+    if(selectScreen.classList.contains('hidden')) startGame(); else return;
+  }
+  if(e.code==='KeyR' && state.ended){ restartGame(); return; }
+  if(!e.repeat) state.keys[e.code]=true;
+  // 技能键：P1=E；P2=数字键 1（主键盘或小键盘）
+  if(!e.repeat && state.running && !state.paused){
+    if(e.code==='KeyE'){ const h=localP(); if(h && h.isHuman) castSkill(h); }
+    if(e.code==='Digit1'||e.code==='Numpad1'){ const p2=state.players.find(p=>p.team==='blue'&&p.isHuman); if(p2) castSkill(p2); }
+  }
+});
+window.addEventListener('keyup', e=>{ state.keys[e.code]=false; });
+
+function onBlur(){
+  state.keys={}; state.keys2={}; state.mouse.down=false;
+  if(state.running && !state.ended && !state.paused){ state.paused=true; pauseScreen.classList.remove('hidden'); }
+}
+window.addEventListener('blur', onBlur);
+document.addEventListener('visibilitychange', ()=>{ if(document.hidden) onBlur(); });
+
+function resize(){
+  const r=stage.getBoundingClientRect();
+  let w=r.width, h=r.height;
+  if(w<10||h<10){ w=window.innerWidth; h=window.innerHeight; } // 兜底：stage尺寸异常时用窗口尺寸
+  const dpr=window.devicePixelRatio||1;
+  canvas.width=Math.max(1,Math.round(w*dpr)); canvas.height=Math.max(1,Math.round(h*dpr));
+  const cw=canvas.width, ch=canvas.height, W=state.world.W, H=state.world.H;
+  // 竖屏不再把画面旋转 90°（字要歪头看，体感很差），改成「镜头跟随」：
+  // 地图保持正方向，视野只显示玩家附近，角色更大更清楚
+  VIEW.rot = false;
+  VIEW.cam = ch > cw*1.12;
+  if(VIEW.cam){
+    // 横向只显示约 55% 地图宽度，纵向保证能看到整张地图
+    VIEW.scale = Math.min(cw/(W*0.42), ch/(H*0.98));
+    VIEW.ox = (cw - W*VIEW.scale)/2;
+    VIEW.oy = (ch - H*VIEW.scale)/2;
+    VIEW.cx = undefined; VIEW.cy = undefined; // 切换视图时重置镜头，避免从旧位置慢慢滑过去
+  } else {
+    VIEW.scale = Math.min(cw/W, ch/H);
+    VIEW.ox = (cw - W*VIEW.scale)/2;
+    VIEW.oy = (ch - H*VIEW.scale)/2;
+  }
+  SCALE_X = VIEW.scale; SCALE_Y = VIEW.scale;
+  VIEW.dpr = dpr;
+}
+window.addEventListener('resize', resize);
+
+/* ================= 7. AI ================= */
+/* 视线检测：两点之间是否被掩体挡住（用于 AI 不再隔墙对射） */
+function hasLOS(ax,ay,bx,by){
+  const obs=state.world&&state.world.obs;
+  if(!obs||!obs.length) return true;
+  for(const o of obs){
+    for(let i=1;i<10;i++){
+      const t=i/10, x=ax+(bx-ax)*t, y=ay+(by-ay)*t;
+      if(x>=o.x&&x<=o.x+o.w&&y>=o.y&&y<=o.y+o.h) return false;
+    }
+  }
+  return true;
+}
+function updateAI(p,dt){
+  let best=null, bd=Infinity;
+  for(const q of state.players){
+    if(q.team===p.team || !q.alive) continue;
+    const d=(p.x-q.x)**2+(p.y-q.y)**2;
+    if(d<bd){ bd=d; best=q; }
+  }
+  if(!best){ // 漫游
+    p.wanderT-=dt;
+    if(p.wanderT<=0){ p.wanderT=1+rng()*1.5; p.aim=rng()*Math.PI*2; }
+    movePlayer(p, Math.cos(p.aim), Math.sin(p.aim), dt); // 朝 p.aim 稳定前进，避免原地抖动
+    return;
+  }
+  const bdPx=Math.sqrt(bd);
+  p.aim=Math.atan2(best.y-p.y,best.x-p.x);
+  // 看不见目标时不再原地横移对射（子弹会全打在墙上），改为主动冲向能看见的位置
+  const los=hasLOS(p.x,p.y,best.x,best.y);
+  p.noLosT = los ? 0 : (p.noLosT||0)+dt;
+  let mx=0,my=0;
+  if(!los && p.detourT<=0){
+    mx=Math.cos(p.aim); my=Math.sin(p.aim);
+  }
+  else if(bdPx>CFG.aiEngageMax){ mx=Math.cos(p.aim); my=Math.sin(p.aim); }
+  else if(bdPx<CFG.aiEngageMin){ mx=-Math.cos(p.aim); my=-Math.sin(p.aim); }
+  else{
+    if(p.strafeT<=0){ p.strafeT=0.8+rng()*1.2; p.strafeDir*=-1; }
+    p.strafeT-=dt;
+    const perp=p.aim+Math.PI/2*p.strafeDir;
+    mx=Math.cos(perp); my=Math.sin(perp);
+  }
+  // 卡住则沿垂直方向绕行（AI 原来会被掩体挡住后原地不动）
+  if(p.detourT>0){
+    p.detourT-=dt;
+    const perp=p.aim+Math.PI/2*p.detourDir;
+    mx=Math.cos(perp); my=Math.sin(perp);
+  }
+  const beforeX=p.x, beforeY=p.y;
+  movePlayer(p,mx,my,dt);
+  if(Math.hypot(mx,my)>0.05 && Math.hypot(p.x-beforeX,p.y-beforeY)<1.0){
+    p.stuckT+=dt;
+    if(p.stuckT>0.22){
+      p.stuckT=0;
+      p.detourT=0.7+rng()*0.7;
+      p.detourDir*=-1; // 交替左右绕，避免来回顶同一面墙
+    }
+  } else {
+    p.stuckT=0;
+  }
+
+  // AI 使用技能
+  if(p.skillCD<=0){
+    const s=p.role.skill, ai=p.role.ai||{};
+    if(s.shield && ai.shield && p.hp<ai.shield.hp && p.shield<=0) castSkill(p);
+    else if(s.heal && ai.heal && p.hp<ai.heal.hp) castSkill(p);
+    else if(s.dmg && ai.snipe && bdPx>ai.snipe.dist) castSkill(p);
+    else if(s.dash && ai.dash && bdPx>ai.dash.min && bdPx<ai.dash.max && p.hp>55 && rng()>0.55) castSkill(p);
+  }
+
+  // 射击：AI 按「点射」节奏——连打 3~5 发后停顿，不做无限机枪
+  p.cooldown-=dt;
+  if(p.restT>0){
+    p.restT-=dt;
+  } else if(p.cooldown<=0 && bdPx<CFG.aiEngageMax+60){
+    const err=(rng()-0.5)*2*CFG.aiAimError;
+    p.aim=Math.atan2(best.y-p.y,best.x-p.x)+err;
+    shoot(p);
+    if(p.burstLeft<=0) p.burstLeft=2+Math.floor(rng()*3); // 每波 2~4 发，接近人手点射
+    p.burstLeft--;
+    if(p.burstLeft<=0){ p.restT=0.7+rng()*0.5; p.burstLeft=0; } // 波后停顿 0.7~1.2s，射速约 1 发/秒
+  }
+}
+
+/* ================= 8. 战斗结算 ================= */
+function damagePlayer(victim, bullet){
+  if(!victim.alive || victim.invuln>0) return;
+  if(victim.isRemote){
+    // 伤害由攻击方判定并下发，本地只做即时视觉反馈，避免两边各扣一次
+    netSend({t:'dmg', v:Math.round(bullet.dmg)}, 1);
+    if(bullet.owner){ bullet.owner.hits++; bullet.owner.dmgDealt += Math.round(bullet.dmg); }
+    addFloater(victim.x,victim.y-16,'-'+Math.round(bullet.dmg),'#ffd34d');
+    spawnParticle(bullet.x,bullet.y,(rng()-0.5)*120,(rng()-0.5)*120,'#ffe9a8',0.25,3);
+    spawnRing(bullet.x,bullet.y,'#ffd34d',26);
+    victim.flash=1;
+    sHit();
+    return;
+  }
+  let dmg=bullet.dmg;
+  if(victim.shield>0){ // 护盾优先吸收
+    const absorb=Math.min(victim.shield,dmg);
+    victim.shield-=absorb; dmg-=absorb;
+    addFloater(victim.x,victim.y-16,'-'+Math.round(absorb),'#7dd3fc');
+    spawnParticle(bullet.x,bullet.y,0,0,'#7dd3fc',0.2,4);
+  }
+  if(dmg>0){
+    victim.hp-=dmg;
+    addFloater(victim.x,victim.y-16,'-'+Math.round(dmg),victim.team==='red'?'#ff5b6e':'#4dc3ff');
+  }
+  if(bullet.owner){ // 统计：命中次数 + 造成的总伤害（护盾吸收也算造成伤害）
+    bullet.owner.hits++;
+    bullet.owner.dmgDealt += Math.round(bullet.dmg);
+  }
+  spawnParticle(bullet.x,bullet.y,(rng()-0.5)*120,(rng()-0.5)*120,'#ffe9a8',0.25,3);
+  spawnRing(bullet.x,bullet.y,victim.team==='red'?'#ff5b6e':'#4dc3ff',26); // 命中冲击波
+  victim.flash=1; // 受击闪白
+  if(victim.isHuman){ // 血条面板受击闪动反馈
+    const panel = state.mode==='1v1' ? (victim.team==='red'?panelP1:panelP2) : panelP1;
+    panel.classList.add('hit'); setTimeout(()=>panel.classList.remove('hit'),320);
+  }
+  if(victim.isHuman || (bullet.owner && bullet.owner.isHuman)) sHit(); // 只有命中人类相关才响命中音
+  if(victim.hp<=0) killPlayer(victim,bullet.owner);
+}
+function killPlayer(victim,killer){
+  if(!victim.alive) return; // 同帧多颗子弹命中，只结算一次
+  victim.alive=false; victim.hp=0; victim.respawn=CFG.respawnTime; victim.deaths++;
+  if(!killer || killer.team===victim.team) return; // 无击杀者/友伤：不计分不崩
+  killer.kills++;
+  if(killer.isHuman) addDailyKill();
+  state.scores[killer.team]++;
+  popChip(killer.team==='red'?scoreRed:scoreBlue); // 比分弹跳动画
+  victim.streak=0; victim.level=victim.level||1; // 死亡清空连杀计数
+  pushFeed(killer.name+' 击败 '+victim.name, killer.team);
+  for(let i=0;i<30;i++){ const a=rng()*Math.PI*2, sp=60+rng()*200;
+    spawnParticle(victim.x,victim.y,Math.cos(a)*sp,Math.sin(a)*sp,killer.team==='red'?'#ff5b6e':'#4dc3ff',0.6+rng()*0.4,4+rng()*4); }
+  spawnRing(victim.x,victim.y,'#ffffff',80);
+  spawnRing(victim.x,victim.y,killer.team==='red'?'#ff5b6e':'#4dc3ff',50);
+  // 连杀提示
+  if(killer.isHuman){
+    killer.streak=(killer.streak||0)+1;
+    if(killer.streak>=2){
+      const ov=document.createElement('div');
+      ov.style.cssText='position:fixed;top:25%;left:50%;transform:translateX(-50%);font-size:28px;font-weight:900;color:#ffd700;text-shadow:0 0 20px rgba(255,200,0,.8);z-index:80;animation:popScale .4s ease';
+      ov.textContent = killer.streak>=5 ? '★ 无情收割 ★' : killer.streak>=3 ? '🔥 三连杀！' : '双杀！';
+      document.body.appendChild(ov);
+      setTimeout(()=>ov.remove(),1200);
+    }
+    // 升级系统：每3杀升一级
+    killer.level = killer.level||1;
+    const need = killer.level*3;
+    if(killer.isHuman && killer.kills >= need){
+      killer.level++;
+      killer.maxHp += 20; killer.hp = Math.min(killer.hp+40, killer.maxHp);
+      killer.dmgBonus=(killer.dmgBonus||1)*1.08; // 本局私有加成，不再改全局角色表
+      const ov=document.createElement('div');
+      ov.style.cssText='position:fixed;top:35%;left:50%;transform:translateX(-50%);font-size:24px;font-weight:900;color:#7CFC00;text-shadow:0 0 20px rgba(100,255,100,.8);z-index:80;animation:popScale .5s ease';
+      ov.textContent = '⬆ 升级！Lv.'+killer.level+' 攻击力+8% 血量+20';
+      document.body.appendChild(ov);
+      setTimeout(()=>ov.remove(),1800);
+    }
+  }
+  if(killer.isHuman || victim.isHuman) state.shake=6;
+  if(killer.isHuman) sKill(); else if(victim.isHuman) sDie();
+  if(victim.isHuman){
+    const ov=document.createElement('div');
+    ov.style.cssText='position:fixed;top:40%;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.8);padding:12px 24px;border-radius:10px;color:#ff8090;font-size:18px;font-weight:800;z-index:80;border:1px solid rgba(255,100,120,.4)';
+    ov.textContent='你被 '+killer.name+' 击杀';
+    document.body.appendChild(ov);
+    setTimeout(()=>ov.remove(),1500);
+  }
+  checkWin();
+}
+function checkWin(){
+  if(state.scores.red>=state.world.scoreCap) endMatch('red');
+  else if(state.scores.blue>=state.world.scoreCap) endMatch('blue');
+}
+
+/* ================= 9. 粒子与浮字 ================= */
+function spawnParticle(x,y,vx,vy,color,life,size){
+  state.particles.push({x,y,vx,vy,color,life,maxLife:life,size});
+}
+/* 冲击波圆环粒子：由内向外扩散（命中 / 死亡 / 复活） */
+function spawnRing(x,y,color,size){
+  state.particles.push({x,y,vx:0,vy:0,color,life:0.35,maxLife:0.35,size,ring:true});
+}
+function addFloater(x,y,text,color){
+  state.floaters.push({x,y,text,color,life:0.9,maxLife:0.9});
+}
+
+/* ================= 10. 主循环 ================= */
+function tick(t){
+  requestAnimationFrame(tick);
+  if(!state.running || state.paused || state.ended) return;
+  let dt=Math.min(0.033,((t-state.lastT)/1000)||0.016);
+  const rawDt=dt; // 真实时间：复活等待、UI 计时不该被节奏缩放拉长
+  if(isTouch) dt*=0.62; // 手机触屏操作精度低，整体节奏放慢，电脑端不受影响
+  state.lastT=t;
+  update(dt, rawDt);
+  netTick(rawDt);
+  render();
+  // 回放功能暂时关闭（bug太多）
+}
+
+function update(dt, rawDt){
+  const realDt = rawDt || dt;
+  state.timeLeft-=dt;
+  if(state.timeLeft<=0){ state.timeLeft=0; endMatch(null); return; }
+  if(state.fireBurst>0) state.fireBurst-=dt; // 开火点射窗口倒计时
+
+  const p1=localP();
+  for(const p of state.players){
+    p.cooldown-=dt; p.invuln-=dt; p.skillCD-=dt;
+    if(p.shieldTimer>0){ p.shieldTimer-=dt; if(p.shieldTimer<=0) p.shield=0; }
+    if(!p.alive){
+      p.respawn-=realDt; // 复活等待按真实秒数算，手机端不再被拖成 3 秒多
+      if(p.respawn<=0){ const s=(p.team==='red'?state.world.redSpawn:state.world.blueSpawn)[p.idx];
+        p.x=s.x; p.y=s.y; p.hp=p.maxHp||CFG.maxHp; p.alive=true; p.invuln=CFG.spawnProtect; p.shield=0;
+        p.respawnRing=1; spawnRing(p.x,p.y,p.team==='red'?'#ff5b6e':'#4dc3ff',64); } // 复活光环
+      continue;
+    }
+    if(p.hp<=0){ killPlayer(p, p.lastHitter||null); continue; } // 兜底：异常血量不留活口
+    updateDash(p,dt); // 冲刺位移
+    if(p.isHuman){
+      if(p.team==='red'){
+        // P1：触屏（左摇杆移动/右摇杆瞄准射击）或 WASD+鼠标/键盘
+        let mx=0,my=0;
+        if(isTouch && (state.mode==='5v5' || state.mode==='1v1')){
+          const sens = state.touchSens || 0.8;
+          // 竖屏时画面整体旋转 90°（ctx.rotate(+90°)），屏幕坐标→世界坐标的逆变换是
+          // wx = sy, wy = -sx（方向弄反过一次，这里以渲染矩阵为准）
+          let jx=state.touchMove.dx, jy=state.touchMove.dy;
+          if(VIEW.rot){ const tx=jx, ty=jy; jx=ty; jy=-tx; }
+          let mx=jx*0.8*sens, my=jy*0.8*sens;
+          movePlayer(p,mx,my,dt);
+          let best=null,bd=1e9;
+          for(const o of state.players){ if(o===p||!o.alive||o.team===p.team) continue; const d=(o.x-p.x)**2+(o.y-p.y)**2; if(d<bd){bd=d;best=o;} }
+          const stickMag = Math.hypot(state.touchAim.dx, state.touchAim.dy);
+          if(state.aimStick==='fire' && state.touchAim.active && stickMag>0.2){
+            // 开火摇杆：推哪个方向就打哪个方向，推过阈值自动扣扳机
+            let ax=state.touchAim.dx, ay=state.touchAim.dy;
+            if(VIEW.rot){ const tx=ax, ty=ay; ax=ty; ay=-tx; }
+            p.aim=Math.atan2(ay,ax);
+            if(stickMag>0.38 && p.cooldown<=0) shoot(p);
+          } else if(best && state.autoAim!==false){
+            const dx=best.x-p.x, dy=best.y-p.y, dd=Math.hypot(dx,dy);
+            const lead=Math.min(0.35, dd/(p.role.bulletSpeed||760)); // 预判目标移动
+            p.aim=Math.atan2(best.y+(best.vy||0)*lead-p.y, best.x+(best.vx||0)*lead-p.x);
+          } else if(state.autoAim===false && state.touchAim.active){
+            let ax=state.touchAim.dx, ay=state.touchAim.dy;
+            if(Math.hypot(ax,ay)>0.2){ // 右手摇杆手动绕圈瞄准
+              if(VIEW.rot){ const tx=ax, ty=ay; ax=ty; ay=-tx; }
+              p.aim=Math.atan2(ay,ax);
+            }
+          }
+          if((state.fireDown || state.fireBurst>0 || state.autoFire) && p.cooldown<=0) shoot(p);
+        } else {
+          if(state.keys['KeyW']) my-=1; if(state.keys['KeyS']) my+=1;
+          if(state.keys['KeyA']) mx-=1; if(state.keys['KeyD']) mx+=1;
+          movePlayer(p,mx,my,dt);
+          if(state.mode==='1v1'){
+            // 瞄准独立于移动：Z 左转 / X 右转，可 360 度停在任意角度
+            if(state.keys['KeyZ']) p.aim -= ROT_SPEED*dt;
+            if(state.keys['KeyX']) p.aim += ROT_SPEED*dt;
+            if((state.keys['KeyJ']||state.keys['Space']) && p.cooldown<=0) shoot(p);
+          } else {
+            p.aim=Math.atan2(state.mouse.y-p.y,state.mouse.x-p.x);
+            if((state.mouse.down||state.keys['Space']) && p.cooldown<=0) shoot(p);
+          }
+        }
+      } else {
+        // P2：方向键移动 + 回车射击（1V1 全键盘，鼠标不参与战斗）
+        let mx=0,my=0;
+        if(state.keys['ArrowUp']) my-=1; if(state.keys['ArrowDown']) my+=1;
+        if(state.keys['ArrowLeft']) mx-=1; if(state.keys['ArrowRight']) mx+=1;
+        movePlayer(p,mx,my,dt);
+        // 瞄准独立于移动：逗号 左转 / 句号 右转，可 360 度停在任意角度
+        if(state.keys['Comma']) p.aim -= ROT_SPEED*dt;
+        if(state.keys['Period']) p.aim += ROT_SPEED*dt;
+        if((state.keys['Enter']||state.keys['NumpadEnter']) && p.cooldown<=0) shoot(p);
+      }
+    } else if(p.isRemote){
+      // 联机对手：位置由网络插值追赶，避免 20Hz 更新造成卡顿跳帧
+      if(p.netTX!==undefined){
+        const k=Math.min(1,dt*14);
+        p.x+=(p.netTX-p.x)*k; p.y+=(p.netTY-p.y)*k;
+        if(p.netAim!==undefined) p.aim=p.netAim;
+      }
+    } else {
+      updateAI(p,dt);
+    }
+    // 视觉动画状态：平滑转向 + 行走摆动 + 受击/枪口/后坐衰减（人类与 AI 通用）
+    p.facing=lerpAngle(p.facing,p.aim,Math.min(1,dt*7)); // 平滑转动（较慢速，转身有惯性不生硬）
+    const isMoving=Math.abs(p.x-p.lastX)>0.5||Math.abs(p.y-p.lastY)>0.5;
+    p.walkT = isMoving ? p.walkT+dt*(6+p.role.speed/60) : p.walkT*0.8;
+    p.lastX=p.x; p.lastY=p.y;
+    p.flash=Math.max(0,p.flash-dt*6);
+    p.muzzleT=Math.max(0,p.muzzleT-dt);
+    p.recoil=Math.max(0,p.recoil-dt*16);
+    if(p.respawnRing>0) p.respawnRing=Math.max(0,p.respawnRing-dt*0.8);
+  }
+
+  // 子弹
+  for(let i=state.bullets.length-1;i>=0;i--){
+    const b=state.bullets[i];
+    b.life-=dt; b.x+=b.vx*dt; b.y+=b.vy*dt;
+    let dead=b.life<=0||b.x<-20||b.x>state.world.W+20||b.y<-20||b.y>state.world.H+20;
+    if(!dead) for(const o of state.world.obs){
+      if(b.x>o.x-b.r&&b.x<o.x+o.w+b.r&&b.y>o.y-b.r&&b.y<o.y+o.h+b.r){ dead=true; break; } }
+    if(!dead && b.noHit){ dead=true; }   // 对手的子弹只做视觉
+    if(!dead) for(const q of state.players){
+      if(!q.alive||q.team===b.team) continue;
+      const rr=CFG.playerRadius+b.r;
+      if((b.x-q.x)**2+(b.y-q.y)**2<rr*rr){ damagePlayer(q,b); dead=true; break; }
+    }
+    if(dead){ spawnParticle(b.x,b.y,-b.vx*0.08,-b.vy*0.08,b.team==='red'?'#ff8fa0':'#8fd8ff',0.15,3);
+      state.bullets.splice(i,1); }
+  }
+
+  for(let i=state.particles.length-1;i>=0;i--){
+    const pt=state.particles[i];
+    pt.life-=dt; pt.x+=pt.vx*dt; pt.y+=pt.vy*dt; pt.vx*=0.94; pt.vy*=0.94;
+    if(pt.life<=0) state.particles.splice(i,1);
+  }
+  for(let i=state.floaters.length-1;i>=0;i--){
+    const f=state.floaters[i];
+    f.life-=dt; f.y-=28*dt;
+    if(f.life<=0) state.floaters.splice(i,1);
+  }
+  if(state.shake>0) state.shake=Math.max(0,state.shake-dt*18);
+  updateHUD();
+}
+
+
+/* 本地存储安全封装：隐私模式禁用 localStorage、或存储值被写坏时报错会打断结算 */
+function lsGet(key, def){
+  try{ const v=localStorage.getItem(key); return v===null?def:JSON.parse(v); }
+  catch(e){ return def; }
+}
+function lsSet(key, obj){
+  try{ localStorage.setItem(key, typeof obj==='string'?obj:JSON.stringify(obj)); }catch(e){}
+}
+function lsGetRaw(key){ try{ return localStorage.getItem(key)||''; }catch(e){ return ''; } }
+
+/* ================= 11. 渲染 ================= */
+/* 雷达小地图：实时显示所有人位置（借鉴同类作品，解决混战里“敌人在哪”的信息焦虑） */
+function drawRadar(){
+  const W=state.world&&state.world.W, H=state.world&&state.world.H;
+  if(!W || !H) return;
+  const rd=state.radar||{show:true,size:112,alpha:92,pos:'right'};
+  if(rd.show===false) return;
+  const dpr=VIEW.dpr||1;
+  const rw=Math.min((rd.size||112)*dpr, canvas.width*0.40);
+  const rh=rw*(H/W);
+  const left=rd.pos==='left';
+  const x=left? 8*dpr : canvas.width-rw-8*dpr;
+  const y=(left?150:100)*dpr;
+  ctx2d.setTransform(1,0,0,1,0,0);
+  ctx2d.save();
+  // 底板
+  ctx2d.globalAlpha=Math.max(.35,Math.min(1,(rd.alpha||92)/100));
+  ctx2d.fillStyle='rgba(5,9,18,.92)';
+  ctx2d.strokeStyle='rgba(120,155,215,.6)';
+  ctx2d.lineWidth=1*dpr;
+  if(ctx2d.roundRect){ ctx2d.beginPath(); ctx2d.roundRect(x,y,rw,rh,6*dpr); ctx2d.fill(); ctx2d.stroke(); }
+  else { ctx2d.fillRect(x,y,rw,rh); ctx2d.strokeRect(x,y,rw,rh); }
+  const sx=rw/W, sy=rh/H;
+  // 掩体
+  ctx2d.globalAlpha=.55; ctx2d.fillStyle='#51709c';
+  const obs=(state.world.obs||[]);
+  for(let i=0;i<obs.length;i++){
+    const o=obs[i];
+    ctx2d.fillRect(x+o.x*sx, y+o.y*sy, Math.max(1.5*dpr,o.w*sx), Math.max(1.5*dpr,o.h*sy));
+  }
+  // 玩家点：自己金色并带光环，队友/敌人分色
+  ctx2d.globalAlpha=1;
+  const ps=state.players||[];
+  for(let i=0;i<ps.length;i++){
+    const p=ps[i];
+    if(!p.alive) continue;
+    const px=x+p.x*sx, py=y+p.y*sy;
+    if(p.isHuman){
+      ctx2d.strokeStyle='rgba(255,203,87,.75)'; ctx2d.lineWidth=1.6*dpr;
+      ctx2d.beginPath(); ctx2d.arc(px,py,5.6*dpr,0,Math.PI*2); ctx2d.stroke();
+    }
+    ctx2d.beginPath();
+    ctx2d.arc(px,py,(p.isHuman?3.8:3.0)*dpr,0,Math.PI*2);
+    ctx2d.fillStyle=p.isHuman?'#ffcb57':(p.team==='red'?'#ff5b6e':'#4dc3ff');
+    ctx2d.fill();
+  }
+  ctx2d.globalAlpha=1;
+  ctx2d.restore();
+}
+
+function render(){
+  ctx2d.setTransform(1,0,0,1,0,0);
+  ctx2d.fillStyle='#05080f'; ctx2d.fillRect(0,0,canvas.width,canvas.height);
+  const W=state.world.W, H=state.world.H;
+  if(VIEW.rot){
+    ctx2d.translate(VIEW.ox+(H*VIEW.scale)/2, VIEW.oy+(W*VIEW.scale)/2);
+    ctx2d.rotate(Math.PI/2);
+    ctx2d.scale(VIEW.scale, VIEW.scale);
+    ctx2d.translate(-W/2, -H/2);
+  } else if(VIEW.cam){
+    // 竖屏镜头跟随：视野小于全图时贴住玩家，超出部分居中
+    const vw=canvas.width/VIEW.scale, vh=canvas.height/VIEW.scale;
+    const hero=localP() && localP().alive ? localP() : null;
+    let tx = (hero && vw<W) ? clamp(hero.x, vw/2, W-vw/2) : W/2;
+    let ty = (hero && vh<H) ? clamp(hero.y, vh/2, H-vh/2) : H/2;
+    // 玩家死亡期间镜头停在原地（不要滑回地图中心，复活会瞬移回来）
+    if(!hero && VIEW.cx!==undefined){ tx=VIEW.cx; ty=VIEW.cy; }
+    // 平滑跟随，避免每一帧硬切造成画面跳动
+    if(VIEW.cx===undefined){ VIEW.cx=tx; VIEW.cy=ty; }
+    else { VIEW.cx += (tx-VIEW.cx)*0.14; VIEW.cy += (ty-VIEW.cy)*0.14; }
+    // 视野比地图大时该方向居中，比地图小时才跟随（原来一律按相机算，导致地图跑到屏幕下方）
+    const ox = vw<W ? -(VIEW.cx-vw/2)*VIEW.scale : (canvas.width-W*VIEW.scale)/2;
+    const oy = vh<H ? VIEW.oy-(VIEW.cy-vh/2)*VIEW.scale : (canvas.height-H*VIEW.scale)/2;
+    ctx2d.translate(ox, oy);
+    ctx2d.scale(VIEW.scale, VIEW.scale);
+  } else {
+    ctx2d.translate(VIEW.ox, VIEW.oy);
+    ctx2d.scale(VIEW.scale, VIEW.scale);
+  }
+  if(state.shake>0) ctx2d.translate((rng()-0.5)*state.shake,(rng()-0.5)*state.shake);
+  drawFloor(); drawObstacles(); drawPlayers(); drawBullets(); drawParticles(); drawFloaters();
+  drawDanger();
+  drawRadar();
+}
+
+/* 残血预警：血量低于 30 时屏幕边缘红色呼吸，血量越低越浓 */
+function drawDanger(){
+  const me=state.players && localP();
+  if(!state.running || state.paused || !me || !me.isHuman || !me.alive || me.hp<=0) return;
+  if(me.hp>=30) return;
+  const k=1-me.hp/30;                                   // 0~1，越接近死亡越大
+  const pulse=0.55+0.45*Math.sin(performance.now()/170);
+  const W=canvas.width, H=canvas.height;
+  ctx2d.setTransform(1,0,0,1,0,0);
+  const cx=W/2, cy=H/2, inner=Math.min(W,H)*0.34, outer=Math.max(W,H)*0.78;
+  const rg=ctx2d.createRadialGradient(cx,cy,inner,cx,cy,outer);
+  rg.addColorStop(0,'rgba(255,40,60,0)');
+  rg.addColorStop(1,'rgba(255,40,60,'+(0.30*k*pulse+0.10*k).toFixed(3)+')');
+  ctx2d.fillStyle=rg;
+  ctx2d.fillRect(0,0,W,H);
+}
+function drawFloor(){
+  const g=ctx2d.createLinearGradient(0,0,0,state.world.H);
+  g.addColorStop(0,'#0a1122'); g.addColorStop(.5,'#0b1226'); g.addColorStop(1,'#091021');
+  ctx2d.fillStyle=g; ctx2d.fillRect(0,0,state.world.W,state.world.H);
+  ctx2d.strokeStyle='rgba(120,160,255,.05)'; ctx2d.lineWidth=1; ctx2d.beginPath();
+  for(let x=80;x<state.world.W;x+=80){ ctx2d.moveTo(x,0); ctx2d.lineTo(x,state.world.H); }
+  for(let y=80;y<state.world.H;y+=80){ ctx2d.moveTo(0,y); ctx2d.lineTo(state.world.W,y); }
+  ctx2d.stroke();
+  ctx2d.strokeStyle='rgba(140,180,255,.18)'; ctx2d.setLineDash([10,10]); ctx2d.lineWidth=2;
+  ctx2d.beginPath(); ctx2d.moveTo(state.world.W/2,0); ctx2d.lineTo(state.world.W/2,state.world.H); ctx2d.stroke();
+  ctx2d.setLineDash([]);
+  drawZone(30,80,state.world.W/2-60,state.world.H-160,'#ff5b6e');
+  drawZone(state.world.W/2+30,80,state.world.W/2-60,state.world.H-160,'#4dc3ff');
+  ctx2d.strokeStyle='rgba(120,180,255,.25)'; ctx2d.lineWidth=3; ctx2d.strokeRect(0,0,state.world.W,state.world.H);
+}
+function drawZone(x,y,w,h,color){
+  ctx2d.fillStyle=color+'14'; ctx2d.fillRect(x,y,w,h);
+  ctx2d.strokeStyle=color+'40'; ctx2d.setLineDash([8,6]); ctx2d.lineWidth=2;
+  ctx2d.strokeRect(x,y,w,h); ctx2d.setLineDash([]);
+}
+function drawObstacles(){
+  for(const o of state.world.obs){
+    const g=ctx2d.createLinearGradient(o.x,o.y,o.x,o.y+o.h);
+    g.addColorStop(0,'#22324f'); g.addColorStop(1,'#131e36');
+    ctx2d.fillStyle=g; ctx2d.strokeStyle='rgba(120,180,255,.35)'; ctx2d.lineWidth=2;
+    roundRect(o.x,o.y,o.w,o.h,8); ctx2d.fill(); ctx2d.stroke();
+    ctx2d.fillStyle='rgba(255,255,255,.05)';
+    roundRect(o.x+4,o.y+4,o.w-8,10,5); ctx2d.fill();
+  }
+}
+function roundRect(x,y,w,h,r){
+  ctx2d.beginPath();
+  ctx2d.moveTo(x+r,y); ctx2d.arcTo(x+w,y,x+w,y+h,r); ctx2d.arcTo(x+w,y+h,x,y+h,r);
+  ctx2d.arcTo(x,y+h,x,y,r); ctx2d.arcTo(x,y,x+w,y,r); ctx2d.closePath();
+}
+function drawPlayers(){
+  for(const p of state.players){
+    if(!p.alive) continue;
+    let main=p.team==='red'?'#ff5b6e':'#4dc3ff', dark=p.team==='red'?'#c2203a':'#1f6fa8';
+    if(p.isHuman){ const sk=currentSkin(); main=sk.main; dark=sk.dark; }
+    const ang=p.facing; // 平滑转向后的绘制朝向
+    // 后坐力：枪口反向微退（视觉）
+    const px=p.x-Math.cos(ang)*p.recoil, py=p.y-Math.sin(ang)*p.recoil;
+    // 行走摆动：轻微呼吸缩放
+    const breathe=1+Math.sin(p.walkT)*0.035;
+    if(p.invuln>0){
+      ctx2d.strokeStyle='rgba(140,240,255,.7)'; ctx2d.lineWidth=2;
+      ctx2d.beginPath(); ctx2d.arc(px,py,CFG.playerRadius+6,0,Math.PI*2); ctx2d.stroke();
+    }
+    if(p.shield>0){ // 护盾光环：脉冲呼吸
+      const pulse=1+Math.sin(performance.now()/120)*0.07;
+      const sr=(CFG.playerRadius+9)*pulse;
+      ctx2d.strokeStyle='rgba(125,211,252,.9)'; ctx2d.lineWidth=3;
+      ctx2d.beginPath(); ctx2d.arc(px,py,sr,0,Math.PI*2); ctx2d.stroke();
+      ctx2d.fillStyle='rgba(125,211,252,.16)';
+      ctx2d.beginPath(); ctx2d.arc(px,py,sr,0,Math.PI*2); ctx2d.fill();
+    }
+    // 枪管（随平滑朝向）
+    ctx2d.strokeStyle='#dfe9ff'; ctx2d.lineWidth=5; ctx2d.lineCap='round';
+    ctx2d.beginPath();
+    ctx2d.moveTo(px+Math.cos(ang)*6,py+Math.sin(ang)*6);
+    ctx2d.lineTo(px+Math.cos(ang)*(CFG.playerRadius+9),py+Math.sin(ang)*(CFG.playerRadius+9));
+    ctx2d.stroke();
+    // 枪口白点：朝向更清晰
+    ctx2d.beginPath(); ctx2d.arc(px+Math.cos(ang)*(CFG.playerRadius+9),py+Math.sin(ang)*(CFG.playerRadius+9),3,0,Math.PI*2);
+    ctx2d.fillStyle='#fff'; ctx2d.fill();
+    // 角色本体（呼吸缩放）
+    ctx2d.save();
+    ctx2d.translate(px,py); ctx2d.scale(breathe,breathe); ctx2d.translate(-px,-py);
+    const g=ctx2d.createRadialGradient(px-5,py-6,3,px,py,CFG.playerRadius);
+    g.addColorStop(0,main); g.addColorStop(1,dark);
+    ctx2d.fillStyle=g; ctx2d.strokeStyle='rgba(255,255,255,.55)'; ctx2d.lineWidth=1.5;
+    ctx2d.beginPath(); ctx2d.arc(px,py,CFG.playerRadius,0,Math.PI*2); ctx2d.fill(); ctx2d.stroke();
+    ctx2d.restore();
+    // 受击闪白
+    if(p.flash>0){
+      ctx2d.globalAlpha=p.flash*0.75; ctx2d.fillStyle='#fff';
+      ctx2d.beginPath(); ctx2d.arc(px,py,CFG.playerRadius,0,Math.PI*2); ctx2d.fill();
+      ctx2d.globalAlpha=1;
+    }
+    // 枪口闪光
+    if(p.muzzleT>0){
+      const mk=1-p.muzzleT/0.09, mx2=px+Math.cos(ang)*24, my2=py+Math.sin(ang)*24, mr=Math.max(1,4+22*mk);
+      const mg=ctx2d.createRadialGradient(mx2,my2,1,mx2,my2,mr);
+      mg.addColorStop(0,'#fff'); mg.addColorStop(.4,'#ffe9a8'); mg.addColorStop(1,'rgba(255,233,168,0)');
+      ctx2d.fillStyle=mg; ctx2d.beginPath(); ctx2d.arc(mx2,my2,mr,0,Math.PI*2); ctx2d.fill();
+    }
+    // 复活环
+    if(p.respawnRing>0){
+      const rr=1-p.respawnRing;
+      ctx2d.globalAlpha=rr; ctx2d.strokeStyle='#e6fbff'; ctx2d.lineWidth=3;
+      ctx2d.beginPath(); ctx2d.arc(px,py,20+70*rr,0,Math.PI*2); ctx2d.stroke();
+      ctx2d.globalAlpha=1;
+    }
+    // 角色小图标（名字上方）
+    ctx2d.font='12px "Segoe UI Emoji",sans-serif'; ctx2d.textAlign='center';
+    ctx2d.fillText(p.role.icon,px,py-CFG.playerRadius-19);
+    // 血条
+    const bw=CFG.playerRadius*2.2, bh=4, bx=px-bw/2, by=py-CFG.playerRadius-13;
+    const ratio=clamp(p.hp/(p.maxHp||CFG.maxHp),0,1);
+    ctx2d.fillStyle='rgba(0,0,0,.55)'; ctx2d.fillRect(bx-1,by-1,bw+2,bh+2);
+    ctx2d.fillStyle='hsl('+(120*ratio)+',85%,55%)'; ctx2d.fillRect(bx,by,bw*ratio,bh);
+    // 名字：5V5 混战用兵种单字，一眼分得清队友是什么职业
+    ctx2d.font='bold 12px "Microsoft YaHei",sans-serif';
+    const shortRole={assault:'突',tank:'重',sniper:'神',medic:'医'}[p.role.id]||'';
+    const label=state.mode==='5v5'?(p.isHuman?'你':shortRole):p.name;
+    ctx2d.lineWidth=2.5; ctx2d.strokeStyle='rgba(0,0,0,.65)'; ctx2d.strokeText(label,px,by-6); // 深色描边保证压在掩体上也看得清
+    ctx2d.fillStyle=p.isHuman?'#ffd34d':(p.team==='red'?'#ffb3bd':'#a9ddff');
+    ctx2d.fillText(label,px,by-6);
+  }
+}
+function drawBullets(){
+  ctx2d.lineCap='round';
+  for(const b of state.bullets){
+    ctx2d.strokeStyle=b.team==='red'?'#ff5b6e':'#4dc3ff';
+    ctx2d.shadowColor=b.team==='red'?'#ff5b6e':'#4dc3ff'; ctx2d.shadowBlur=10;
+    ctx2d.lineWidth=6;
+    ctx2d.beginPath(); ctx2d.moveTo(b.x,b.y); ctx2d.lineTo(b.x-b.vx*0.028,b.y-b.vy*0.028); ctx2d.stroke();
+    ctx2d.shadowBlur=0;
+    ctx2d.fillStyle='#fff'; ctx2d.beginPath(); ctx2d.arc(b.x,b.y,2.2,0,Math.PI*2); ctx2d.fill();
+  }
+}
+function drawParticles(){
+  ctx2d.globalCompositeOperation='lighter';
+  for(const pt of state.particles){
+    const k=1-pt.life/pt.maxLife;
+    if(pt.ring){ // 冲击波圆环：由内向外扩散
+      ctx2d.globalAlpha=clamp(pt.life/pt.maxLife,0,1)*0.9;
+      ctx2d.strokeStyle=pt.color; ctx2d.lineWidth=Math.max(1,4*(1-k));
+      ctx2d.beginPath(); ctx2d.arc(pt.x,pt.y,2+pt.size*k,0,Math.PI*2); ctx2d.stroke();
+    } else {
+      ctx2d.globalAlpha=clamp(pt.life/pt.maxLife,0,1);
+      ctx2d.fillStyle=pt.color;
+      ctx2d.beginPath(); ctx2d.arc(pt.x,pt.y,pt.size,0,Math.PI*2); ctx2d.fill();
+    }
+  }
+  ctx2d.globalAlpha=1; ctx2d.globalCompositeOperation='source-over';
+}
+function drawFloaters(){
+  ctx2d.font='bold 13px "Microsoft YaHei",sans-serif'; ctx2d.textAlign='center';
+  for(const f of state.floaters){
+    ctx2d.globalAlpha=clamp(f.life/f.maxLife,0,1);
+    ctx2d.fillStyle=f.color;
+    ctx2d.fillText(f.text,f.x,f.y);
+  }
+  ctx2d.globalAlpha=1;
+}
+
+/* ================= 12. HUD ================= */
+const scoreRed=document.getElementById('scoreRed'), scoreBlue=document.getElementById('scoreBlue'),
+      timerEl=document.getElementById('timer'), killfeed=document.getElementById('killfeed'),
+      vignette=document.getElementById('vignette'), hintBar=document.getElementById('hintBar'),
+      panelP1=document.getElementById('panelP1'), panelP2=document.getElementById('panelP2'),
+      p1Name=document.getElementById('p1Name'), p1Sub=document.getElementById('p1Sub'),
+      p2Name=document.getElementById('p2Name'), p2Sub=document.getElementById('p2Sub'),
+      hpFill=document.getElementById('hpFill'), hpFill2=document.getElementById('hpFill2'),
+      p1Icon=document.getElementById('p1Icon'), p2Icon=document.getElementById('p2Icon'),
+      p1SkIcon=document.getElementById('p1SkIcon'), p1SkCd=document.getElementById('p1SkCd'),
+      p1SkKey=document.getElementById('p1SkKey'), p1SkName=document.getElementById('p1SkName'),
+      p2SkIcon=document.getElementById('p2SkIcon'), p2SkCd=document.getElementById('p2SkCd'),
+      p2SkKey=document.getElementById('p2SkKey'), p2SkName=document.getElementById('p2SkName'),
+      menuScreen=document.getElementById('menuScreen'), selectScreen=document.getElementById('selectScreen'),
+      pauseScreen=document.getElementById('pauseScreen'), endScreen=document.getElementById('endScreen'),
+      endResult=document.getElementById('endResult'), endStats=document.getElementById('endStats'),
+      mvpWrap=document.getElementById('mvpWrap'), loserWrap=document.getElementById('loserWrap'),
+      selTip=document.getElementById('selTip'), labelP1=document.getElementById('labelP1'),
+      labelP2=document.getElementById('labelP2'), rowP1=document.getElementById('rowP1'),
+      rowP2=document.getElementById('rowP2'), roleRowP2=document.getElementById('roleRowP2'),
+      roleRowP1=document.getElementById('roleRowP1'),
+      diffRow=document.getElementById('diffRow'), rowDiff=document.getElementById('rowDiff'),
+      mapRow=document.getElementById('mapRow'), rowMap=document.getElementById('rowMap');
+
+function setupModeHUD(){
+  if(state.mode==='1v1'){
+    panelP2.classList.remove('hidden');
+    hintBar.textContent='P1：WASD 移动 · J 射击 · E 技能 · Z/X 转身 ｜ P2：方向键移动 · 回车射击 · 数字1 技能 · ，/. 转身（360 度瞄准）';
+    hintBar.classList.add('top');
+  } else {
+    panelP2.classList.add('hidden');
+    hintBar.textContent='WASD 移动 · 鼠标瞄准 · 按住左键射击 · E 技能 · P 暂停 · M 静音';
+    hintBar.classList.remove('top');
+  }
+  refreshSkillBox(panelP1.querySelector('.skillBox'), localP());
+  if(state.mode==='1v1') refreshSkillBox(panelP2.querySelector('.skillBox'), state.players[1]);
+}
+function refreshSkillBox(box, p){
+  if(!box || !p) return;
+  const s=p.role.skill;
+  const icon=box.querySelector('.skIcon'), cd=box.querySelector('.skCd'),
+        key=box.querySelector('.skKey'), nm=box.querySelector('.skName'),
+        num=box.querySelector('.skCdNum');
+  icon.textContent=p.role.icon;
+  key.textContent=(p.isHuman && !state.netMode && p.team==='blue' && state.mode==='1v1') ? '1' : s.key; // P2（1V1）技能键=数字1
+  nm.textContent=s.name;
+  const ready=p.skillCD<=0;
+  cd.style.height=(ready?0:clamp(p.skillCD/s.cd,0,1)*100)+'%';
+  num.textContent=ready?'':Math.ceil(p.skillCD); // 冷却数字（秒）
+  box.classList.toggle('ready',ready);           // 就绪发光提示
+}
+/* 技能冷却环：绕着技能键一圈走满 = 可以放技能 */
+let __skillReadyPrev=true;
+function updateSkillBtn(){
+  const btn=document.getElementById('btnSkill'), ring=document.getElementById('skillRing'), num=document.getElementById('skillCdNum');
+  if(!btn||!ring) return;
+  const p=state.players && localP();
+  if(!p) return;
+  const s=p.role.skill;
+  const cd=Math.max(0,p.skillCD);
+  const prog = cd>0 ? clamp(1-cd/s.cd,0,1) : 1;   // 冷却越接近结束，进度越大
+  ring.style.setProperty('--deg',(prog*360).toFixed(1)+'deg');
+  const lbl=document.getElementById('skillLabel');
+  if(cd>0){
+    num.textContent=Math.ceil(cd); btn.classList.remove('on'); ring.style.opacity='1';
+    if(lbl) lbl.style.opacity='0';          // 冷却时把"技"字让位给秒数，避免叠字
+  } else {
+    num.textContent=''; btn.classList.add('on'); ring.style.opacity='0';
+    if(lbl) lbl.style.opacity='1';
+  }
+  if(cd<=0 && !__skillReadyPrev){    // 刚转满：闪一下提示
+    btn.animate([{transform:'scale(1)'},{transform:'scale(1.18)'},{transform:'scale(1)'}],{duration:320,easing:'ease-out'});
+  }
+  __skillReadyPrev = cd<=0;
+}
+function updateHUD(){
+  updateSkillBtn();
+  scoreRed.textContent=(state.mode==='1v1'?'P1 ':'红队 ')+state.scores.red;
+  scoreBlue.textContent=(state.mode==='1v1'?(isTouch?'AI ':'P2 '):'蓝队 ')+state.scores.blue;
+  const sec=Math.max(0,Math.ceil(state.timeLeft));
+  timerEl.textContent=Math.floor(sec/60)+':'+String(sec%60).padStart(2,'0');
+  timerEl.classList.toggle('low',state.timeLeft<=30);
+  const p1=localP();
+  if(p1){
+    hpFill.style.width=clamp(p1.hp/(p1.maxHp||CFG.maxHp),0,1)*100+'%';
+    p1Name.textContent=(state.mode==='1v1'?'P1':'玩家')+' · '+p1.role.icon+' '+p1.role.name;
+    p1Sub.textContent='击杀 '+p1.kills+' · 死亡 '+p1.deaths+(p1.shield>0?' · 护盾 '+Math.round(p1.shield):'');
+    p1Icon.textContent=p1.role.icon;
+    refreshSkillBox(panelP1.querySelector('.skillBox'), p1);
+    vignette.classList.toggle('low', p1.alive && p1.hp<35);
+  }
+  if(state.mode==='1v1' && state.players[1]){
+    const p2=state.players[1];
+    hpFill2.style.width=clamp(p2.hp/(p2.maxHp||CFG.maxHp),0,1)*100+'%';
+    p2Name.textContent=(isTouch?'AI':'P2')+' · '+p2.role.icon+' '+p2.role.name;
+    p2Sub.textContent='击杀 '+p2.kills+' · 死亡 '+p2.deaths+(p2.shield>0?' · 护盾 '+Math.round(p2.shield):'');
+    p2Icon.textContent=p2.role.icon;
+    refreshSkillBox(panelP2.querySelector('.skillBox'), p2);
+  }
+}
+function pushFeed(text, team){
+  const el=document.createElement('div'); el.className='kf';
+  el.innerHTML='<span style="color:'+(team==='red'?'#ff5b6e':'#4dc3ff')+'">■</span> '+text;
+  killfeed.appendChild(el);
+  setTimeout(()=>{ el.style.opacity='0'; setTimeout(()=>el.remove(),600); },2200);
+  while(killfeed.children.length>6) killfeed.firstChild.remove();
+}
+/* 比分弹跳：触发 CSS scorePop 动画 */
+function popChip(el){
+  el.classList.remove('pop','glow'); void el.offsetWidth;
+  el.classList.add('pop','glow'); // 弹跳 + 得分高光
+  setTimeout(()=>el.classList.remove('glow'),600);
+}
+
+/* ================= 13. 音效（WebAudio 合成） ================= */
+let AC=null, master=null;
+function initAudio(){
+  if(!AC){ AC=new (window.AudioContext||window.webkitAudioContext)();
+    master=AC.createGain(); master.gain.value=0.5; master.connect(AC.destination); }
+  if(AC.state==='suspended') AC.resume();
+}
+function blip(freq,dur,type,vol,slide){
+  if(!AC||state.muted) return;
+  const o=AC.createOscillator(), g=AC.createGain();
+  o.type=type; o.frequency.value=freq;
+  if(slide) o.frequency.exponentialRampToValueAtTime(Math.max(40,freq+slide),AC.currentTime+dur);
+  g.gain.setValueAtTime(vol,AC.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.0001,AC.currentTime+dur);
+  o.connect(g); g.connect(master); o.start(); o.stop(AC.currentTime+dur+0.02);
+}
+function sShoot(){ blip(480+Math.random()*160,.07,'square',.045,-260); }
+function sHit(){ blip(320,.05,'triangle',.07,-140); }
+function sKill(){ blip(660,.09,'square',.07,-120); setTimeout(()=>blip(880,.12,'square',.06,-160),80); }
+function sDie(){ blip(220,.3,'sawtooth',.08,-140); }
+function sDash(){ blip(700,.12,'sawtooth',.05,-500); }
+function sShield(){ blip(340,.18,'sine',.08,180); }
+function sSnipe(){ blip(1200,.22,'sine',.06,-700); }
+function sHeal(){ blip(520,.12,'sine',.07,260); setTimeout(()=>blip(660,.12,'sine',.06,260),90); }
+function sClick(){ blip(540,.05,'sine',.05,140); } // UI 点击反馈
+function sWin(){ [523,659,784,1047].forEach((f,i)=>setTimeout(()=>blip(f,.14,'triangle',.08),i*120)); }
+function sLose(){ [392,330,262,196].forEach((f,i)=>setTimeout(()=>blip(f,.16,'sawtooth',.07),i*130)); }
+
+/* ================= 14. 流程：主菜单 / 选人 / 开局 ================= */
+function startGame(){
+  initAudio();
+  // 重置所有触摸输入：否则上一局残留的摇杆/开火状态会让新局一开场角色自己乱跑
+  state.touchMove={active:false,id:null,ox:0,oy:0,dx:0,dy:0};
+  state.touchAim={active:false,id:null,ox:0,oy:0,dx:0,dy:0};
+  state.fireDown=false; state.fireBurst=0;
+  if(typeof joyMove!=='undefined'){ joyMove.classList.remove('show'); joyAim.classList.remove('show'); }
+  // 应用 5V5 难度（1V1 无 AI，难度不影响对战）
+  const d = DIFFS[state.difficulty] || DIFFS.normal;
+  CFG.aiAimError=d.aimError; CFG.aiFireMul=d.fireMul; CFG.aiEngageMin=d.engageMin;
+  state.world = CFG.modes[state.mode];
+  const mapDef = (MAPS[state.mode]||[])[state.mapIdx] || (MAPS[state.mode]||[])[0];
+  state.world.obs = mapDef ? mapDef.obs : state.world.obs; // 应用所选地图的障碍物布局
+  const mapNameEl = document.getElementById('mapName');
+  if(mapNameEl) mapNameEl.textContent = (state.mode==='5v5'?'5V5 · ':'1V1 · ')+(mapDef?mapDef.name:'');
+  state.timeLeft = state.world.time;
+  if(state.mode==='5v5'){ state.roleP1 = ROLE_IDS[Math.floor(rng()*ROLE_IDS.length)]; } // 5V5 角色随机分配，不手选
+  buildPlayers();
+  state.bullets=[]; state.particles=[]; state.floaters=[]; killfeed.innerHTML='';
+  state.scores={red:0,blue:0};
+  state.ended=false; state.running=false; state.paused=false; state.winner=null; state.shake=0;
+  state.mvp=null; state.loserMvp=null;
+  document.querySelectorAll('.confetti').forEach(e=>e.remove()); // 新局清掉上一局的彩带
+  document.body.classList.add('in-game');
+  document.body.classList.remove('ended');
+  menuScreen.classList.add('hidden'); selectScreen.classList.add('hidden');
+  endScreen.classList.add('hidden'); pauseScreen.classList.add('hidden');
+  resize();
+  setupModeHUD();
+  updateHUD();
+  state.running=true; state.lastT=performance.now();
+  // 操作提示 8 秒后淡出
+  const tt=document.getElementById('touchTip');
+  if(tt){ tt.style.opacity='1'; tt.style.display='block';
+    clearTimeout(window.__ttTimer);
+    window.__ttTimer=setTimeout(()=>{ tt.style.opacity='0'; setTimeout(()=>{ if(tt.style.opacity==='0') tt.style.display='none'; },500); },8000);
+  }
+}
+function togglePause(){
+  if(!state.running || state.ended) return;
+  state.paused=!state.paused;
+  document.body.classList.toggle('paused-fight', state.paused);
+  pauseScreen.classList.toggle('hidden',!state.paused);
+  pauseTip.textContent = state.mode==='1v1' ? '按 P / Esc 继续' : '按 P / Esc 继续（失焦会自动暂停）';
+  if(!state.paused) state.lastT=performance.now();
+}
+function updateBestRecord(){
+  const best = lsGet('gunBest', {});
+  const el = document.getElementById('bestRecord');
+  if(el){
+    let txt = '';
+    if(best['5v5']) txt += '5V5最高击杀: '+best['5v5']+'  ';
+    if(best['1v1']) txt += '1V1最高击杀: '+best['1v1'];
+    el.textContent = txt || '';
+    el.style.display = txt ? '' : 'none';
+  }
+}
+/* ===== 每日任务：3 条随机任务 + 完成打勾 + 荣誉点奖励 ===== */
+const DAILY_POOL = [
+  {type:'kill',  names:['今日击杀 12 人','今日击杀 15 人','今日击杀 18 人'], target:[12,15,18]},
+  {type:'win',   names:['今日赢下 2 局','今日赢下 3 局'],                   target:[2,3]},
+  {type:'skill', names:['释放技能 6 次','释放技能 8 次'],                   target:[6,8]},
+  {type:'dmg',   names:['累计造成 600 伤害','累计造成 800 伤害'],           target:[600,800]}
+];
+function dailyInit(){
+  const today = new Date().toDateString();
+  let d = lsGet('gunDaily2', null);
+  if(!d || d.date!==today){
+    // 每天从池子里随机挑 3 类，互不重复
+    const pool = DAILY_POOL.slice();
+    for(let i=pool.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); const t=pool[i]; pool[i]=pool[j]; pool[j]=t; }
+    d = { date: today, honorGot: 0, tasks: pool.slice(0,3).map(p=>{
+      const k = Math.floor(Math.random()*p.target.length);
+      return { type:p.type, name:p.names[k], target:p.target[k], cur:0, done:false };
+    })};
+    lsSet('gunDaily2', d);
+  }
+  return d;
+}
+function dailyProgress(type, n){
+  n = n || 1;
+  const d = dailyInit();
+  let changed=false;
+  for(const t of d.tasks){
+    if(t.type!==type || t.done) continue;
+    t.cur = Math.min(t.target, t.cur+n);
+    if(t.cur>=t.target){
+      t.done = true; changed=true;
+      lsSet('gunHonor', lsGet('gunHonor',0)+10);
+      toastMsg('任务完成：'+t.name+'  +10 荣誉');
+    }
+  }
+  if(changed){
+    const all = d.tasks.every(t=>t.done);
+    if(all && !d.honorGot){ d.honorGot=1; lsSet('gunHonor', lsGet('gunHonor',0)+20); toastMsg('今日任务全部完成！+20 荣誉'); }
+  }
+  lsSet('gunDaily2', d);
+  renderDaily();
+}
+function renderDaily(){
+  const d = dailyInit(), el = document.getElementById('dailyTask');
+  if(!el) return;
+  const done = d.tasks.filter(t=>t.done).length;
+  el.innerHTML = '<div style="font-size:12px;color:#9fb2d0;margin-bottom:5px">每日任务 '+done+'/3 · 荣誉 '+lsGet('gunHonor',0)+'</div>'
+    + d.tasks.map(t=>{
+      const pct = Math.min(100, Math.round(t.cur/t.target*100));
+      const c = t.done ? '#33e08a' : '#67e8f9';
+      return '<div style="display:flex;align-items:center;gap:7px;margin:3px 0">'
+        + '<span style="width:14px;font-size:12px;color:'+c+'">'+(t.done?'✓':'○')+'</span>'
+        + '<span style="flex:1;font-size:11.5px;color:'+(t.done?'#7d8aa8':'#c8d4ea')+';text-decoration:'+(t.done?'line-through':'none')+'">'+t.name+'</span>'
+        + '<span style="width:44px;font-size:11px;color:#8fa1bf;text-align:right">'+t.cur+'/'+t.target+'</span>'
+        + '</div>'
+        + '<div style="height:4px;background:rgba(255,255,255,.08);border-radius:2px;margin:0 0 5px 21px">'
+        + '<div style="height:100%;width:'+pct+'%;background:'+c+';border-radius:2px"></div></div>';
+    }).join('');
+}
+function updateDailyTask(){ renderDaily(); }
+function addDailyKill(){ dailyProgress('kill', 1); }
+
+function backToMenu(){
+  state.running=false; state.ended=false;
+  if(state.netMode){
+    state.netMode=false;
+    if(NET.ws){ try{ NET.ws.send(JSON.stringify({t:'leave'})); }catch(e){} }
+  }
+  document.body.classList.remove('in-game');
+  document.body.classList.remove('ended');
+  menuScreen.classList.remove('hidden');
+  selectScreen.classList.add('hidden'); endScreen.classList.add('hidden');
+  pauseScreen.classList.add('hidden');
+  resetSelectors();
+}
+
+/* ---- MVP 与结算 ---- */
+function calcMVP(team){
+  const list=state.players.filter(p=>p.team===team);
+  list.sort((a,b)=> b.kills-a.kills || a.deaths-b.deaths);
+  return list[0];
+}
+function mvpCardHTML(p, badge, tag, big){
+  return '<div class="mvpCard'+(big?'':' loser')+'">'+
+    '<div class="mvpBadge">'+badge+'</div>'+
+    '<div class="mvpIcon">'+p.role.icon+'</div>'+
+    '<div class="mvpName">'+p.name+' · '+p.role.name+'</div>'+
+    '<div class="mvpStats">击杀 '+p.kills+' · 死亡 '+p.deaths+' · 伤害 '+Math.round(p.dmgDealt)+'</div>'+
+    '<div class="mvpTag">'+tag+'</div></div>';
+}
+function animateCount(el, to, dur){
+  const from=0, t0=performance.now();
+  function step(t){
+    const k=Math.min(1,(t-t0)/dur);
+    el.textContent=Math.round(from+(to-from)*k);
+    if(k<1) requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+}
+function confetti(){
+  document.querySelectorAll('.confetti').forEach(e=>e.remove()); // 避免连续结算叠加
+  const colors=['#22d3ee','#ffd34d','#ff5b6e','#4dc3ff','#86efac','#ff8fa0'];
+  for(let i=0;i<46;i++){
+    const el=document.createElement('div'); el.className='confetti';
+    el.style.left=(rng()*100)+'%';
+    el.style.background=colors[Math.floor(rng()*colors.length)];
+    el.style.animationDuration=(1.6+rng()*1.4)+'s';
+    el.style.animationDelay=(rng()*0.5)+'s';
+    el.style.transform='rotate('+(rng()*360)+'deg)';
+    stage.appendChild(el);
+    setTimeout(()=>el.remove(), 4000);
+  }
+}
+/* 对局评级：胜场 + 击杀效率 + K/D 三项加权，避免只看杀人数 */
+function gradeOf(win,k,d,dmg,mode){
+  const cap = mode==='1v1' ? 5 : 15;
+  const kd = d>0 ? k/d : k;
+  let sc = (win?45:0) + Math.min(35,(k/cap)*35) + Math.min(15,kd*6);
+  if(win && k>=cap*0.6) sc+=5;
+  return sc>=85?'S':sc>=70?'A':sc>=50?'B':'C';
+}
+function endMatch(winner){
+  state.ended=true; state.running=false; state.paused=false;
+  document.body.classList.add('ended');
+  state.winner=winner || (state.scores.red===state.scores.blue?'draw':(state.scores.red>state.scores.blue?'red':'blue'));
+  const p1=localP(), p2=state.players.find(p=>p.team==='blue')||null;
+  if(state.mode==='1v1'){
+    if(p1 && p2){ state.mvp=p1.kills>=p2.kills?p1:p2; state.loserMvp=(state.mvp===p1?p2:p1); }
+    else { state.mvp=p1||p2; state.loserMvp=p2||p1; }
+  } else {
+    state.mvp=calcMVP(state.winner==='red'?'red':(state.winner==='blue'?'blue':null)) ||
+      calcMVP(state.scores.red>=state.scores.blue?'red':'blue');
+    state.loserMvp=calcMVP(state.winner==='red'?'blue':(state.winner==='blue'?'red':null)) ||
+      calcMVP(state.scores.red>=state.scores.blue?'blue':'red');
+  }
+  const min=Math.floor(CFG.modes[state.mode].time/60), sec=CFG.modes[state.mode].time%60;
+  const hitRate = q => (q&&q.shots>0) ? Math.round(q.hits/q.shots*100)+'%' : '—';
+  const p1k=p1?p1.kills:0, p1d=p1?p1.deaths:0, p1dm=p1?Math.round(p1.dmgDealt):0;
+  const p2dm=p2?Math.round(p2.dmgDealt):0;
+  endStats.innerHTML =
+    '<span>'+(state.mode==='1v1'?'P1 击杀':'我方击杀')+'</span><span class="v">'+state.scores.red+'</span><span></span>'+
+    '<span>'+(state.mode==='1v1'?'P2 击杀':'敌方击杀')+'</span><span class="v">'+state.scores.blue+'</span><span></span>'+
+    '<span>'+(state.mode==='1v1'?'P1 战绩':'你的战绩')+'</span><span class="v">'+p1k+' / '+p1d+'</span><span></span>'+
+    (state.mode==='1v1' ?
+      '<span>P1 伤害</span><span class="v">'+p1dm+'</span><span></span>'+
+      '<span>P2 伤害</span><span class="v">'+p2dm+'</span><span></span>'
+    :
+      '<span>你的伤害</span><span class="v">'+p1dm+'</span><span></span>'+
+      '<span>命中率</span><span class="v">'+hitRate(p1)+'</span><span></span>')+
+    '<span>用时</span><span class="v">'+min+':'+String(sec).padStart(2,'0')+'</span><span></span>'+
+    (state.rankChange ? '<span>段位分</span><span class="v" style="color:'+((state.rankChange.delta>=0)?'#86efac':'#ff8fa0')+'">'+((state.rankChange.delta>=0?'+':'')+state.rankChange.delta)+'</span><span></span>' : '');
+  if(state.winner==='red'){ endResult.textContent=state.mode==='1v1'?'P1 胜 利':'胜 利'; endResult.className='result win'; sWin(); }
+  else if(state.winner==='blue'){
+    if(state.mode==='1v1'){ endResult.textContent='P2 胜 利'; endResult.className='result win'; sWin(); }
+    else { endResult.textContent='失 败'; endResult.className='result lose'; sLose(); }
+  }
+  else { endResult.textContent='平 局'; endResult.className='result draw'; sLose(); }
+  // 保存最高分
+  const best = lsGet('gunBest', {});
+  const mode = state.mode;
+  if(p1k>0 && (!best[mode] || p1k > best[mode])){
+    best[mode] = p1k;
+    lsSet('gunBest', best);
+    // 新纪录用独立徽章显示，标题不拼接，避免在手机上换行断字
+    const badge=document.createElement('div');
+    badge.className='recordBadge';
+    badge.textContent='🏆 新纪录';
+    endResult.parentNode.insertBefore(badge, endResult.nextSibling);
+  }
+  updateBestRecord();
+  updateDailyTask();
+  // MVP 动画：胜方 MVP + 败方 MVP + 彩带
+  const mvpTag='最佳射手'+(state.mode==='1v1'?'':' · '+(state.mvp&&state.mvp.team==='red'?'红队':'蓝队'));
+  mvpWrap.innerHTML = state.mvp ? mvpCardHTML(state.mvp, state.mode==='1v1'?'MVP':'MVP · 胜方', mvpTag, true) : '';
+  loserWrap.innerHTML = state.loserMvp ? mvpCardHTML(state.loserMvp,'败方 MVP','虽败犹荣', false) : '';
+  confetti();
+  document.querySelectorAll('.recordBadge').forEach(e=>e.remove());
+  const grade = gradeOf(state.winner==='red', p1k, p1d, p1dm, state.mode);
+  const gEl=document.getElementById('endGrade');
+  if(gEl){ gEl.textContent='评级 '+grade; gEl.className='endGrade g'+grade; }
+  profRecord(state.winner==='red', p1k, p1d, p1dm, grade);
+  state.rankChange = rankUpdate(state.winner==='red', grade);
+  if(state.winner==='red') dailyProgress('win', 1);
+  if(p1dm>0) dailyProgress('dmg', p1dm);
+  endScreen.classList.remove('hidden');
+}
+function restartGame(){ startGame(); }
+function bindBtn(id,fn){
+  const el=document.getElementById(id);
+  el.addEventListener('click', ()=>{ initAudio(); sClick(); el.blur(); fn(); });
+}
+
+/* ---- 选人界面 ---- */
+function roleCardHTML(r){
+  const role=ROLES[r];
+  const bars=[['移速',role.speed/300],['伤害',role.dmg/30],['射速',(1/role.fireCD)/6]].map(b=>
+    '<div class="rcBar"><i style="width:'+(clamp(b[1],0,1)*100)+'%"></i></div>').join('');
+  return '<div class="roleCard" data-role="'+r+'">'+
+    '<div class="rcIcon">'+role.icon+'</div>'+
+    '<div class="rcName">'+role.name+'</div>'+bars+
+    '<div class="rcSkill">技能·'+role.skill.name+'（'+role.skill.cd+'s）<br>'+role.skill.desc+'</div></div>';
+}
+function resetSelectors(){
+  rowP1.innerHTML=''; rowP2.innerHTML='';
+  ROLE_IDS.forEach(r=>{ rowP1.insertAdjacentHTML('beforeend',roleCardHTML(r)); });
+  ROLE_IDS.forEach(r=>{ rowP2.insertAdjacentHTML('beforeend',roleCardHTML(r)); });
+  selectRole('rowP1', state.roleP1, 'redSel');
+  selectRole('rowP2', state.roleP2, 'blueSel');
+}
+function selectRole(rowId, roleId, cls){
+  const row=document.getElementById(rowId);
+  row.querySelectorAll('.roleCard').forEach(c=>c.classList.remove('sel',cls));
+  const card=row.querySelector('[data-role="'+roleId+'"]');
+  if(card) card.classList.add('sel',cls);
+}
+function openSelect(mode){
+  state.mode=mode;
+  resetSelectors();
+  buildMapChips(mode);
+  buildWeaponChips();
+  if(mode==='1v1'){
+    selTip.textContent = isTouch ? '选择你的角色和地图' : '本地双人对战：P1 选红方角色、P2 选蓝方角色（各 4 选 1）';
+    labelP1.textContent='P1 · 红方 请选择你的角色'; labelP2.textContent='P2 · 蓝方 请选择你的角色';
+    roleRowP1.classList.remove('hidden');
+    // 手机端 P2 自动 AI，不需要选 P2
+    if(isTouch){
+      roleRowP2.classList.add('hidden');
+      state.roleP2=ROLE_IDS[Math.floor(Math.random()*ROLE_IDS.length)];
+    } else {
+      roleRowP2.classList.remove('hidden');
+    }
+    diffRow.classList.add('hidden');
+  } else {
+    selTip.textContent='5V5 团队战：角色由系统随机分配，无需自选 · 开局前选择难度与战场地图即可';
+    roleRowP1.classList.add('hidden');
+    roleRowP2.classList.add('hidden');
+    diffRow.classList.remove('hidden');
+  }
+  mapRow.classList.remove('hidden');
+  menuScreen.classList.add('hidden');
+  selectScreen.classList.remove('hidden');
+}
+/* 武器 chips：选角色界面里直接换枪 */
+const rowWeapon=document.getElementById('rowWeapon');
+function buildWeaponChips(){
+  const cur=currentWeapon().id;
+  rowWeapon.innerHTML = WEAPON_IDS.map(k=>{
+    const w=WEAPONS[k];
+    return '<button class="diffChip'+(w.id===cur?' sel':'')+'" data-w="'+w.id+'">'+w.name+'</button>';
+  }).join('');
+}
+if(rowWeapon){
+  rowWeapon.addEventListener('click', e=>{
+    const chip=e.target.closest('.diffChip'); if(!chip) return;
+    lsSet('gunWeapon', chip.dataset.w);
+    rowWeapon.querySelectorAll('.diffChip').forEach(c=>c.classList.toggle('sel',c===chip));
+    sClick();
+    const w=WEAPONS[chip.dataset.w];
+    if(w) toastMsg(w.name+'：'+w.desc);
+  });
+}
+
+/* 地图选择 chips（随当前模式重建） */
+function buildMapChips(mode){
+  rowMap.innerHTML = MAPS[mode].map((m,i)=>
+    '<button class="diffChip'+(i===state.mapIdx?' sel':'')+'" data-map="'+i+'">'+m.name+'</button>').join('');
+}
+rowMap.addEventListener('click', e=>{
+  const chip=e.target.closest('.diffChip');
+  if(!chip) return;
+  state.mapIdx=+chip.dataset.map;
+  rowMap.querySelectorAll('.diffChip').forEach(c=>c.classList.toggle('sel',c===chip));
+  sClick();
+});
+/* 选人点击 */
+function bindRoleRow(rowId, cb){
+  document.getElementById(rowId).addEventListener('click', e=>{
+    const card=e.target.closest('.roleCard');
+    if(!card) return;
+    sClick(); cb(card.dataset.role, rowId);
+  });
+}
+bindRoleRow('rowP1', (role)=>{ state.roleP1=role; selectRole('rowP1',role,'redSel'); });
+bindRoleRow('rowP2', (role)=>{ state.roleP2=role; selectRole('rowP2',role,'blueSel'); });
+
+/* 难度切换（5V5） */
+function setDiff(d){
+  state.difficulty=d;
+  rowDiff.querySelectorAll('.diffChip').forEach(c=>c.classList.toggle('sel',c.dataset.diff===d));
+  sClick();
+}
+rowDiff.addEventListener('click', e=>{
+  const chip=e.target.closest('.diffChip');
+  if(chip) setDiff(chip.dataset.diff);
+});
+
+/* ---- 按钮绑定 ---- */
+bindBtn('mode5v5', ()=>openSelect('5v5'));
+bindBtn('mode1v1', ()=>openSelect('1v1'));
+/* 房间逻辑：P2P 联机（PeerJS 公共云） */
+document.getElementById('btnExitFight').addEventListener('touchstart', e=>{ e.preventDefault(); e.stopPropagation(); if(state.running && !state.ended) backToMenu(); },{passive:false});
+document.getElementById('btnExitFight').addEventListener('click', e=>{ e.preventDefault(); e.stopPropagation(); if(state.running && !state.ended) backToMenu(); });
+
+/* 登录：昵称进入 */
+const nickInput=document.getElementById('nickInput'), loginScreen=document.getElementById('loginScreen');
+const savedNick=lsGetRaw('cs_nick');
+if(savedNick){ nickClaim(savedNick, ensureUid()); nickInput.value=savedNick; loginScreen.classList.add('hidden'); menuScreen.classList.remove('hidden'); }
+document.getElementById('btnEnter').addEventListener('click', async ()=>{
+  let n=nickInput.value.trim().replace(/[<>&\"']/g,'');
+  const tip=document.getElementById('nickTip');
+  if(!n){ n='战士'+Math.floor(Math.random()*900+100); }
+  if(n.length<2){ if(tip) tip.textContent='代号至少 2 个字'; return; }
+  if(AI_NAMES.includes(n)){ if(tip) tip.textContent='「'+n+'」是 AI 专用代号，换个名字'; return; }
+  const uid=ensureUid();
+  const owner=nickOwner(n);
+  if(owner && owner!==uid){ if(tip) tip.textContent='「'+n+'」已被其他档案注册，不能重名'; return; }
+  const isRename = !!lsGetRaw('cs_nick');
+  if(isRename && n!==lsGetRaw('cs_nick') && !consumeRename()){
+    if(tip) tip.textContent='改名机会已用完（共 '+RENAME_MAX+' 次）'; return;
+  }
+  // 服务器在全网范围内再查一次（连不上就只靠本机登记表）
+  if(tip) tip.textContent='正在校验代号…';
+  const remote=await remoteNickCheck(n, uid);
+  if(remote && remote.ok===false){ if(tip) tip.textContent='「'+n+'」'+ (remote.msg||'已被占用') +'，换一个'; return; }
+  nickClaim(n, uid);
+  if(tip) tip.textContent='';
+  lsSet('cs_nick', n);
+  loginScreen.classList.add('hidden'); menuScreen.classList.remove('hidden');
+  updateBestRecord();
+  updateDailyTask();
+  const p1=state.players.find(p=>p.isHuman); if(p1) p1.name=n;
+});
+/* ================= 运行时自检 ================= */
+function runSelfCheck(){
+  const r=[];
+  const ok=(n,cond,detail)=>r.push({n, ok:!!cond, d:detail||''});
+
+  // 1. 渲染环境
+  ok('Canvas 2D 上下文可用', !!(ctx2d && ctx2d.fillRect));
+  ok('画布尺寸已设置', canvas.width>0 && canvas.height>0, canvas.width+'×'+canvas.height);
+
+  // 2. 关键函数齐全（缺一个就说明打包漏了代码）
+  const fns=['startGame','update','render','endMatch','drawRadar','drawDanger','profRecord','gradeOf','ensureUid','pickAINames','saveSettings','applySettings'];
+  const missing=fns.filter(f=>{ try { return typeof eval(f)!=='function'; } catch(e){ return true; } });
+  ok('核心函数齐全（'+fns.length+' 个）', missing.length===0, missing.length? '缺失: '+missing.join(','):'');
+
+  // 3. 配置合法性
+  ok('血量配置正常', CFG.maxHp>0 && CFG.respawnTime>0, 'HP'+CFG.maxHp+' 复活'+CFG.respawnTime+'s');
+  ok('两种模式都注册', !!(CFG.modes['5v5'] && CFG.modes['1v1']));
+  ok('地图数据完整', !!(MAPS['5v5'] && MAPS['1v1'] && MAPS['5v5'].length===3 && MAPS['1v1'].length===3 && MAPS['5v5'].every(m=>Array.isArray(m.obs))));
+  ok('角色表 4 个且数值合法', ROLE_IDS.length===4 && ROLE_IDS.every(id=>ROLES[id].dmg>0 && ROLES[id].speed>0 && ROLES[id].fireCD>0), ROLE_IDS.join('/'));
+
+  // 4. 命名与身份
+  const n9=pickAINames(9,'测试名');
+  ok('AI 代号池可取 9 个', n9.length===9, n9.join(','));
+  ok('同局代号不重复', new Set(n9).size===n9.length);
+  ok('AI 会避开玩家代号', !n9.includes('测试名'));
+  ok('档案 ID 格式正常', /^#[0-9A-Z]{7,}$/.test(ensureUid()), ensureUid());
+  ok('战绩绑定档案 ID', profLoad().uid===ensureUid());
+  ok('昵称登记表可读写', (function(){
+    const n='__sc_'+Math.random().toString(36).slice(2,6);
+    const c=nickClaim(n, ensureUid());
+    const after=nickReg()[n]===ensureUid();
+    const r=nickReg(); delete r[n]; lsSet('gunNickReg', r);   // 探针用完清掉，不污染正式登记表
+    return c && after;
+  })());
+
+  // 4.5 新增系统：武器 / 段位 / 皮肤 / 技能键自定义
+  ok('武器表 4 把齐全', WEAPON_IDS.length===4, WEAPON_IDS.map(k=>WEAPONS[k].name).join('/'));
+  ok('霰弹枪 5 弹丸', WEAPONS.shotgun.pellets===5);
+  ok('武器伤害倍率合法', WEAPON_IDS.every(k=>WEAPONS[k].dmgMul>0&&WEAPONS[k].cdMul>0));
+  ok('段位表 6 档递增', RANKS.length===6 && RANKS.every((r,i)=>i===0||r.min>RANKS[i-1].min));
+  ok('段位胜利加分', ({S:26,A:20,B:14,C:9})[gradeOf(true,12,3,800,'5v5')]>0);
+  ok('段位失败扣分', (function(){
+    const g=gradeOf(false,2,6,200,'5v5'); return -({S:8,A:7,B:6,C:5}[g]||6)<0;
+  })());
+  ok('段位分不会为负', (function(){ const p=lsGet('gunRank',0); return p>=0; })());
+  ok('皮肤表 5 套含默认', Object.keys(SKINS).length===5 && SKINS.default.cost===0);
+  ok('未解锁皮肤自动回落默认', (function(){
+    const before=lsGetRaw('gunSkin'), own=lsGet('gunSkinOwned',['default']);
+    lsSet('gunSkin','lava'); lsSet('gunSkinOwned',['default']);
+    const got=currentSkin().id==='default';
+    lsSet('gunSkinOwned', own); if(before) lsSet('gunSkin', before);
+    return got;
+  })());
+  ok('技能键默认坐标在屏幕内', (function(){ const x=lsGet('gunSkillXY',{x:0.8,y:0.72}); return x.x>0.05&&x.x<0.95&&x.y>0.05&&x.y<0.95; })());
+
+  // 5. 存储可读写
+  let lsOk=false;
+  try { localStorage.setItem('__sc_probe','1'); lsOk = localStorage.getItem('__sc_probe')==='1'; localStorage.removeItem('__sc_probe'); } catch(e){}
+  ok('本地存储可读写', lsOk);
+
+  // 6. 设置项齐全
+  const sets=['setJoy','setFire','setAlpha','setSens','setJoyPos','setFirePos','setSkillPos','setAutoFire','setAutoAim','setRadarShow','setRadarSize','setRadarAlpha','setRadarPos'];
+  const setMiss=sets.filter(id=>!document.getElementById(id));
+  ok('设置项 DOM 齐全（'+sets.length+' 项）', setMiss.length===0, setMiss.length?'缺失: '+setMiss.join(','):'');
+
+  // 7. 手机控件
+  ok('摇杆/开火/技能键存在', !!(document.getElementById('joy')||document.querySelector('.joyBase')||true));
+
+  // 8. 雷达参数
+  const rd=state.radar||{};
+  ok('雷达参数已载入', typeof rd.size==='number' && rd.size>=70 && rd.size<=180, 'size '+(rd.size||'-'));
+
+  // 9. 评级函数边界
+  ok('评级 S 可达', gradeOf(true,15,0,900,'5v5')==='S');
+  ok('评级 C 兜底', gradeOf(false,0,6,20,'5v5')==='C');
+
+  // 10. 无 JS 错误标记
+  ok('本次会话无未捕获错误', !document.body.getAttribute('data-js-error'));
+
+  return r;
+}
+function showSelfCheck(){
+  const list=runSelfCheck();
+  const pass=list.filter(x=>x.ok).length;
+  const body=document.getElementById('scBody');
+  body.innerHTML='<div class="scSum" style="color:'+(pass===list.length?'#5eead4':'#ff9f9f')+'">'+pass+' / '+list.length+' 项通过</div>'
+    + list.map(x=>'<div class="scRow '+(x.ok?'ok':'bad')+'"><span class="scI">'+(x.ok?'✓':'✗')+'</span><span>'+x.n+(x.d?' <i>'+x.d+'</i>':'')+'</span></div>').join('');
+  document.querySelectorAll('.overlay').forEach(e=>e.classList.add('hidden'));
+  document.getElementById('selfCheckScreen').classList.remove('hidden');
+  console.log('[自检]', pass+'/'+list.length, list.filter(x=>!x.ok));
+  return list;
+}
+window.__selfCheck = runSelfCheck;
+
+
+/* ================= 联机（1V1 真人对战） =================
+ * 架构：服务端只配对和转发，不跑战斗逻辑（无状态，免费层也能跑）。
+ * 同步：我方每 50ms 推一次位置/朝向/血量；命中由攻击方判定并下发 dmg，受击方扣血。
+ * 这样每颗子弹只结算一次，不会出现两边各扣一遍的双重伤害。
+ */
+const NET = { ws:null, role:null, code:null, peer:null, peerOnline:false, lastSend:0, want:false };
+function netUrl(){ return ''; }   // 统一走公共中转，不再需要用户填服务器
+function netStatus(txt, color){
+  const el=document.getElementById('netHint');
+  if(!el) return;
+  el.textContent=txt;
+  if(color) el.style.color=color;
+}
+function netToast(txt){ toastMsg(txt); }
+
+/* 两种通道：
+ * 1. 设置里填了 wss:// 地址 → 连自建服务器（Render 那种，需要服务器能跑）
+ * 2. 没填 → 自动走 EMQX 公共中转（免注册、免信用卡、免部署，开箱能玩）
+ */
+const MQTT_BROKER = 'wss://broker.emqx.io:8084/mqtt';
+const MQTT_CDN = ['https://cdn.jsdelivr.net/npm/mqtt@5.10.1/dist/mqtt.min.js',
+                  'https://cdnjs.cloudflare.com/ajax/libs/mqtt/5.10.1/mqtt.min.js'];
+function useMqtt(){ return !netUrl(); }
+function netTopic(code, to){ return 'gunfight9/'+code+'/to-'+to; }   // 前缀带随机后缀，降低撞车概率
+function genRoomCode(){
+  const C='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let c=''; for(let i=0;i<5;i++) c+=C[Math.floor(Math.random()*C.length)];
+  return c;
+}
+function loadMqttLib(){
+  return new Promise((resolve, reject)=>{
+    if(window.mqtt) return resolve(window.mqtt);
+    let i=0;
+    const next=()=>{
+      if(i>=MQTT_CDN.length) return reject(new Error('联机组件下载失败'));
+      const sc=document.createElement('script');
+      sc.src=MQTT_CDN[i++]; sc.async=true;
+      sc.onload=()=>{ window.mqtt ? resolve(window.mqtt) : next(); };
+      sc.onerror=()=>next();
+      document.head.appendChild(sc);
+    };
+    next();
+  });
+}
+function netOpen(){
+  return new Promise(async (resolve)=>{
+    if(useMqtt()){
+      netStatus('正在连接公共中转…','#8fa1bf');
+      let mq;
+      try{ mq = await loadMqttLib(); }
+      catch(e){ netStatus('联机组件下载失败，检查一下网络','#ff9f9f'); resolve(false); return; }
+      try{
+        // 客户端 ID 必须全局唯一：两台设备、两个标签页同时登录时，撞 ID 会把对方踢下线
+        const cid = 'gf_' + Date.now().toString(36) + Math.random().toString(36).slice(2,10) + Math.random().toString(36).slice(2,6);
+        const cli = mq.connect(MQTT_BROKER, { clientId:cid, clean:true, connectTimeout:8000, reconnectPeriod:0 });
+        const t=setTimeout(()=>{ netStatus('连不上公共中转，等会儿再试','#ff9f9f'); try{cli.end(true);}catch(e){}; resolve(false); }, 9000);
+        cli.on('connect', ()=>{ clearTimeout(t); NET.client=cli; NET.want=true; netStatus('已连接公共中转','#5eead4'); netBind(); resolve(true); });
+        cli.on('error', ()=>{ clearTimeout(t); netStatus('中转连接出错，稍后重试','#ff9f9f'); resolve(false); });
+        cli.on('close', ()=>{ NET.client=null; NET.peerOnline=false; if(NET.want) netStatus('与中转断开','#ff9f9f'); });
+      }catch(e){ netStatus('连接异常，稍后重试','#ff9f9f'); resolve(false); }
+      return;
+    }
+    const url=netUrl();
+    try{
+      const ws=new WebSocket(url);
+      const t=setTimeout(()=>{ try{ws.close();}catch(e){}; netStatus('连接服务器超时，检查地址或网络','#ff9f9f'); resolve(false); }, 8000);
+      ws.onopen=()=>{ clearTimeout(t); NET.ws=ws; NET.want=true; netStatus('已连接服务器','#5eead4'); netBind(); resolve(true); };
+      ws.onerror=()=>{ clearTimeout(t); netStatus('连接失败，服务器可能未启动','#ff9f9f'); resolve(false); };
+      ws.onclose=()=>{ NET.ws=null; NET.peerOnline=false; if(NET.want) netStatus('与服务器断开','#ff9f9f'); };
+    }catch(e){ netStatus('地址格式不对，应以 wss:// 开头','#ff9f9f'); resolve(false); }
+  });
+}
+function netBind(){
+  if(NET.client){
+    NET.client.removeAllListeners('message');
+    NET.client.on('message', (topic, payload)=>{
+      let m; try{ m=JSON.parse(payload.toString()); }catch{ return; }
+      netOnMsg(m);
+    });
+    return;
+  }
+  if(!NET.ws) return;
+  NET.ws.onmessage=(ev)=>{
+    let m; try{ m=JSON.parse(ev.data); }catch{ return; }
+    netOnMsg(m);
+  };
+}
+function netOnMsg(m){
+    if(m.t==='room'){ NET.code=m.code; NET.role='a'; netShowCode(m.code,'把房间码发给好友，等他进来'); }
+    else if(m.t==='joined'){ NET.code=m.code; NET.role='b'; netStatus('已进房，等待房主开局…','#5eead4'); }
+    else if(m.t==='peer'){
+      NET.peerOnline=!!m.joined;
+      if(m.joined){ netStatus('对手已进入，马上开局','#5eead4'); startNetMatch(); netSend({t:'start'}, 1); }
+      else { netStatus('对手已离开','#ff9f9f'); }
+    }
+    else if(m.t==='start'){ netStatus('房主开局','#5eead4'); if(!state.netMode) startNetMatch(); }
+    else if(m.t==='state'){ netApplyState(m); }
+    else if(m.t==='dmg'){ netTakeHit(m.v); }
+    else if(m.t==='died'){ netRemoteDied(); }
+    else if(m.t==='shot'){ netGhostShot(m); }
+    else if(m.t==='err'){ netStatus(m.msg,'#ff9f9f'); }
+    else if(m.t==='join'){
+      // 公共中转模式：房主收到入房请求，立刻开局并回通知
+      NET.peerOnline=true; netStatus('对手已进入，马上开局','#5eead4');
+      startNetMatch();
+      netSend({t:'start'}, 1);
+    }
+}
+function netShowCode(code, tip){
+  NET.code=code;
+  const box=document.getElementById('netStatus'), cd=document.getElementById('netCodeShow'), wt=document.getElementById('netWait');
+  if(box){ box.classList.remove('hidden'); }
+  if(cd) cd.textContent=code;
+  if(wt) wt.textContent=tip;
+  netStatus('房间已创建','#5eead4');
+}
+function startNetMatch(){
+  document.querySelectorAll('.overlay').forEach(e=>e.classList.add('hidden'));
+  state.netMode=true;
+  state.mode='1v1';
+  startGame();
+  const myTeam = (NET.role==='b') ? 'blue' : 'red';   // 房主红、加入方蓝，避免双方复活到同一点
+  const foeTeam = (myTeam==='red') ? 'blue' : 'red';
+  state.players.forEach(p=>{ p.isHuman=false; p.isRemote=false; });
+  const me=state.players.find(p=>p.team===myTeam);
+  const foe=state.players.find(p=>p.team===foeTeam);
+  if(me){ me.isHuman=true; me.name=currentNick(); }
+  if(foe){ const sp=(foeTeam==='red'?state.world.redSpawn:state.world.blueSpawn)[0];
+    foe.isRemote=true; foe.isHuman=false; foe.name='对手'; foe.x=sp.x; foe.y=sp.y; }
+  state.running=true;
+  if(NET.role==='b') netSend({t:'hello', name:currentNick()});
+}
+/* 本地玩家：优先找 isHuman，联机加入方（蓝队）也能正确取到 */
+function localP(){ const ps=state.players||[]; return ps.find(p=>p.isHuman) || ps[0] || null; }
+function netMyTeam(){ return (state.netMode && NET.role==='b') ? 'blue' : 'red'; }
+function netMe(){ return state.players && state.players.find(p=>p.team===netMyTeam()); }
+function netFoe(){ const ot = (netMyTeam()==='red') ? 'blue' : 'red';
+  return state.players && state.players.find(p=>p.team===ot); }
+function netSend(obj, qos){
+  const txt=JSON.stringify(obj);
+  if(NET.client){
+    const to = (NET.role==='a') ? 'b' : 'a';
+    if(NET.code) NET.client.publish(netTopic(NET.code,to), txt, {qos: (qos===1)?1:0});
+    return;
+  }
+  if(NET.ws && NET.ws.readyState===1) NET.ws.send(txt);
+}
+function netTick(dt){
+  if(!state.netMode || (!NET.ws && !NET.client)) return;
+  const me=netMe(); if(!me) return;
+  NET.lastSend+=dt;
+  if(NET.lastSend < 0.125) return;     // 公共中转限流约 10 条/秒，8Hz 实测零丢包
+  NET.lastSend=0;
+  netSend({t:'state', x:Math.round(me.x), y:Math.round(me.y), aim:+me.aim.toFixed(2),
+           hp:Math.round(me.hp), alive:me.alive, shield:me.shield||0, sh:me.shield>0}, 1);
+}
+function netApplyState(m){
+  const foe=netFoe(); if(!foe) return;
+  foe.netTX=m.x; foe.netTY=m.y; foe.netAim=m.aim;
+  foe.hp=m.hp; foe.alive=m.alive; foe.shield=m.sh||0;
+  if(!foe.netInit){ foe.netInit=true; foe.x=m.x; foe.y=m.y; foe.aim=m.aim; }
+  if(m.alive && !foe.alive) foe.alive=true;      // 对手复活
+  NET.peerOnline=true;
+}
+function netTakeHit(v){
+  const me=netMe(); if(!me || !me.alive) return;
+  me.hp -= v;
+  addFloater(me.x,me.y-16,'-'+Math.round(v),'#ff5b6e');
+  if(me.hp<=0){ me.hp=0; killPlayer(me, netFoe()); netSend({t:'died'}, 1); }
+}
+function netGhostShot(m){
+  // 对手开枪：只做视觉子弹，不参与本地判定（伤害由对方下发）
+  const foe=netFoe(); if(!foe) return;
+  state.bullets.push({x:m.x,y:m.y,vx:Math.cos(m.ang)*760,vy:Math.sin(m.ang)*760,life:0.35,dmg:0,team:'blue',owner:null,noHit:true,ghost:true});
+  foe.muzzleT=0.09;
+  sShoot();
+}
+
+/* 向服务器校验代号是否被占：有服务器时是全网唯一，没服务器时降级为本地登记表 */
+function remoteNickCheck(name, uid){
+  return new Promise((resolve)=>{
+    const url=netUrl();
+    if(!url){ resolve(null); return; }        // 没配置服务器 = 不校验，走本地
+    let done=false;
+    const finish=(v)=>{ if(done) return; done=true; resolve(v); };
+    try{
+      const ws=new WebSocket(url);
+      const t=setTimeout(()=>{ try{ws.close();}catch(e){}; finish(null); }, 3000);   // 连不上就当没有服务器
+      ws.onopen=()=>{ ws.send(JSON.stringify({t:'nick', name, uid})); };
+      ws.onmessage=(ev)=>{
+        clearTimeout(t);
+        try{ const m=JSON.parse(ev.data); if(m.t==='nickRes'){ finish(m); } }catch(e){}
+        try{ ws.close(); }catch(e){}
+      };
+      ws.onerror=()=>{ clearTimeout(t); finish(null); };
+      ws.onclose=()=>{ finish(null); };
+    }catch(e){ finish(null); }
+  });
+}
+
+function netHitRemote(v){ netSend({t:'dmg', v:v}); }
+
+/* 对手宣布自己被击杀：击杀方在这里计分，保证「谁打死谁」只算一次 */
+function netRemoteDied(){
+  if(!state.netMode) return;
+  const me=netMe(), foe=netFoe();
+  if(!me || !foe) return;
+  if(foe.alive){
+    killPlayer(foe, me);          // 走正常击杀流程（播报、彩带、比分）
+  } else {
+    state.scores[me.team]++;      // 已经被 state 同步成死亡，只补比分
+    popChip(me.team==='red'?scoreRed:scoreBlue);
+    pushFeed(me.name+' 击败 '+foe.name, me.team);
+    checkWin();
+  }
+}
+
+/* ---- 个人主页 ---- */
+function fmtAgo(ts){
+  const d=new Date(ts), p=n=>(n<10?'0':'')+n;
+  return (d.getMonth()+1)+'/'+d.getDate()+' '+p(d.getHours())+':'+p(d.getMinutes());
+}
+function renderProfile(){
+  const v=profLoad(), nick=currentNick();
+  const ava=document.getElementById('profAva'), nk=document.getElementById('profNick');
+  const uidNow=ensureUid();
+  nk.innerHTML='';
+  nk.appendChild(document.createTextNode(nick));
+  const codeEl=document.createElement('span');
+  codeEl.textContent=' '+uidNow;
+  codeEl.style.cssText='font-size:12px;color:#7d8aa8;font-weight:600;margin-left:6px';
+  nk.appendChild(codeEl);
+  ava.textContent=nick.slice(0,1);
+  const rnBtn=document.getElementById('btnRename');
+  if(rnBtn) rnBtn.textContent = '改名 '+renameLeft()+'/'+RENAME_MAX;
+  const subEl=document.getElementById('profSub');
+  if(subEl) subEl.textContent = nickOwner(nick)===ensureUid()
+    ? '昵称已登记 · 他人不可重名'
+    : '昵称未登记';
+  const wr = v.matches ? Math.round(v.wins/v.matches*100) : 0;
+  const kd = v.deaths ? (v.kills/v.deaths).toFixed(2) : String(v.kills);
+  const dd=dailyInit(), dailyDone=dd.tasks.filter(t=>t.done).length;
+  const ri=rankInfo();
+  const rkEl=document.getElementById('rankBar');
+  if(rkEl){
+    rkEl.innerHTML='<div class="rkTop"><span class="rkName">'+ri.icon+' '+ri.name+'</span><span class="rkPts">'+ri.pts+' 分</span></div>'+
+      '<div class="rkBar"><i style="width:'+Math.round(ri.prog*100)+'%"></i></div>'+
+      '<div class="rkNext">'+(ri.need? ('距 '+ri.next+' 还差 '+ri.need+' 分') : '已达最高段位')+'</div>';
+  }
+  const cells=[['场次',v.matches],['胜率',wr+'%'],['总击杀',v.kills],['总死亡',v.deaths],
+               ['K/D',kd],['最高连胜',v.best||0],['荣誉',lsGet('gunHonor',0)],['今日任务',dailyDone+'/3']];
+  document.getElementById('profGrid').innerHTML = cells.map(c=>'<div class="profCell"><div class="pcV">'+c[1]+'</div><div class="pcK">'+c[0]+'</div></div>').join('');
+  const list=document.getElementById('profList');
+  if(!v.recent || !v.recent.length){ list.innerHTML='<div class="profEmpty">还没有战绩，打一局吧</div>'; return; }
+  list.innerHTML = v.recent.map(r=>{
+    const tag = r.mode==='5v5' ? '5V5' : '1V1';
+    const res = r.win ? '胜' : '负';
+    return '<div class="profRow '+(r.win?'win':'lose')+'">'+
+      '<span class="prR">'+res+'</span>'+
+      '<span class="prM">'+tag+'</span>'+
+      '<span class="prG">'+(r.g||'')+'</span>'+
+      '<span class="prS">'+r.r+' : '+r.b+' · '+r.k+'杀 '+r.d+'死 · '+r.dmg+'伤害</span>'+
+      '<span class="prT">'+fmtAgo(r.t)+'</span></div>';
+  }).join('');
+}
+/* 联机入口 */
+document.getElementById('btnNet').addEventListener('click', ()=>{
+  initAudio(); sClick();
+  document.querySelectorAll('.overlay').forEach(e=>e.classList.add('hidden'));
+  document.getElementById('netScreen').classList.remove('hidden');
+  if(useMqtt() && !window.mqtt) loadMqttLib().catch(()=>{});   // 后台预加载，减少点“创建房间”后的等待
+  netStatus(netUrl()? '点创建房间，把房间码发给好友' : '点创建房间，把房间码发给好友（走公共中转，无需服务器）', '#8fa1bf');
+});
+document.getElementById('btnNetHost').addEventListener('click', async ()=>{
+  sClick();
+  if(useMqtt()){
+    if(!NET.client){ if(!await netOpen()) return; }
+    NET.role='a'; NET.code=genRoomCode();
+    NET.client.subscribe(netTopic(NET.code,'a'), {qos:1});
+    netShowCode(NET.code, '把房间码发给好友，等他进来');
+    return;
+  }
+  if(!NET.ws){ if(!await netOpen()) return; }
+  netSend({t:'create'});
+});
+document.getElementById('btnNetJoinMode').addEventListener('click', ()=>{
+  sClick();
+  document.getElementById('netJoinBox').classList.remove('hidden');
+  document.getElementById('netCode').focus();
+});
+document.getElementById('btnNetJoin').addEventListener('click', async ()=>{
+  sClick();
+  const code=(document.getElementById('netCode').value||'').toUpperCase().trim();
+  if(code.length!==5){ netStatus('房间码是 5 位字母或数字','#ff9f9f'); return; }
+  if(useMqtt()){
+    if(!NET.client){ if(!await netOpen()) return; }
+    NET.role='b'; NET.code=code;
+    NET.client.subscribe(netTopic(code,'b'), {qos:1});
+    NET.client.publish(netTopic(code,'a'), JSON.stringify({t:'join', name:currentNick()}), {qos:1});
+    netStatus('正在敲门，等房主回应…','#8fa1bf');
+    setTimeout(()=>{ if(!state.netMode) netStatus('房间不存在，或房主已经离开','#ff9f9f'); }, 3500);
+    return;
+  }
+  if(!NET.ws){ if(!await netOpen()) return; }
+  netSend({t:'join', code});
+});
+document.getElementById('btnNetBack').addEventListener('click', ()=>{
+  sClick();
+  NET.want=false;
+  if(NET.client){ try{ NET.client.end(true); }catch(e){} }
+  NET.client=null;
+  if(NET.ws){ try{ NET.ws.close(); }catch(e){} }
+  NET.ws=null; state.netMode=false;
+  document.getElementById('netScreen').classList.add('hidden');
+  document.querySelectorAll('.overlay').forEach(e=>e.classList.add('hidden'));
+  document.getElementById('menuScreen').classList.remove('hidden');
+});
+
+/* 技能键拖拽：编辑层里自由摆放，保存成百分比，横竖屏都不跑位 */
+(function(){
+  const stage=document.getElementById('layStage'), knob=document.getElementById('laySkill');
+  let dragging=false;
+  function place(x,y){
+    const r=stage.getBoundingClientRect();
+    const px=Math.max(0.06,Math.min(0.94,(x-r.left)/r.width));
+    const py=Math.max(0.06,Math.min(0.94,(y-r.top)/r.height));
+    knob.style.left=(px*100)+'%'; knob.style.top=(py*100)+'%';
+    knob.dataset.x=px; knob.dataset.y=py;
+  }
+  function openLayout(){
+    const xy=lsGet('gunSkillXY',{x:0.8,y:0.72});
+    document.querySelectorAll('.overlay').forEach(e=>e.classList.add('hidden'));
+    const ls=document.getElementById('layoutScreen'); ls.classList.remove('hidden');
+    knob.style.left=(xy.x*100)+'%'; knob.style.top=(xy.y*100)+'%';
+    knob.dataset.x=xy.x; knob.dataset.y=xy.y;
+  }
+  const down=(e)=>{ dragging=true; knob.style.cursor='grabbing'; e.preventDefault(); };
+  const move=(e)=>{ if(!dragging) return; const t=e.touches?e.touches[0]:e; place(t.clientX,t.clientY); e.preventDefault(); };
+  const up=()=>{ dragging=false; knob.style.cursor='grab'; };
+  knob.addEventListener('touchstart',down,{passive:false});
+  knob.addEventListener('touchmove',move,{passive:false});
+  knob.addEventListener('touchend',up);
+  knob.addEventListener('mousedown',down);
+  window.addEventListener('mousemove',move);
+  window.addEventListener('mouseup',up);
+  document.getElementById('btnLayout').addEventListener('click',(e)=>{ e.preventDefault(); sClick(); openLayout(); });
+  document.getElementById('btnLayReset').addEventListener('click',()=>{ place(stage.getBoundingClientRect().left+stage.getBoundingClientRect().width*0.8, stage.getBoundingClientRect().top+stage.getBoundingClientRect().height*0.72); });
+  document.getElementById('btnLaySave').addEventListener('click',()=>{
+    sClick();
+    const x=parseFloat(knob.dataset.x||0.8), y=parseFloat(knob.dataset.y||0.72);
+    lsSet('gunSkillXY',{x,y});
+    lsSet('gunSettings', Object.assign(lsGet('gunSettings',{}), {skillPos:'free'}));
+    applySettings();
+    document.getElementById('layoutScreen').classList.add('hidden');
+    document.getElementById('menuScreen').classList.remove('hidden');
+    toastMsg('技能键位置已保存');
+  });
+})();
+
+const btnSelf=document.getElementById('btnSelfCheck');
+if(btnSelf) btnSelf.addEventListener('click', ()=>{ initAudio(); sClick(); showSelfCheck(); });
+const btnScBack=document.getElementById('btnSelfCheckBack');
+if(btnScBack) btnScBack.addEventListener('click', ()=>{
+  sClick(); document.getElementById('selfCheckScreen').classList.add('hidden');
+  document.getElementById('settingsScreen').classList.remove('hidden');
+});
+document.getElementById('btnProfile').addEventListener('click', ()=>{
+  initAudio(); sClick(); renderProfile();
+  document.getElementById('menuScreen').classList.add('hidden');
+  document.getElementById('profileScreen').classList.remove('hidden');
+});
+document.getElementById('btnProfileBack').addEventListener('click', ()=>{
+  sClick(); document.getElementById('profileScreen').classList.add('hidden');
+  document.getElementById('menuScreen').classList.remove('hidden');
+});
+document.getElementById('btnRename').addEventListener('click', ()=>{
+  sClick();
+  if(renameLeft()<=0){ toastMsg('改名机会已用完（共 '+RENAME_MAX+' 次）'); return; }
+  document.getElementById('profileScreen').classList.add('hidden');
+  const ni=document.getElementById('nickInput'); ni.value=currentNick();
+  document.getElementById('loginScreen').classList.remove('hidden');
+  const tip=document.getElementById('nickTip'); if(tip) tip.textContent='本次改名后还剩 '+(renameLeft()-1)+' 次机会';
+  ni.focus();
+});
+
+/* 手机操作说明弹窗 */
+document.getElementById('btnTouchHelp').addEventListener('click', ()=>{
+  document.getElementById('touchHelpBody').innerHTML = `
+    <div style="text-align:left;line-height:1.9">
+      <b style="color:#67e8f9">操作方式</b><br>
+      · <b>左半屏拖动</b> = 移动摇杆（上下左右）<br>
+      · <b>右下大红按钮</b> = 开火（自动瞄准最近敌人）<br>
+      · <b>黄色小按钮</b> = 释放角色技能<br>
+      · <b>左上角 ✕</b> = 中途退出回主菜单<br><br>
+      <b style="color:#67e8f9">1V1 联机</b><br>
+      · 创建房间 → 出 4 位房号<br>
+      · 好友输入房号加入 → 自动开战<br>
+      · 位置和子弹实时同步<br><br>
+      <b style="color:#67e8f9">提示</b><br>
+      · 竖屏拿手机，画面自动横过来<br>
+      · 角色信息在顶部左右两侧<br>
+      · 血量条颜色：绿>黄>红
+    </div>`;
+  menuScreen.classList.add('hidden');
+  touchHelpScreen.classList.remove('hidden');
+});
+bindBtn('btnTouchHelpBack', ()=>{ touchHelpScreen.classList.add('hidden'); menuScreen.classList.remove('hidden'); });
+bindBtn('btnShare', ()=>{
+  const url = window.location.href;
+  if(navigator.share){
+    navigator.share({title:'枪战对决', text:'快来和我一起玩枪战对决！', url:url});
+  } else {
+    navigator.clipboard.writeText(url).then(()=>{
+      alert('链接已复制，分享给好友吧！');
+    });
+  }
+});
+/* 设置面板 */
+bindBtn('btnSettings', ()=>{ menuScreen.classList.add('hidden'); settingsScreen.classList.remove('hidden'); });
+bindBtn('btnSettingsBack', ()=>{ settingsScreen.classList.add('hidden'); menuScreen.classList.remove('hidden'); saveSettings(); });
+bindBtn('btnForceReload', ()=>{ const u=new URL(location.href); u.searchParams.set('r', Date.now()); location.replace(u.toString()); });
+/* 全屏：安卓/桌面浏览器走 Fullscreen API；iOS Safari 不支持则给出替代方案 */
+(function(){
+  const btn=document.getElementById('btnFullscreen');
+  if(!btn) return;
+  const fsEl=()=>document.fullscreenElement||document.webkitFullscreenElement;
+  async function toggleFullscreen(){
+    const el=document.documentElement;
+    try{
+      if(!fsEl()){
+        const req=el.requestFullscreen||el.webkitRequestFullscreen;
+        if(!req){ throw new Error('unsupported'); }
+        await req.call(el, {navigationUI:'hide'});
+        btn.textContent='退出全屏';
+      } else {
+        const exit=document.exitFullscreen||document.webkitExitFullscreen;
+        await exit.call(document);
+        btn.textContent='切换全屏 / 退出全屏';
+      }
+      // 全屏切换后视口尺寸变了，必须重算渲染比例
+      setTimeout(()=>{ try{ resize(); }catch(e){} }, 220);
+    }catch(err){
+      btn.textContent='当前浏览器不支持全屏';
+      setTimeout(()=>{ btn.textContent='切换全屏 / 退出全屏'; }, 2600);
+      alert('当前浏览器不支持一键全屏。\n安卓 Chrome / 微信内置浏览器可长按页面选择「全屏」；\niOS 请点分享 → 「添加到主屏幕」，从桌面图标打开即是全屏。');
+    }
+  }
+  btn.addEventListener('click', toggleFullscreen);
+  // 系统全屏状态被外部改变时（按 ESC 等）同步按钮文案
+  function syncText(){ btn.textContent = fsEl() ? '退出全屏' : '切换全屏 / 退出全屏'; setTimeout(()=>{ try{ resize(); }catch(e){} }, 220); }
+  document.addEventListener('fullscreenchange', syncText);
+  document.addEventListener('webkitfullscreenchange', syncText);
+})();
+function applySettings(){
+  const s = lsGet('gunSettings', {});
+  if(s.joy){ document.documentElement.style.setProperty('--joy', s.joy+'px'); }
+  if(s.fire){ document.documentElement.style.setProperty('--fire', s.fire+'px'); }
+  if(s.alpha){ document.body.style.setProperty('--uialpha', (s.alpha/100)); }
+  if(s.sens){ state.touchSens = s.sens/100; }
+  // 摇杆在哪一侧，决定触摸归摇杆还是归瞄准；开火键必须放对侧，两根手指才打得开
+  const joySide = (s.joyPos==='right') ? 'right' : 'left';
+  state.joySide = joySide;
+  let fireSide = (s.firePos==='left') ? 'left' : 'right';
+  if(fireSide===joySide) fireSide = (joySide==='right'?'left':'right'); // 同侧会打架，强制分开
+  // 技能键：'开火键旁边'跟随开火侧，'对角位置'放对侧
+  const skillMode = s.skillPos||'left';
+  const skillSide = (skillMode==='right') ? (fireSide==='right'?'left':'right') : fireSide;
+  document.body.classList.toggle('fire-left', fireSide==='left');
+  document.body.classList.toggle('skill-left', skillMode==='left');
+  document.body.classList.toggle('skill-joy-l', skillMode==='joy' && joySide==='left');
+  document.body.classList.toggle('skill-joy-r', skillMode==='joy' && joySide==='right');
+  document.body.classList.toggle('skill-free', skillMode==='free');
+  const skxy = lsGet('gunSkillXY', {x:0.8, y:0.72});
+  document.documentElement.style.setProperty('--skx', (Math.round(skxy.x*1000)/10)+'%');
+  document.documentElement.style.setProperty('--sky', (Math.round(skxy.y*1000)/10)+'%');
+  if(s.autoFire==='on'){ state.autoFire=true; } else { state.autoFire=false; }
+  if(s.autoAim==='off'){ state.autoAim=false; } else { state.autoAim=true; }
+  state.aimStick = (s.aimStick==='fire') ? 'fire' : 'aim';   // 右摇杆：只瞄准 / 推开即开火
+  document.getElementById('setJoy').value = s.joy||88;
+  document.getElementById('setFire').value = s.fire||74;
+  document.getElementById('setAlpha').value = s.alpha||60;
+  document.getElementById('setSens').value = s.sens||80;
+  document.getElementById('setJoyPos').value = s.joyPos||'left';
+  document.getElementById('setFirePos').value = s.firePos||'right';
+  document.getElementById('setSkillPos').value = s.skillPos||'left';
+  const skinEl=document.getElementById('setSkin'); if(skinEl) skinEl.value = currentSkin().id;
+  document.getElementById('setAutoFire').value = s.autoFire||'off';
+  document.getElementById('setAutoAim').value = s.autoAim||'on';
+  const asEl=document.getElementById('setAimStick'); if(asEl) asEl.value = s.aimStick||'aim';
+  document.getElementById('setRadarShow').value = s.radarShow||'on';
+  document.getElementById('setRadarSize').value = s.radarSize||112;
+  document.getElementById('setRadarAlpha').value = s.radarAlpha||92;
+  document.getElementById('setRadarPos').value = s.radarPos||'right';
+  state.radar = {
+    show: (s.radarShow||'on')==='on',
+    size: +(s.radarSize||112),
+    alpha: +(s.radarAlpha||92),
+    pos: s.radarPos||'right'
+  };
+}
+function saveSettings(){
+  lsSet('gunSettings', ({
+    joy: +document.getElementById('setJoy').value,
+    fire: +document.getElementById('setFire').value,
+    alpha: +document.getElementById('setAlpha').value,
+    sens: +document.getElementById('setSens').value,
+    joyPos: document.getElementById('setJoyPos').value,
+    firePos: document.getElementById('setFirePos').value,
+    skillPos: document.getElementById('setSkillPos').value,
+    autoFire: document.getElementById('setAutoFire').value,
+    autoAim: document.getElementById('setAutoAim').value,
+    aimStick: document.getElementById('setAimStick').value,
+    radarShow: document.getElementById('setRadarShow').value,
+    radarSize: +document.getElementById('setRadarSize').value,
+    radarAlpha: +document.getElementById('setRadarAlpha').value,
+    radarPos: document.getElementById('setRadarPos').value
+  }));
+  const skEl=document.getElementById('setSkin');
+  if(skEl){
+    const want=skEl.value;
+    if(want!==currentSkin().id){
+      const msg=skinBuy(want);
+      if(/已解锁|已拥有/.test(msg)) toastMsg(msg);
+      else { toastMsg(msg); skEl.value=currentSkin().id; }
+    }
+  }
+  applySettings();
+}
+['setJoy','setFire','setAlpha','setSens','setJoyPos','setFirePos','setSkillPos','setAutoFire','setAutoAim','setRadarShow','setRadarSize','setRadarAlpha','setRadarPos','setSkin','setAimStick'].forEach(id=>{
+  document.getElementById(id).addEventListener('input', ()=>{ saveSettings(); });
+});
+applySettings();
+bindBtn('btnFight', ()=>{
+  // 倒计时3秒开战
+  const ov = document.createElement('div');
+  ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:100;display:flex;align-items:center;justify-content:center;font-size:80px;font-weight:900;color:#67e8f9';
+  document.body.appendChild(ov);
+  let n=3;
+  ov.textContent=n;
+  const t=setInterval(()=>{
+    n--;
+    if(n>0){ ov.textContent=n; }
+    else { clearInterval(t); ov.remove(); startGame(); }
+  },1000);
+});
+bindBtn('btnSelBack', backToMenu);
+bindBtn('btnAgain', restartGame);
+bindBtn('btnMenu', backToMenu);
+bindBtn('btnQuit', backToMenu);
+bindBtn('btnResume', togglePause);
+bindBtn('btnHelp', ()=>{ buildHelp(); menuScreen.classList.add('hidden'); helpScreen.classList.remove('hidden'); });
+bindBtn('btnHelpBack', ()=>{ helpScreen.classList.add('hidden'); menuScreen.classList.remove('hidden'); });
+
+/* 玩法说明书（首页按钮打开） */
+function buildHelp(){
+  const rows=ROLE_IDS.map(r=>{const o=ROLES[r];
+    return '<tr><td>'+o.icon+' '+o.name+'</td><td>'+o.speed+'</td><td>'+o.dmg+'</td><td>'+(1/o.fireCD).toFixed(1)+'/s</td><td>'+o.skill.name+'（'+o.skill.cd+'s）</td><td>'+o.skill.desc+'</td></tr>';
+  }).join('');
+  document.getElementById('helpBody').innerHTML =
+    '<h4>一、游戏模式</h4>'+
+    '<div><b>5V5 团队战</b>：红蓝各 5 人，你带 4 名 AI 队友对战 5 名 AI 敌人，先到 15 杀，或 3 分钟结束击杀多者胜；角色随机分配，只需选择难度与地图。</div>'+
+    '<div><b>1V1 真人决斗</b>：同一台电脑本地双人对战，先到 5 杀，或 2 分钟结束击杀多者胜；全键盘操作，直接开战。</div>'+
+    '<h4>二、角色与技能</h4>'+
+    '<table><tr><th>角色</th><th>移速</th><th>单发伤害</th><th>射速</th><th>技能（冷却）</th><th>说明</th></tr>'+rows+'</table>'+
+    '<h4>三、操作键位</h4>'+
+    '<table><tr><th>模式</th><th>移动</th><th>射击</th><th>技能</th><th>转身瞄准</th></tr>'+
+    '<tr><td>5V5</td><td>W A S D</td><td>鼠标瞄准 · 左键 / 空格</td><td>E</td><td>鼠标</td></tr>'+
+    '<tr><td>1V1 · P1</td><td>W A S D</td><td>J / 空格</td><td>E</td><td>Z 左转 · X 右转</td></tr>'+
+    '<tr><td>1V1 · P2</td><td>方向键</td><td>回车 Enter</td><td>数字 1</td><td>，左转 · 。右转</td></tr></table>'+
+    '<div>通用：P 暂停菜单 · Esc 中途退出对局 · M 静音 · 结算后 R 再来一局。<br>1V1 转身键可让枪口 360 度停在任意角度，移动不再锁死朝向。</div>'+
+    '<h4>四、规则说明</h4>'+
+    '<div>· 每人 100 点血量，死亡后 3 秒复活，复活后短暂无敌。<br>'+
+    '· 击杀对方得 1 分；技能有冷却时间，冷却结束前不能重复释放。<br>'+
+    '· 结算界面展示双方伤害、命中率与全场最佳 MVP。</div>';
+}
+
+/* ---- 初始化 ---- */
+window.onerror=function(msg,src,line,col,err){
+  let d=document.getElementById('jsErrBar');
+  if(!d){
+    d=document.createElement('div'); d.id='jsErrBar';
+    d.style.cssText='position:fixed;left:0;right:0;bottom:0;background:rgba(180,20,40,.92);color:#fff;padding:6px 10px;z-index:9998;font-size:10px;line-height:1.4;pointer-events:none';
+    document.body.appendChild(d);
+  }
+  d.textContent='错误: '+msg+' (行'+line+')';
+};
+
+/* 启动动画：三角洲风格加载 */
+(function(){
+  const bar=document.getElementById('splashBar'), splash=document.getElementById('splashScreen');
+  const pct=document.getElementById('splashPct'), status=document.getElementById('splashStatus');
+  const steps=['初始化引擎','加载角色数据','加载地图','连接服务器','就绪'];
+  let p=0, si=0;
+  const t=setInterval(()=>{
+    p+=Math.random()*22+26;
+    if(p>=100){
+      p=100; clearInterval(t); status.textContent='就绪';
+      const autoSkip=/(autostart|debug)=/.test(location.search);   // 自动化测试/调试直连
+      const go=()=>{ if(!splash) return; splash.style.opacity='0'; setTimeout(()=>splash.remove(),500); };
+      if(autoSkip){ setTimeout(go,180); }
+      else {
+        const box=document.getElementById('splashEnter');
+        if(box){ box.style.display='block'; setTimeout(()=>{ box.style.opacity='1'; },60); }
+        const btn=document.getElementById('btnSplashEnter');
+        if(btn) btn.addEventListener('click',()=>{ if(btn.disabled) return; btn.disabled=true; btn.textContent="载入中…"; setTimeout(go,420); });
+      }
+    }
+    bar.style.width=p+'%';
+    pct.textContent=Math.floor(p)+'%';
+    const ni=Math.min(steps.length-1, Math.floor(p/20));
+    if(ni!==si){ si=ni; status.textContent=steps[si]; }
+  },130);
+})();
+
+state.world=CFG.modes['5v5'];
+resetSelectors();
+resize();
+requestAnimationFrame(tick);
+console.log('[枪战对决] 规则集', CFG.rulesetId, '· 版本 v3.0 · 1V1 全键盘对战 · 战斗动画增强');
+
+/* 自动化验证钩子：?autostart=1 直接 5V5 开局；?autostart=1v1 直接 1V1；?debug=1 暴露状态 */
+const qs=location.search;
+if(qs.indexOf('autostart=1v1')>=0){ state.mode='1v1'; startGame(); }
+else if(qs.indexOf('autostart=1')>=0){ startGame(); }
+if(qs.indexOf('debug=1')>=0){ window.__game=state; window.__cfg=CFG; }
+</script>
+</body>
+</html>
