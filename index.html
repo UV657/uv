@@ -241,6 +241,8 @@ body.is-touch.in-game #btnFire{display:flex}
 body.is-touch.in-game #touchTip{display:block}
 @keyframes popScale{0%{transform:translateX(-50%) scale(.5);opacity:0}100%{transform:translateX(-50%) scale(1);opacity:1}}
 body.is-touch .pc-only{display:none !important}
+#pcTip{font-size:12px;color:#7f92b0;letter-spacing:.5px}
+body:not(.is-touch) #touchTip{display:none !important}
 body.is-touch #hintBar{display:none !important}
 /* ===== 移动端精简 UI：像王者那样干净 ===== */
 body.is-touch .title{font-size:26px !important;margin-bottom:6px !important}
@@ -509,6 +511,7 @@ body.fire-left #btnFire{left:18px !important;right:auto !important}
     <div id="btnSkill"><span id="skillLabel">技</span><div id="skillRing"></div><span id="skillCdNum"></span></div>
     <button id="btnFire">开火</button>
     <div id="touchTip">左摇杆移动 · 自动瞄准 · 右下开火按钮射击</div>
+    <div id="pcTip" class="pc-only">W A S D 移动 · 鼠标瞄准 · 左键开火 · E 技能</div>
     <button id="btnExitFight">✕</button>
 
     <!-- HUD -->
@@ -665,6 +668,7 @@ body.fire-left #btnFire{left:18px !important;right:auto !important}
           <input id="netCode" maxlength="5" placeholder="输入 5 位房间码"
             style="width:100%;padding:11px;border-radius:10px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.06);color:#e8eefc;font-size:16px;text-align:center;letter-spacing:3px;text-transform:uppercase;outline:none">
           <button class="btn primary" id="btnNetJoin" style="width:100%;margin-top:8px">进入房间</button>
+          <div style="font-size:11px;color:#8fa1bf;margin-top:10px;line-height:1.6">电脑和手机分开匹配：电脑只能和电脑连，手机只能和手机连。<br>房间码通用，但不同设备输入同一个码也进不去。</div>
         </div>
         <div id="netStatus" class="netStatus hidden">
           <div class="netCode" id="netCodeShow">----</div>
@@ -713,7 +717,7 @@ body.fire-left #btnFire{left:18px !important;right:auto !important}
       </div>
     </div>
     <div class="overlay hidden" id="settingsScreen">
-      <div class="title">自定义设置 <span id="verTag" style="font-size:11px;color:#7d8aa8;font-weight:400;display:block;margin-top:2px">v2.3.1124</span></div>
+      <div class="title">自定义设置 <span id="verTag" style="font-size:11px;color:#7d8aa8;font-weight:400;display:block;margin-top:2px">v2.3.1125</span></div>
       <div id="settingsWrap" style="text-align:left;max-width:320px;line-height:2.2">
         <div>摇杆大小 <input type="range" id="setJoy" min="60" max="140" value="88" style="width:100%"></div>
         <div>开火键大小 <input type="range" id="setFire" min="50" max="120" value="74" style="width:100%"></div>
@@ -1577,8 +1581,9 @@ function update(dt, rawDt){
           if(state.keys['KeyW']) my-=1; if(state.keys['KeyS']) my+=1;
           if(state.keys['KeyA']) mx-=1; if(state.keys['KeyD']) mx+=1;
           movePlayer(p,mx,my,dt);
-          if(state.mode==='1v1'){
-            // 瞄准独立于移动：Z 左转 / X 右转，可 360 度停在任意角度
+          const localDuel = state.mode==='1v1' && state.players.some(o=>o.team==='blue' && o.isHuman && !o.isRemote);
+          if(state.mode==='1v1' && localDuel){
+            // 本地双人：瞄准靠 Z 左转 / X 右转，可 360 度停在任意角度
             if(state.keys['KeyZ']) p.aim -= ROT_SPEED*dt;
             if(state.keys['KeyX']) p.aim += ROT_SPEED*dt;
             if((state.keys['KeyJ']||state.keys['Space']) && p.cooldown<=0) shoot(p);
@@ -2560,7 +2565,9 @@ const MQTT_BROKER = 'wss://broker.emqx.io:8084/mqtt';
 const MQTT_CDN = ['https://cdn.jsdelivr.net/npm/mqtt@5.10.1/dist/mqtt.min.js',
                   'https://cdnjs.cloudflare.com/ajax/libs/mqtt/5.10.1/mqtt.min.js'];
 function useMqtt(){ return !netUrl(); }
-function netTopic(code, to){ return 'gunfight9/'+code+'/to-'+to; }   // 前缀带随机后缀，降低撞车概率
+/* 端类型：触屏=手机(m)，键鼠=电脑(p)。两端用不同主题前缀，房间码互不相通 */
+function netPlat(){ return isTouch ? 'm' : 'p'; }
+function netTopic(code, to){ return 'gunfight9/'+netPlat()+'/'+code+'/to-'+to; }
 function genRoomCode(){
   const C='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
   let c=''; for(let i=0;i<5;i++) c+=C[Math.floor(Math.random()*C.length)];
@@ -2837,7 +2844,7 @@ document.getElementById('btnNetJoin').addEventListener('click', async ()=>{
     NET.client.subscribe(netTopic(code,'b'), {qos:1});
     NET.client.publish(netTopic(code,'a'), JSON.stringify({t:'join', name:currentNick()}), {qos:1});
     netStatus('正在敲门，等房主回应…','#8fa1bf');
-    setTimeout(()=>{ if(!state.netMode) netStatus('房间不存在，或房主已经离开','#ff9f9f'); }, 3500);
+    setTimeout(()=>{ if(!state.netMode) netStatus('没收到回应：检查房间码；电脑和手机不互通','#ff9f9f'); }, 4000);
     return;
   }
   if(!NET.ws){ if(!await netOpen()) return; }
