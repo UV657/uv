@@ -241,6 +241,7 @@ body.is-touch.in-game #btnFire{display:flex}
 body.is-touch.in-game #touchTip{display:block}
 @keyframes popScale{0%{transform:translateX(-50%) scale(.5);opacity:0}100%{transform:translateX(-50%) scale(1);opacity:1}}
 body.is-touch .pc-only{display:none !important}
+#settingsScreen{justify-content:flex-start !important;overflow-y:auto !important;-webkit-overflow-scrolling:touch;padding:14px 0 40px !important}
 #pcTip{font-size:12px;color:#7f92b0;letter-spacing:.5px}
 body:not(.is-touch) #touchTip{display:none !important}
 body.is-touch #hintBar{display:none !important}
@@ -560,6 +561,7 @@ body.fire-left #btnFire{left:18px !important;right:auto !important}
     <!-- 主菜单 -->
     <div class="overlay hidden" id="menuScreen">
       <button id="btnSettings" style="position:absolute;top:14px;right:14px;width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);color:#cdd9f0;font-size:18px;cursor:pointer;z-index:10">⚙</button>
+      <button id="btnProfileTop" title="我的主页" style="position:absolute;top:14px;left:14px;width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#22d3ee,#3b82f6);border:1px solid rgba(140,200,255,.5);color:#04121c;font-size:15px;font-weight:800;cursor:pointer;z-index:10;display:flex;align-items:center;justify-content:center;padding:0">我</button>
       <div class="title">枪战对决</div>
       <div class="sub">选择模式开始战斗</div>
       <div id="bestRecord" style="display:none;font-size:13px;color:#ffd700;background:rgba(255,215,0,.1);padding:6px 16px;border-radius:20px;border:1px solid rgba(255,215,0,.3)"></div>
@@ -579,7 +581,6 @@ body.fire-left #btnFire{left:18px !important;right:auto !important}
         <button class="btn ghost" id="btnHelp">玩法说明书</button>
         <button class="btn ghost" id="btnTouchHelp">手机操作说明</button>
         <button class="btn ghost" id="btnNet">联机对战</button>
-        <button class="btn ghost" id="btnProfile">我的主页</button>
         <button class="btn ghost" id="btnShare">分享给好友</button>
       </div>
     </div>
@@ -719,7 +720,7 @@ body.fire-left #btnFire{left:18px !important;right:auto !important}
       </div>
     </div>
     <div class="overlay hidden" id="settingsScreen">
-      <div class="title">自定义设置 <span id="verTag" style="font-size:11px;color:#7d8aa8;font-weight:400;display:block;margin-top:2px">v2.3.1126</span></div>
+      <div class="title">自定义设置 <span id="verTag" style="font-size:11px;color:#7d8aa8;font-weight:400;display:block;margin-top:2px">v2.3.1127</span></div>
       <div id="settingsWrap" style="text-align:left;max-width:320px;line-height:2.2">
         <div>摇杆大小 <input type="range" id="setJoy" min="60" max="140" value="88" style="width:100%"></div>
         <div>开火键大小 <input type="range" id="setFire" min="50" max="120" value="74" style="width:100%"></div>
@@ -747,7 +748,30 @@ body.fire-left #btnFire{left:18px !important;right:auto !important}
       </div>
       <div style="margin-top:8px;text-align:center">
         <button class="btn ghost" id="btnSelfCheck" style="width:100%;max-width:320px;padding:7px;font-size:12px;margin-bottom:6px">运行自检（检查这一版有没有坏）</button>
-        <button class="btn" id="btnForceReload" style="width:100%;max-width:320px;padding:7px;font-size:12px;background:#1a2340">看不到最新内容？点我强制刷新</button>
+        <button class="btn" id="btnForceReload" style="width:100%;max-width:320px;padding:7px;font-size:12px;background:#1a2340;color:#e8eefc">看不到最新内容？点我强制刷新</button>
+      </div>
+      <div style="max-width:320px;margin:14px auto 0;text-align:left;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:12px 14px;font-size:12px;line-height:1.9;color:#9fb2d0">
+        <div style="font-size:13px;font-weight:800;color:#67e8f9;margin-bottom:6px">关于我们</div>
+        <div><b style="color:#e8eefc">制作人</b>　刘伟骏</div>
+        <div>16 岁 · 东莞理工学校电子技术应用专业（中职）</div>
+        <div style="margin-top:6px">一个人从零写的网页枪战游戏，纯 HTML 单文件，没用任何游戏引擎。从画第一个圆点开始，一步一步改到现在。</div>
+        <div style="margin-top:6px"><b style="color:#e8eefc">技术</b>　Canvas 2D · 原生 JS · MQTT 公网联机 · PWA 可装到桌面</div>
+        <button class="btn ghost" id="btnHistory" style="width:100%;margin-top:10px;padding:7px;font-size:12px">查看修改历史</button>
+        <div id="historyBox" style="display:none;margin-top:10px;border-top:1px solid rgba(255,255,255,.1);padding-top:10px">
+          <div style="font-size:13px;font-weight:800;color:#67e8f9;margin-bottom:6px">修改历史</div>
+          <div style="line-height:1.8">
+            <div><b style="color:#ffd34d">v2.3.1127</b>　个人主页移到左上角，设置里加「关于我们」与修改历史</div>
+            <div><b style="color:#ffd34d">v2.3.1126</b>　代号全网唯一：一个名字只能用一次</div>
+            <div><b style="color:#ffd34d">v2.3.1125</b>　电脑/手机双端分离：电脑键鼠、手机触屏，两端联机互不相通</div>
+            <div><b style="color:#ffd34d">v2.3.1124</b>　修正联机分队伍与出生点，加点击进入页，GitHub Pages 上线</div>
+            <div><b style="color:#ffd34d">v2.3.1123</b>　删掉服务器输入框与开火摇杆，补全搜索引擎抓取信息</div>
+            <div><b style="color:#ffd34d">v2.3.1122</b>　公网联机上线：免注册、免部署，5 位房间码直连</div>
+            <div><b style="color:#ffd34d">v2.3.1121</b>　段位系统、4 种武器、5 套皮肤、技能键可自定义</div>
+            <div><b style="color:#ffd34d">v2.3.1119</b>　技能冷却环、每日任务、荣誉点</div>
+            <div><b style="color:#ffd34d">v2.3.1117</b>　雷达自定义、残血预警、结算评级、运行时自检</div>
+            <div><b style="color:#ffd34d">v2.3.1115</b>　雷达小地图、地图名、兵种单字标签</div>
+          </div>
+        </div>
       </div>
       <div class="rowBtns">
         <button class="btn" id="btnSettingsBack">完成</button>
@@ -2106,7 +2130,12 @@ function togglePause(){
   pauseTip.textContent = state.mode==='1v1' ? '按 P / Esc 继续' : '按 P / Esc 继续（失焦会自动暂停）';
   if(!state.paused) state.lastT=performance.now();
 }
+function refreshProfileBtn(){
+  const b=document.getElementById('btnProfileTop');
+  if(b){ const n=currentNick()||'我'; b.textContent=n.trim().slice(0,1) || '我'; b.title='我的主页 · '+n; }
+}
 function updateBestRecord(){
+  refreshProfileBtn();
   const best = lsGet('gunBest', {});
   const el = document.getElementById('bestRecord');
   if(el){
@@ -2953,7 +2982,7 @@ if(btnScBack) btnScBack.addEventListener('click', ()=>{
   sClick(); document.getElementById('selfCheckScreen').classList.add('hidden');
   document.getElementById('settingsScreen').classList.remove('hidden');
 });
-document.getElementById('btnProfile').addEventListener('click', ()=>{
+document.getElementById('btnProfileTop').addEventListener('click', ()=>{
   initAudio(); sClick(); renderProfile();
   document.getElementById('menuScreen').classList.add('hidden');
   document.getElementById('profileScreen').classList.remove('hidden');
@@ -3006,6 +3035,11 @@ bindBtn('btnShare', ()=>{
 });
 /* 设置面板 */
 bindBtn('btnSettings', ()=>{ menuScreen.classList.add('hidden'); settingsScreen.classList.remove('hidden'); });
+bindBtn('btnHistory', ()=>{
+  sClick();
+  const b=document.getElementById('historyBox');
+  b.style.display = (b.style.display==='block') ? 'none' : 'block';
+});
 bindBtn('btnSettingsBack', ()=>{ settingsScreen.classList.add('hidden'); menuScreen.classList.remove('hidden'); saveSettings(); });
 bindBtn('btnForceReload', ()=>{ const u=new URL(location.href); u.searchParams.set('r', Date.now()); location.replace(u.toString()); });
 /* 全屏：安卓/桌面浏览器走 Fullscreen API；iOS Safari 不支持则给出替代方案 */
