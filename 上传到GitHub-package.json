@@ -1,0 +1,10 @@
+{
+  "name": "gunfight-relay",
+  "version": "1.0.0",
+  "private": true,
+  "description": "枪战对决 1v1 房间中继服务（WebSocket）",
+  "main": "index.js",
+  "scripts": { "start": "node index.js" },
+  "dependencies": { "ws": "^8.18.0" },
+  "engines": { "node": ">=18" }
+}
