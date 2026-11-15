@@ -824,7 +824,7 @@ body.fire-left #btnFire{left:18px !important;right:auto !important}
       <span id="noticeBarClose" style="flex:none;width:20px;height:20px;line-height:20px;text-align:center;border-radius:50%;background:rgba(255,255,255,.1);color:#9fb2d0;font-size:12px">✕</span>
     </div>
     <div id="maintBar" class="hidden" style="position:fixed;top:calc(env(safe-area-inset-top,0px) + 62px);left:52px;right:52px;max-width:430px;margin:0 auto;z-index:40;background:rgba(255,140,90,.16);border:1px solid rgba(255,150,80,.5);border-radius:12px;padding:7px 12px;font-size:12px;color:#ffd0ad;text-align:center">系统维护中，匹配暂停</div>
-    <style>body.in-game #noticeBar,body.in-game #maintBar,body.admin-mode #noticeBar,body.admin-mode #maintBar{display:none !important}</style>
+    <style>body.in-game #noticeBar,body.in-game #maintBar{display:none !important}</style>
     <!-- 全服公告 -->
     <div class="overlay hidden" id="noticeScreen" style="align-items:flex-start;justify-content:center;overflow-y:auto;padding:26px 16px">
       <div style="width:100%;max-width:520px;background:rgba(9,14,26,.96);border:1px solid rgba(103,232,249,.3);border-radius:16px;padding:18px 18px 16px;text-align:left">
@@ -995,7 +995,7 @@ body.fire-left #btnFire{left:18px !important;right:auto !important}
       </div>
     </div>
     <div class="overlay hidden" id="settingsScreen">
-      <div class="title">自定义设置 <span id="verTag" style="font-size:11px;color:#7d8aa8;font-weight:400;display:block;margin-top:2px">v2.6.6</span></div>
+      <div class="title">自定义设置 <span id="verTag" style="font-size:11px;color:#7d8aa8;font-weight:400;display:block;margin-top:2px">v2.6.7</span></div>
       <div id="settingsWrap" style="text-align:left;max-width:320px;line-height:2.2">
         <div>摇杆大小 <input type="range" id="setJoy" min="60" max="140" value="88" style="width:100%"></div>
         <div>开火键大小 <input type="range" id="setFire" min="50" max="120" value="74" style="width:100%"></div>
@@ -1040,6 +1040,7 @@ body.fire-left #btnFire{left:18px !important;right:auto !important}
         <div id="historyBox" style="display:none;margin-top:10px;border-top:1px solid rgba(255,255,255,.1);padding-top:10px">
           <div style="font-size:13px;font-weight:800;color:#67e8f9;margin-bottom:6px">修改历史</div>
           <div style="line-height:1.8">
+            <div><b style="color:#ffd34d">v2.6.7</b>　公告栏在所有页面都显示（含管理页面），不再隐藏，方便随时看当前公告</div>
             <div><b style="color:#ffd34d">v2.6.6</b>　新增违规账号处罚：被封禁的账号会停在登录页并显示解除时间与原因；被禁言的账号不能改名、不能邀请好友、不能点赞。公告栏在管理页面自动隐藏，不挡操作</div>
             <div><b style="color:#ffd34d">v2.6.5</b>　公告发布更稳：中转没连上会自动重连再发（最多等 9 秒），发布后主页顶部立刻出现</div>
             <div><b style="color:#ffd34d">v2.6.4</b>　主页公告条右侧加了叉，看完直接点掉，不会再挡视野；5V5 给本人加了青色脉冲圈和向外扩散的水波纹，头顶标「你」，人多也能一眼找到自己</div>
@@ -4154,7 +4155,9 @@ document.getElementById('adminList').addEventListener('click', async (e)=>{
 });
 function adminBoot(){
   if(!/[?&]admin=1/.test(location.search)) return;
-  document.body.classList.add('admin-mode');
+  const nb=document.getElementById('noticeBar'), mb=document.getElementById('maintBar');
+  if(nb){ nb.style.top='6px'; }        // 终端页公告条贴顶，不挡面板
+  if(mb){ mb.style.top='52px'; }
   document.querySelectorAll('.overlay,.splash,#splashScreen').forEach(e=>{ e.classList.add('hidden'); if(e.id==='splashScreen') e.style.display='none'; });
   adminShow(true);
   // 同一标签页内已登录过就直接进面板，免去反复输口令
