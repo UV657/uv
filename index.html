@@ -858,7 +858,7 @@ body.fire-left #btnFire{left:18px !important;right:auto !important}
       </div>
     </div>
     <div class="overlay hidden" id="settingsScreen">
-      <div class="title">自定义设置 <span id="verTag" style="font-size:11px;color:#7d8aa8;font-weight:400;display:block;margin-top:2px">v2.5.1</span></div>
+      <div class="title">自定义设置 <span id="verTag" style="font-size:11px;color:#7d8aa8;font-weight:400;display:block;margin-top:2px">v2.5.2</span></div>
       <div id="settingsWrap" style="text-align:left;max-width:320px;line-height:2.2">
         <div>摇杆大小 <input type="range" id="setJoy" min="60" max="140" value="88" style="width:100%"></div>
         <div>开火键大小 <input type="range" id="setFire" min="50" max="120" value="74" style="width:100%"></div>
@@ -895,9 +895,11 @@ body.fire-left #btnFire{left:18px !important;right:auto !important}
         <div style="margin-top:6px"><b style="color:#e8eefc">技术</b>　Canvas 2D · 原生 JS · MQTT 公网联机 · PWA 可装到桌面</div>
         <button class="btn ghost" id="btnHistory" style="width:100%;margin-top:10px;padding:7px;font-size:12px">查看修改历史</button>
         <button class="btn ghost" id="btnFeedback" style="width:100%;margin-top:8px;padding:7px;font-size:12px">问题反馈</button>
+        <button class="btn" id="btnDeleteAccount" style="width:100%;margin-top:8px;padding:7px;font-size:12px;background:#4a1f28;color:#ffb3bd;border-color:rgba(255,120,140,.35)">注销账号（清除本机全部数据）</button>
         <div id="historyBox" style="display:none;margin-top:10px;border-top:1px solid rgba(255,255,255,.1);padding-top:10px">
           <div style="font-size:13px;font-weight:800;color:#67e8f9;margin-bottom:6px">修改历史</div>
           <div style="line-height:1.8">
+            <div><b style="color:#ffd34d">v2.5.2</b>　修加入方（蓝队）手机摇杆完全动不了、双方角色不一致、对方技能看不到；设置加「注销账号」；匹配 9 秒没人自动进人机局</div>
             <div><b style="color:#ffd34d">v2.5.1</b>　快速匹配加了回退：公告板上有死房时不会一直干等，4.8 秒后自动改开自己的房；离开页面自动撤公告</div>
             <div><b style="color:#ffd34d">v2.5.0</b>　联机加「快速匹配」：点一下自动找对手，不用换房号；改名修复（旧名字彻底释放、改名失败不扣次数、失败能点返回）；联机组件内嵌，不再依赖外部 CDN</div>
             <div><b style="color:#ffd34d">v2.4.9</b>　联机组件改成内嵌（不再依赖外部 CDN，国内网络也能连上）；中转连不上自动换备用；首页背景重做（全屏网格＋透视地面＋流光带＋漂浮光点）</div>
@@ -1329,6 +1331,17 @@ function shoot(p){
 }
 
 /* ================= 5. 技能 ================= */
+function skillKind(s){
+  return s && s.dash ? 'dash' : (s && s.shield) ? 'shield' : (s && s.dmg) ? 'snipe' : (s && s.heal) ? 'heal' : 'none';
+}
+/* 对方的技能只放视觉，不重复结算伤害/护盾 */
+function netGhostSkill(m){
+  const f=netFoe(); if(!f) return;
+  if(m.k==='shield'){ f.shield=f.shield||1; f.shieldTimer=3.2; spawnParticle(f.x,f.y,0,0,'#7dd3fc',0.55,22); }
+  else if(m.k==='dash'){ for(let i=0;i<9;i++){ const a=Math.random()*Math.PI*2; spawnParticle(f.x,f.y,Math.cos(a)*160,Math.sin(a)*160,'#ffd34d',0.3,4); } }
+  else if(m.k==='snipe'){ spawnParticle(f.x,f.y,0,0,'#ff8fa0',0.45,16); }
+  else if(m.k==='heal'){ for(let i=0;i<12;i++){ const a=Math.random()*Math.PI*2; spawnParticle(f.x,f.y,Math.cos(a)*(60+Math.random()*120),Math.sin(a)*(60+Math.random()*120),'#86efac',0.45,3); } }
+}
 function castSkill(p){
   if(!p.alive || p.skillCD>0) return;
   const s=p.role.skill;
@@ -1359,7 +1372,7 @@ function castSkill(p){
     sHeal();
   }
   p.skillCD=s.cd;
-  if(p.isHuman) dailyProgress('skill', 1);
+  if(p.isHuman){ dailyProgress('skill', 1); if(state.netMode) { try{ netSend({t:'skill', k:skillKind(s)}, 0); }catch(e){} } }
 }
 function updateDash(p,dt){
   if(p.dashT<=0) return;
@@ -1756,7 +1769,8 @@ function update(dt, rawDt){
     if(p.hp<=0){ killPlayer(p, p.lastHitter||null); continue; } // 兜底：异常血量不留活口
     updateDash(p,dt); // 冲刺位移
     if(p.isHuman){
-      if(p.team==='red'){
+      // 触屏设备一律走摇杆（红蓝都算）：之前只给红队，加入方是蓝队，手机上根本动不了
+      if(p.team==='red' || isTouch){
         // P1：触屏（左摇杆移动/右摇杆瞄准射击）或 WASD+鼠标/键盘
         let mx=0,my=0;
         if(isTouch && (state.mode==='5v5' || state.mode==='1v1')){
@@ -2922,10 +2936,13 @@ function netOnMsg(m){
     else if(m.t==='dmg'){ netTakeHit(m.v); }
     else if(m.t==='died'){ netRemoteDied(); }
     else if(m.t==='shot'){ netGhostShot(m); }
+    else if(m.t==='skill'){ netGhostSkill(m); }
     else if(m.t==='err'){ netStatus(m.msg,'#ff9f9f'); }
     else if(m.t==='join'){
       // 公共中转模式：房主收到入房请求，立刻开局并回通知
-      NET.peerOnline=true; netStatus('对手已进入，马上开局','#5eead4');
+      netStatus('对手已进入，马上开局','#5eead4');
+      NET.hostRole = m.role || state.roleP1;
+      if(NET.soloTimer){ clearTimeout(NET.soloTimer); NET.soloTimer=null; }
       startNetMatch();
       netSend({t:'start'}, 1);
     }
@@ -2985,6 +3002,17 @@ function parkAsHost(){
   beacon();
   if(NET.lobbyTimer) clearInterval(NET.lobbyTimer);
   NET.lobbyTimer=setInterval(beacon, 8000);
+  // 兜底计时已经在点匹配时就起，这里不再重设
+  if(!NET.soloTimer) NET.soloTimer=setTimeout(()=>{
+    if(state.netMode || state.running || NET.role==='b') return;
+    try{ lobbyClear(); }catch(e){}
+    try{ if(NET.client) NET.client.unsubscribe(netTopic(NET.code,'a')); }catch(e){}
+    if(NET.lobbyTimer){ clearInterval(NET.lobbyTimer); NET.lobbyTimer=null; }
+    document.querySelectorAll('.overlay').forEach(e=>e.classList.add('hidden'));
+    state.netMode=false; state.mode='1v1';
+    toastMsg('没匹配到真人，先跟人机练一局');
+    startGame();
+  }, 9000);
   // 两边同时点匹配会互相看不见：挂牌后再看一次板，谁后挂谁让位
   setTimeout(async ()=>{
     if(state.netMode || NET.role!=='a' || !NET.code) return;
@@ -2995,7 +3023,7 @@ function parkAsHost(){
 function netJoinByLobby(hit){
   NET.role='b'; NET.code=hit.code;
   try{ NET.client.subscribe(netTopic(hit.code,'b'),{qos:1}); }catch(e){}
-  try{ NET.client.publish(netTopic(hit.code,'a'), JSON.stringify({t:'join', name:currentNick()}), {qos:1}); }catch(e){}
+  try{ NET.client.publish(netTopic(hit.code,'a'), JSON.stringify({t:'join', name:currentNick(), role:state.roleP1}), {qos:1}); }catch(e){}
   netShowCode(hit.code, '已匹配到 '+hit.nick+'，正在进房…');
   setTimeout(()=>{
     if(state.netMode) return;
@@ -3004,6 +3032,19 @@ function netJoinByLobby(hit){
   }, 4800);
 }
 function netQuickMatch(){
+  // 点下匹配就开始的人机兜底：9 秒还没进对局就直接开人机局，别让人干等
+  if(NET.soloTimer){ clearTimeout(NET.soloTimer); NET.soloTimer=null; }
+  NET.soloTimer=setTimeout(()=>{
+    if(state.netMode || state.running || NET.role==='b') return;
+    try{ lobbyClear(); }catch(e){}
+    try{ if(NET.client && NET.code) NET.client.unsubscribe(netTopic(NET.code,'a')); }catch(e){}
+    if(NET.lobbyTimer){ clearInterval(NET.lobbyTimer); NET.lobbyTimer=null; }
+    NET.code=null; NET.role=null;
+    document.querySelectorAll('.overlay').forEach(e=>e.classList.add('hidden'));
+    state.netMode=false; state.mode='1v1';
+    toastMsg('没匹配到真人，先跟人机练一局');
+    startGame();
+  }, 9000);
   return new Promise(async (resolve)=>{
     if(!await netOpen()){ resolve(false); return; }
     NET.role='a'; NET.quit=false;
@@ -3053,9 +3094,13 @@ function netShowCode(code, tip){
 }
 function startNetMatch(){
   try{ lobbyClear(); }catch(e){}
+  if(NET.soloTimer){ clearTimeout(NET.soloTimer); NET.soloTimer=null; }
   document.querySelectorAll('.overlay').forEach(e=>e.classList.add('hidden'));
   state.netMode=true;
   state.mode='1v1';
+  // 双方统一角色：公平对枪，两边看到的对手角色也一致
+  const hr = NET.hostRole || state.roleP1;
+  if(ROLES[hr]){ state.roleP1=hr; state.roleP2=hr; }
   startGame();
   const myTeam = (NET.role==='b') ? 'blue' : 'red';   // 房主红、加入方蓝，避免双方复活到同一点
   const foeTeam = (myTeam==='red') ? 'blue' : 'red';
@@ -3702,7 +3747,7 @@ document.getElementById('btnNetJoin').addEventListener('click', async ()=>{
     if(!NET.client){ if(!await netOpen()) return; }
     NET.role='b'; NET.code=code;
     NET.client.subscribe(netTopic(code,'b'), {qos:1});
-    NET.client.publish(netTopic(code,'a'), JSON.stringify({t:'join', name:currentNick()}), {qos:1});
+    NET.client.publish(netTopic(code,'a'), JSON.stringify({t:'join', name:currentNick(), role:state.roleP1}), {qos:1});
     netStatus('正在敲门，等房主回应…','#8fa1bf');
     setTimeout(()=>{ if(!state.netMode) netStatus('没收到回应：检查房间码；电脑和手机不互通','#ff9f9f'); }, 4000);
     return;
@@ -4034,6 +4079,16 @@ bindBtn('btnMenu', backToMenu);
 bindBtn('btnQuit', backToMenu);
 bindBtn('btnResume', togglePause);
 const FEEDBACK_MAIL='liuweijun520@qq.com';
+bindBtn('btnDeleteAccount', async ()=>{
+  const ok=window.confirm('注销会永久删除本机的昵称、档案号、好友、明信片、战绩、改名记录和设置，无法恢复，也无法找回原来的名字。确定注销吗？');
+  if(!ok) return;
+  try{
+    if(NET.client && NET.client.connected){ nickRelease(currentNick(), FW.uid||ensureUid()); await new Promise(r=>setTimeout(r,600)); }
+  }catch(e){}
+  try{ localStorage.clear(); }catch(e){}
+  try{ toastMsg('账号已注销，正在重新开始'); }catch(e){}
+  setTimeout(()=>location.reload(), 900);
+});
 bindBtn('btnFeedback', ()=>{
   initAudio(); sClick();
   document.getElementById('settingsScreen').classList.add('hidden');
