@@ -488,7 +488,7 @@ body.fire-left #btnFire{left:18px !important;right:auto !important}
 .profNick{font-size:20px;font-weight:800;color:#e8eefc;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .profSub{font-size:12px;color:#7d8aa8;margin-top:3px}
 .profRename{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.16);color:#cdd9f0;border-radius:9px;padding:7px 12px;font-size:13px;cursor:pointer;flex-shrink:0}
-.profGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}
+.profGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}
 .profCell{background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.08);border-radius:11px;padding:11px 4px;text-align:center}
 .pcV{font-size:18px;font-weight:800;color:#ffd34d;line-height:1.2}
 .pcK{font-size:11px;color:#8fa1bf;margin-top:3px}
@@ -513,7 +513,7 @@ body.fire-left #btnFire{left:18px !important;right:auto !important}
   .profNick{font-size:17px}
   .profCell{padding:7px 3px}
   .pcV{font-size:16px}
-  .profGrid{grid-template-columns:repeat(6,1fr);gap:6px}
+  .profGrid{grid-template-columns:repeat(3,1fr);gap:6px}
   .profRow{padding:7px 9px;font-size:12px}
 }
 </style>
@@ -882,7 +882,7 @@ body.fire-left #btnFire{left:18px !important;right:auto !important}
       </div>
     </div>
     <div class="overlay hidden" id="settingsScreen">
-      <div class="title">自定义设置 <span id="verTag" style="font-size:11px;color:#7d8aa8;font-weight:400;display:block;margin-top:2px">v2.5.4</span></div>
+      <div class="title">自定义设置 <span id="verTag" style="font-size:11px;color:#7d8aa8;font-weight:400;display:block;margin-top:2px">v2.5.5</span></div>
       <div id="settingsWrap" style="text-align:left;max-width:320px;line-height:2.2">
         <div>摇杆大小 <input type="range" id="setJoy" min="60" max="140" value="88" style="width:100%"></div>
         <div>开火键大小 <input type="range" id="setFire" min="50" max="120" value="74" style="width:100%"></div>
@@ -923,6 +923,7 @@ body.fire-left #btnFire{left:18px !important;right:auto !important}
         <div id="historyBox" style="display:none;margin-top:10px;border-top:1px solid rgba(255,255,255,.1);padding-top:10px">
           <div style="font-size:13px;font-weight:800;color:#67e8f9;margin-bottom:6px">修改历史</div>
           <div style="line-height:1.8">
+            <div><b style="color:#ffd34d">v2.5.5</b>　好友分「互关 / 我关注 / 粉丝」三档，只有互关才能拉进联机；个人主页可看荣誉明细与获赞，明信片能点赞；主页数据改 3×3 排布</div>
             <div><b style="color:#ffd34d">v2.5.4</b>　客机终于能玩（蓝队摇杆、面板改「你/对手」、联机用队伍色、出生点拉近、屏幕边缘指向对手）；修好段位条空白、改名剩次显示 98；关注会给对方发提示；新增管理终端 <b style="color:#67e8f9">?admin=1</b></div>
             <div><b style="color:#ffd34d">v2.5.3</b>　人机兜底放宽到 12 秒（对方连中转就要几秒，9 秒会把还在路上的人抢掉）</div>
             <div><b style="color:#ffd34d">v2.5.2</b>　修加入方（蓝队）手机摇杆完全动不了、双方角色不一致、对方技能看不到；设置加「注销账号」；匹配 9 秒没人自动进人机局</div>
@@ -3119,12 +3120,12 @@ function netRenderInviteList(){
   const box=document.getElementById('netFriendBox');
   if(!box) return;
   box.classList.remove('hidden');
-  const list=fwFriends();
+  const list=fwFriends().filter(f=>fwIsMutual(f.uid));
   if(!list.length){
-    box.innerHTML='<div style="font-size:11.5px;color:#8fa1bf;text-align:center;line-height:1.7">还没有好友<br>回主菜单点「好友」，搜名字或档案号关注一个</div>';
+    box.innerHTML='<div style="font-size:11.5px;color:#8fa1bf;text-align:center;line-height:1.7">还没有互关好友<br>只有互关的人才能拉进对战：搜他名字关注，等他回关</div>';
     return;
   }
-  box.innerHTML='<div style="font-size:11px;color:#8fa1bf;margin-bottom:6px">拉好友进来</div>'
+  box.innerHTML='<div style="font-size:11px;color:#8fa1bf;margin-bottom:6px">互关好友（可拉进房间）</div>'
     + list.map(f=>{
       const on=fwOnline(f.uid);
       return '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:7px 0;border-top:1px solid rgba(255,255,255,.07)">'
@@ -3291,7 +3292,8 @@ const FW = {
   cli:null, uid:null, inited:false, ready:false,
   online:{},      // uid -> {name, ts}
   cards:{},       // uid -> 明信片
-  beatTimer:null, invite:null
+  beatTimer:null, invite:null,
+  likes:{}        // uid -> 点赞数
 };
 /* 档案号以 # 开头，而 MQTT 主题里的 # / + 是通配符，直接用会让中转踢掉连接，必须清洗。
    清洗后的值同时作为本地缓存与比对的 key，避免「主题里没#、本地有#」对不上。 */
@@ -3299,6 +3301,13 @@ function fwKey(u){ return String(u||'').replace(/^#/,'').replace(/[\/+#]/g,''); 
 function fwTopic(kind,id){ return 'gunfight9/'+kind+'/'+fwKey(id); }
 function esc(t){ return String(t==null?'':t).replace(/[<>&"']/g, c=>({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;',"'":'&#39;'}[c])); }
 function fwFriends(){ return lsGet('gunFriends', []); }
+function fwFollowers(){ return lsGet('gunFollowers', []); }
+function fwSaveFollowers(a){ lsSet('gunFollowers', a); }
+/* 互关 = 我关注他 且 他关注我；只有互关才能拉进联机 */
+function fwIsMutual(uid){
+  const key=fwKey(uid);
+  return fwFriends().some(f=>fwKey(f.uid)===key) && fwFollowers().some(f=>fwKey(f.uid)===key);
+}
 function fwSaveFriends(a){ lsSet('gunFriends', a); }
 function fwCardLocal(){ const c=lsGet('gunCard', {}); return {sig:(c.sig||''), color:(c.color||'cyan')}; }
 
@@ -3314,6 +3323,29 @@ function fwMyCard(){
     kills: p.kills||0, wins: p.wins||0, matches: p.matches||0, best: p.best||0,
     ts: Date.now()
   };
+}
+/* 点赞：retained 计数，一天只能给同一个人点一次 */
+async function fwLike(uid){
+  if(!FW.cli || !FW.cli.connected){ toastMsg('好友服务未连上，稍等两秒'); return; }
+  const key=fwKey(uid), liked=lsGet('gunLiked', {});
+  if(liked[key] && Date.now()-liked[key] < 20*3600*1000){ toastMsg('今天已经给他点过赞了'); return; }
+  let cur=0;
+  const topic='gunfight9/like/'+key;
+  const h=(t,p)=>{ if(t!==topic) return; const n=parseInt(p.toString())||0; if(n>cur) cur=n; };
+  FW.cli.on('message',h); FW.cli.subscribe(topic,{qos:1});
+  await new Promise(r=>setTimeout(r,900));
+  try{ FW.cli.removeListener('message',h); }catch(e){}
+  const n=cur+1;
+  liked[key]=Date.now(); lsSet('gunLiked', liked);
+  FW.cli.publish(topic, String(n), {qos:1, retain:true});
+  FW.likes[key]=n;
+  toastMsg('已点赞，他现在有 '+n+' 个赞');
+  fwRenderLike();
+}
+function fwLikesOf(uid){ return FW.likes[fwKey(uid)]||0; }
+function fwRenderLike(){
+  const el=document.getElementById('profLike'); if(el) el.textContent=fwLikesOf(FW.uid||ensureUid());
+  const cell=document.querySelector('#profGrid [data-honor]'); if(cell) cell.dataset.like=fwLikesOf(FW.uid||ensureUid());
 }
 function fwOnline(uid){
   if(fwKey(uid)===fwKey(FW.uid)) return true;   // 自己当然在线
@@ -3348,10 +3380,17 @@ function fwOnMsg(topic, payload){
     else if(kind==='card'){ FW.cards[id]=m; fwRenderList(); }
     else if(kind==='invite' && id===fwKey(FW.uid)){ fwShowInvite(m); }
     else if(kind==='notice' && id===fwKey(FW.uid)){
-      // 有人关注了你：互关才有意义，提醒他直接回关
-      const back=fwFriends().some(f=>f.uid===m.from);
-      toastMsg(back ? ('「'+(m.name||'对方')+'」和你已互相关注') : ('「'+(m.name||'对方')+'」关注了你，去搜他名字回关'));
+      // 有人关注了你。记进“粉丝”，我再回关就是互关
+      const fl=fwFollowers();
+      if(!fl.some(f=>fwKey(f.uid)===fwKey(m.from))){ fl.push({uid:m.from,name:m.name||'对方',ts:Date.now()}); fwSaveFollowers(fl); }
+      const lst=fwFriends(); const t=lst.find(f=>fwKey(f.uid)===fwKey(m.from));
+      let msg;
+      if(t){ t.mutual=true; fwSaveFriends(lst); msg='你和他已互相关注，可以拉他联机了'; }
+      else  { msg='「'+(m.name||'对方')+'」关注了你，回关后就能拉联机'; }
+      toastMsg(msg);
+      fwRenderList();
     }
+    else if(kind==='like'){ const n=parseInt(m.count!==undefined?m.count:(payload.toString()))||0; FW.likes[id]=n; if(id===fwKey(FW.uid)) fwRenderLike(); }
   }catch(e){}
 }
 function fwInit(){
@@ -3367,6 +3406,7 @@ function fwInit(){
       c.subscribe(fwTopic('invite',FW.uid), {qos:1});
       c.subscribe(fwTopic('notice',FW.uid), {qos:1});   // 别人关注我时的提醒
       c.subscribe(fwTopic('card',FW.uid), {qos:1});
+      c.subscribe('gunfight9/like/'+fwKey(FW.uid), {qos:1});   // 自己收到的赞
       fwPublishCard(); fwBeat(); fwWatchFriends(); fwRenderList();
     });
     c.on('message', fwOnMsg);
@@ -3413,7 +3453,8 @@ function fwLookup(q){
 function fwFollow(card){
   const list=fwFriends();
   if(list.some(f=>f.uid===card.uid)){ toastMsg('已经在好友里了'); return; }
-  list.push({uid:card.uid, name:card.name, addedAt:Date.now()});
+  const mutual=fwFollowers().some(f=>fwKey(f.uid)===fwKey(card.uid));
+  list.push({uid:card.uid, name:card.name, addedAt:Date.now(), mutual});
   fwSaveFriends(list);
   if(FW.cli && FW.cli.connected){
     FW.cli.subscribe(fwTopic('online',card.uid),{qos:1});
@@ -3422,8 +3463,8 @@ function fwFollow(card){
   // 告诉对方一声，否则被关注的人完全不知道，互关也就无从谈起
   try{ if(FW.cli && FW.cli.connected) FW.cli.publish(fwTopic('notice', card.uid),
         JSON.stringify({from: FW.uid||ensureUid(), name: currentNick(), ts: Date.now()}), {qos:1}); }catch(e){}
-  toastMsg('已关注 '+card.name+'，对方在线会收到提示');
-  fwRenderList(); fwRenderResult(card, true);
+  toastMsg(mutual ? ('你和 '+card.name+' 已互相关注，可以拉他联机了') : ('已关注 '+card.name+'，等他回关就能拉联机'));
+  fwRenderList(); if(card && card.matches!==undefined) fwRenderResult(card, true);
 }
 function fwUnfollow(uid){
   fwSaveFriends(fwFriends().filter(f=>f.uid!==uid));
@@ -3550,7 +3591,11 @@ function fwCardHtml(card, opts){
       :'<span style="font-size:10px;color:#7d8aa8;border:1px solid rgba(255,255,255,.18);border-radius:10px;padding:2px 8px">离线</span>')
     +'</div>'
     +'<div style="margin-top:12px;font-size:12px;color:#b6c4dc;line-height:1.7;min-height:20px">'+(card.sig?esc(card.sig):'<span style="color:#5d6c86">这个人还没写签名</span>')+'</div>'
-    +'<div style="display:flex;gap:8px;margin-top:14px">'
+    +'<div style="display:flex;align-items:center;justify-content:space-between;margin-top:12px;font-size:11.5px;color:#8fa1bf">'
+    +'<span>♥ 获赞 <b style="color:#fda4af">'+fwLikesOf(card.uid)+'</b></span>'
+    +((card.uid!==(FW.uid||ensureUid()))?'<button data-like="'+esc(card.uid)+'" style="font-size:11px;padding:4px 12px;border-radius:8px;border:1px solid rgba(253,164,175,.45);background:rgba(253,164,175,.12);color:#ffc2cb;cursor:pointer">点赞</button>':'<span style="color:#5d6c86">自己的名片</span>')
+    +'</div>'
+    +'<div style="display:flex;gap:8px;margin-top:10px">'
     +'<div style="flex:1;text-align:center;background:rgba(255,255,255,.05);border-radius:10px;padding:8px 4px"><div style="font-size:16px;font-weight:800;color:#e8eefc">'+(card.kills||0)+'</div><div style="font-size:10px;color:#8fa1bf">击杀</div></div>'
     +'<div style="flex:1;text-align:center;background:rgba(255,255,255,.05);border-radius:10px;padding:8px 4px"><div style="font-size:16px;font-weight:800;color:#e8eefc">'+wr+'%</div><div style="font-size:10px;color:#8fa1bf">胜率</div></div>'
     +'<div style="flex:1;text-align:center;background:rgba(255,255,255,.05);border-radius:10px;padding:8px 4px"><div style="font-size:16px;font-weight:800;color:#e8eefc">'+(card.pts||0)+'</div><div style="font-size:10px;color:#8fa1bf">段位分</div></div>'
@@ -3579,30 +3624,47 @@ function fwRenderResult(card, followed, errText){
 }
 
 /* 好友列表 */
+function fwRowHtml(f, kind){
+  const on=fwOnline(f.uid);
+  const mutual=fwIsMutual(f.uid);
+  let tag='', act='';
+  if(kind==='mutual'){ tag='<span style="font-size:9.5px;color:#5eead4;border:1px solid rgba(94,234,212,.45);border-radius:8px;padding:1px 6px">互关</span>'; }
+  else if(kind==='following'){ tag='<span style="font-size:9.5px;color:#fcd34d;border:1px solid rgba(252,211,77,.4);border-radius:8px;padding:1px 6px">待回关</span>'; }
+  else { tag='<span style="font-size:9.5px;color:#c4b5fd;border:1px solid rgba(196,181,253,.4);border-radius:8px;padding:1px 6px">粉丝</span>'; }
+  if(kind==='follower'){
+    act='<button data-followback="'+esc(f.uid)+'" data-fname="'+esc(f.name)+'" style="font-size:11px;padding:5px 10px;border-radius:8px;border:1px solid rgba(94,234,212,.45);background:rgba(94,234,212,.12);color:#9ff5e6;cursor:pointer">回关</button>';
+  }else if(kind==='mutual'){
+    act='<button data-inv="'+esc(f.uid)+'" style="font-size:11px;padding:5px 10px;border-radius:8px;border:1px solid rgba(94,234,212,.45);background:rgba(94,234,212,.12);color:#9ff5e6;cursor:pointer;'+(on?'':'opacity:.5')+'">邀请</button>'
+      +'<button data-carduid="'+esc(f.uid)+'" style="font-size:11px;padding:5px 8px;border-radius:8px;border:1px solid rgba(255,255,255,.18);background:none;color:#9fb2d0;cursor:pointer">卡片</button>'
+      +'<button data-unfollow="'+esc(f.uid)+'" style="font-size:11px;padding:5px 7px;border-radius:8px;border:none;background:none;color:#7d8aa8;cursor:pointer">×</button>';
+  }else{
+    act='<button data-carduid="'+esc(f.uid)+'" style="font-size:11px;padding:5px 8px;border-radius:8px;border:1px solid rgba(255,255,255,.18);background:none;color:#9fb2d0;cursor:pointer">卡片</button>'
+      +'<button data-unfollow="'+esc(f.uid)+'" style="font-size:11px;padding:5px 7px;border-radius:8px;border:none;background:none;color:#7d8aa8;cursor:pointer">×</button>';
+  }
+  return '<div style="display:flex;align-items:center;gap:8px;padding:9px 10px;margin-bottom:7px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:11px">'
+    +'<div style="width:9px;height:9px;border-radius:50%;background:'+(on?'#5eead4':'#4b5563')+';box-shadow:'+(on?'0 0 8px #5eead4':'none')+'"></div>'
+    +'<div style="flex:1;min-width:0"><div style="font-size:13.5px;font-weight:700;color:#e8eefc;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(f.name)+' '+tag+'</div>'
+    +'<div style="font-size:10px;color:#7d8aa8">'+esc(f.uid)+(on?' · 在线':' · 离线')+'</div></div>'
+    + act +'</div>';
+}
 function fwRenderList(){
   const el=document.getElementById('fwList'); if(!el) return;
-  const list=fwFriends();
-  const cnt=document.getElementById('fwCount'); if(cnt) cnt.textContent=list.length;
+  const list=fwFriends(), fol=fwFollowers();
+  const mut=list.filter(f=>fwIsMutual(f.uid));
+  const only=list.filter(f=>!fwIsMutual(f.uid));
+  const fans=fol.filter(f=>!list.some(x=>fwKey(x.uid)===fwKey(f.uid)));
+  const cnt=document.getElementById('fwCount'); if(cnt) cnt.textContent=mut.length+'/'+list.length;
   const badge=document.getElementById('fwBadge');
-  if(badge){
-    const on=list.filter(f=>fwOnline(f.uid)).length;
-    badge.textContent = on? '('+on+')' : '';
-  }
-  if(!list.length){
+  if(badge){ const on=mut.filter(f=>fwOnline(f.uid)).length; badge.textContent = on? '('+on+')' : ''; }
+  if(!list.length && !fans.length){
     el.innerHTML='<div style="font-size:12px;color:#7d8aa8;text-align:center;padding:18px 0">还没有好友，上面搜个名字关注一个</div>';
     return;
   }
-  el.innerHTML=list.map(f=>{
-    const on=fwOnline(f.uid);
-    return '<div style="display:flex;align-items:center;gap:10px;padding:9px 10px;margin-bottom:7px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:11px">'
-      +'<div style="width:9px;height:9px;border-radius:50%;background:'+(on?'#5eead4':'#4b5563')+';box-shadow:'+(on?'0 0 8px #5eead4':'none')+'"></div>'
-      +'<div style="flex:1;min-width:0"><div style="font-size:13.5px;font-weight:700;color:#e8eefc;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(f.name)+'</div>'
-      +'<div style="font-size:10px;color:#7d8aa8">'+esc(f.uid)+(on?' · 在线':' · 离线')+'</div></div>'
-      +'<button data-inv="'+esc(f.uid)+'" style="font-size:11px;padding:5px 10px;border-radius:8px;border:1px solid rgba(94,234,212,.45);background:rgba(94,234,212,.12);color:#9ff5e6;cursor:pointer;'+(on?'':'opacity:.5')+'">邀请</button>'
-      +'<button data-carduid="'+esc(f.uid)+'" style="font-size:11px;padding:5px 8px;border-radius:8px;border:1px solid rgba(255,255,255,.18);background:none;color:#9fb2d0;cursor:pointer">卡片</button>'
-      +'<button data-unfollow="'+esc(f.uid)+'" style="font-size:11px;padding:5px 7px;border-radius:8px;border:none;background:none;color:#7d8aa8;cursor:pointer">×</button>'
-      +'</div>';
-  }).join('');
+  let html='';
+  if(mut.length){ html+='<div style="font-size:10.5px;color:#5eead4;margin:2px 0 5px">互关好友 '+mut.length+' · 可拉联机</div>'+mut.map(f=>fwRowHtml(f,'mutual')).join(''); }
+  if(fans.length){ html+='<div style="font-size:10.5px;color:#c4b5fd;margin:10px 0 5px">粉丝 '+fans.length+' · 关注了你，回关后就能拉联机</div>'+fans.map(f=>fwRowHtml(f,'follower')).join(''); }
+  if(only.length){ html+='<div style="font-size:10.5px;color:#fcd34d;margin:10px 0 5px">我关注的人 '+only.length+' · 等他回关</div>'+only.map(f=>fwRowHtml(f,'following')).join(''); }
+  el.innerHTML=html;
 }
 
 /* 打开好友面板 */
@@ -3807,10 +3869,12 @@ function renderProfile(){
       '<div class="rkBar"><i style="width:'+Math.round(ri.prog*100)+'%"></i></div>'+
       '<div class="rkNext">'+(ri.need? ('距 '+ri.next+' 还差 '+ri.need+' 分') : '已达最高段位')+'</div>';
   }
+  const likes=fwLikesOf(uidNow);
   const cells=[['场次',v.matches],['胜率',wr+'%'],['总击杀',v.kills],['总死亡',v.deaths],
-               ['K/D',kd],['最高连胜',v.best||0],['荣誉',lsGet('gunHonor',0)],['今日任务',dailyDone+'/3']];
+               ['K/D',kd],['最高连胜',v.best||0],['荣誉',lsGet('gunHonor',0),'honor'],['获赞',likes,'like'],
+               ['今日任务',dailyDone+'/3']];
   renderRankBar();   // 段位条在主页里，之前一直没人渲染它
-  document.getElementById('profGrid').innerHTML = cells.map(c=>'<div class="profCell"><div class="pcV">'+c[1]+'</div><div class="pcK">'+c[0]+'</div></div>').join('');
+  document.getElementById('profGrid').innerHTML = cells.map(c=>'<div class="profCell"'+(c[2]?' data-act="'+c[2]+'" style="cursor:pointer"':'')+'><div class="pcV">'+c[1]+'</div><div class="pcK">'+c[0]+'</div></div>').join('');
   const list=document.getElementById('profList');
   if(!v.recent || !v.recent.length){ list.innerHTML='<div class="profEmpty">还没有战绩，打一局吧</div>'; return; }
   list.innerHTML = v.recent.map(r=>{
@@ -4033,9 +4097,22 @@ bindBtn('inviteAccept', ()=>{
 const fwQ=document.getElementById('fwQuery');
 if(fwQ) fwQ.addEventListener('keydown', e=>{ if(e.key==='Enter'){ e.preventDefault(); fwQ.blur(); fwDoSearch(); } });
 document.addEventListener('click', (e)=>{
-  const t=e.target.closest ? e.target.closest('[data-follow],[data-inv],[data-carduid],[data-unfollow],[data-copyuid],[data-theme],[data-cardbuy]') : null;
+  const t=e.target.closest ? e.target.closest('[data-follow],[data-inv],[data-carduid],[data-unfollow],[data-copyuid],[data-theme],[data-cardbuy],[data-followback],[data-like],[data-act]') : null;
   if(!t) return;
-  if(t.dataset.follow){ if(FW.lastSearch) fwFollow(FW.lastSearch); }
+  if(t.dataset.followback){
+    const uid=t.dataset.followback, name=t.dataset.fname||'对方';
+    fwFollow({uid, name, uid_uid:uid});
+  }
+  else if(t.dataset.like){ fwLike(t.dataset.like); }
+  else if(t.dataset.act){
+    if(t.dataset.act==='honor'){
+      const h=lsGet('gunHonor',0);
+      toastMsg('荣誉 '+h+' 点：打一局、每日任务、成就都会加；500 点可换一张改名卡');
+    } else if(t.dataset.act==='like'){
+      toastMsg('你一共收到 '+fwLikesOf(FW.uid||ensureUid())+' 个赞');
+    }
+  }
+  else if(t.dataset.follow){ if(FW.lastSearch) fwFollow(FW.lastSearch); }
   else if(t.dataset.inv){ fwInvite(t.dataset.inv); }
   else if(t.dataset.carduid){ fwOpenCardByUid(t.dataset.carduid); }
   else if(t.dataset.unfollow){ fwUnfollow(t.dataset.unfollow); }
