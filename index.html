@@ -1062,7 +1062,7 @@ body.is-touch .nhTime{display:none !important}
       </div>
     </div>
     <div class="overlay hidden" id="settingsScreen">
-      <div class="title">自定义设置 <span id="verTag" style="font-size:11px;color:#7d8aa8;font-weight:400;display:block;margin-top:2px">v2.7.12</span></div>
+      <div class="title">自定义设置 <span id="verTag" style="font-size:11px;color:#7d8aa8;font-weight:400;display:block;margin-top:2px">v2.7.13</span></div>
       <div id="settingsWrap" style="text-align:left;max-width:320px;line-height:2.2">
         <div>摇杆大小 <input type="range" id="setJoy" min="60" max="140" value="88" style="width:100%"></div>
         <div>开火键大小 <input type="range" id="setFire" min="50" max="120" value="74" style="width:100%"></div>
@@ -1106,6 +1106,7 @@ body.is-touch .nhTime{display:none !important}
         <div id="historyBox" style="display:none;margin-top:10px;border-top:1px solid rgba(255,255,255,.1);padding-top:10px">
           <div style="font-size:13px;font-weight:800;color:#67e8f9;margin-bottom:6px">修改历史</div>
           <div style="line-height:1.8">
+            <div><b style="color:#ffd34d">v2.7.13</b>　修好友邀请失败的根因：改过名的人旧名登记还留在中转，按名字搜会指向错的人（搜 A 出来 B），关注的、邀请的都成了别人；现在按名字搜会核对卡片上的名字，对不上就明说过期，不会再把邀请发给错人。另：名字查重窗口由 1.5 秒加到 2.2 秒（中转推保留消息慢时会漏判重名）；离线好友的按钮点了会说明“不在线、邀请不保存”，不再像是坏了</div>
             <div><b style="color:#ffd34d">v2.7.12</b>　联机去掉屏幕边缘的对手方向箭头：敌人位置只由雷达和视野判断，不再有雷达之外的点位提示</div>
             <div><b style="color:#ffd34d">v2.7.11</b>　自检入口合并：设置里的「运行自检」按钮移除，统一从关于页「检查更新 + 自检（一键）」进入；有失败项时仍可跳进逐项详情</div>
             <div><b style="color:#ffd34d">v2.7.10</b>　版本检查改成两条路并发：轻量版本文件与本页首页同时抓，谁先拿到版本号用谁，13 秒兜底，双端都不再干等</div>
@@ -3717,10 +3718,12 @@ function netRenderInviteList(){
         +'<i style="color:'+(on?'#5eead4':'#5b6b82')+';font-style:normal">●</i> '+esc(f.name)+'</span>'
         + (on
            ? '<button class="btn" data-netinv="'+esc(f.uid)+'" style="padding:5px 14px;font-size:11.5px;flex:none">邀请</button>'
-           : '<span style="font-size:11px;color:#5b6b82;flex:none">离线</span>')
+           : '<button class="btn ghost" data-netoff="'+esc(f.uid)+'" data-offname="'+esc(f.name)+'" style="padding:5px 14px;font-size:11.5px;flex:none;opacity:.65">离线</button>')
         +'</div>';
     }).join('');
   box.onclick=(ev)=>{
+    const off=ev.target.closest('[data-netoff]');
+    if(off){ sClick(); toastMsg(esc(off.getAttribute('data-offname'))+' 现在不在线，等他上线再邀（邀请不会保存）'); return; }
     const b=ev.target.closest('[data-netinv]');
     if(!b) return;
     sClick(); fwInvite(b.getAttribute('data-netinv'));
@@ -3850,7 +3853,7 @@ function nickRemoteClaim(name, uid, probeOnly){
   return new Promise((resolve)=>{
     // 好友通道已经连好就直接借用：省掉建连的 1~2 秒，整轮查重压到 2 秒左右
     const shared = !!(FW.cli && FW.cli.connected);
-    const waitMs = shared ? 1500 : 2600;
+    const waitMs = shared ? 2200 : 2800;
     const go=async ()=>{
       let c=FW.cli, own=false;
       if(!shared){
@@ -4049,12 +4052,19 @@ function fwLookup(q){
     q=String(q||'').trim();
     if(!q) return resolve({err:'empty'});
     if(!FW.cli || !FW.cli.connected) return resolve({err:'offline'});
+    // 按名字查时要求卡片名与查询名一致：有人改名后旧名登记还在，否则会把人指错（搜 A 出来 B）
+    const byName=(q.startsWith('#') || /^\d{8,12}$/.test(q)) ? false : true;
+    const chk=(card)=>{
+      if(card && byName && String(card.name||'').toLowerCase()!==q.toLowerCase())
+        return {err:'stale', staleName:card.name||''};
+      return {card:card};
+    };
     const after=(uid)=>{
       if(!uid) return resolve({err:'nocard'});
-      if(FW.cards[fwKey(uid)]) return resolve({card:FW.cards[fwKey(uid)]});
+      if(FW.cards[fwKey(uid)]) return resolve(chk(FW.cards[fwKey(uid)]));
       const topic=fwTopic('card',uid); let done=false;
       const h=(t,p)=>{ if(t!==topic||done) return; done=true; FW.cli.removeListener('message',h);
-        try{ resolve({card:JSON.parse(p.toString())}); }catch(e){ resolve({err:'nocard'}); } };
+        try{ resolve(chk(JSON.parse(p.toString()))); }catch(e){ resolve({err:'nocard'}); } };
       FW.cli.on('message',h);
       FW.cli.subscribe(topic,{qos:1});
       setTimeout(()=>{ if(!done){ FW.cli.removeListener('message',h); resolve({err:'nocard'}); } }, 2600);
@@ -4881,6 +4891,10 @@ async function fwDoSearch(){
   }
   if(r && r.err==='offline'){
     hint.textContent='好友服务没连上，检查网络';
+    fwRenderResult(null,false); return;
+  }
+  if(r && r.err==='stale'){
+    hint.textContent='「'+q+'」这条名字登记指向的是「'+(r.staleName||'别人')+'」（对方改过名，旧名还没回收），换个名字或用档案号搜';
     fwRenderResult(null,false); return;
   }
   // 精确没有 → 找名字里带关键词的人（输入 uv 也能找到 uv657 这种）
