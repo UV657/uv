@@ -106,8 +106,8 @@ body.is-touch.in-game.paused-fight #btnExitFight{display:none !important}
 
 /* 玩家状态面板（左下 P1 / 右下 P2，1V1 双人） */
 .playerPanel{position:absolute;min-width:230px;padding:10px 14px;border-radius:12px;background:rgba(10,16,30,.6);border:1px solid rgba(255,255,255,.09)}
-#panelP1{left:16px;bottom:14px}
-#panelP2{right:16px;bottom:14px;text-align:right}
+#panelP1{left:calc(8px + var(--uiGap,10px));bottom:calc(6px + var(--uiGap,10px) * .8)}
+#panelP2{right:calc(8px + var(--uiGap,10px));bottom:calc(6px + var(--uiGap,10px) * .8);text-align:right}
 #panelP2 #hpBar{transform:scaleX(-1)} /* P2 血条右起 */
 .ppHead{display:flex;align-items:center;gap:7px;font-size:13px;font-weight:700;color:#ffd;margin-bottom:6px}
 .ppHead .icon{font-size:16px}
@@ -276,8 +276,8 @@ body.is-touch .mcDesc{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 body.is-touch .rowBtns{flex-direction:row !important;gap:8px !important}
 body.is-touch .rowBtns .btn{padding:8px 14px !important;font-size:12px !important}
 body.is-touch .playerPanel{min-width:0;padding:6px 10px;font-size:10px;background:rgba(10,16,30,.45)}
-body.is-touch #panelP1{left:8px;top:58px;bottom:auto}
-body.is-touch #panelP2{right:8px;top:58px;bottom:auto}
+body.is-touch #panelP1{left:calc(2px + var(--uiGap,10px) * .7);top:calc(52px + var(--uiGap,10px) * .6);bottom:auto}
+body.is-touch #panelP2{right:calc(2px + var(--uiGap,10px) * .7);top:calc(52px + var(--uiGap,10px) * .6);bottom:auto}
 body.is-touch .ppHead{font-size:10px;margin-bottom:3px;gap:4px}
 body.is-touch #hpBar{height:7px}
 body.is-touch .skillBox{width:30px;height:30px;margin-top:4px}
@@ -300,8 +300,8 @@ body.is-touch .roleRowLabel{font-size:12px !important;margin:8px 0 4px !importan
 body.is-touch .overlay .btn{padding:10px 16px !important;font-size:14px !important}
 body.is-touch #roomCode{font-size:32px !important;letter-spacing:4px !important}
 body.is-touch .playerPanel{min-width:0;padding:6px 10px;font-size:10px;background:rgba(10,16,30,.45)}
-body.is-touch #panelP1{left:8px;top:58px;bottom:auto}
-body.is-touch #panelP2{right:8px;top:58px;bottom:auto}
+body.is-touch #panelP1{left:calc(2px + var(--uiGap,10px) * .7);top:calc(52px + var(--uiGap,10px) * .6);bottom:auto}
+body.is-touch #panelP2{right:calc(2px + var(--uiGap,10px) * .7);top:calc(52px + var(--uiGap,10px) * .6);bottom:auto}
 body.is-touch .ppHead{font-size:10px;margin-bottom:3px;gap:4px}
 body.is-touch #hpBar{height:7px}
 body.is-touch .skillBox{width:30px;height:30px;margin-top:4px}
@@ -735,6 +735,32 @@ body.fire-left #btnFire{left:18px !important;right:auto !important}
             <button class="btn ghost" id="btnAdminReload" style="padding:7px 12px;font-size:12px">刷新</button>
             <button class="btn ghost" id="btnAdminLobby" style="padding:7px 12px;font-size:12px">清空公告板</button>
           </div>
+          <div style="font-size:13px;font-weight:800;color:#67e8f9;margin:4px 0 6px">角色数值（改完立刻对新开局生效）</div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">
+            <select id="admRole" style="flex:1;min-width:120px;padding:7px;border-radius:8px;background:#0b1220;color:#e8eefc;border:1px solid rgba(255,255,255,.16);font-size:12px">
+              <option value="assault">突击手</option><option value="tank">重装</option><option value="sniper">神射手</option><option value="medic">医疗兵</option>
+            </select>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px">
+            <label style="font-size:11.5px;color:#9fb2d0;display:block">移速<input id="admSpeed" type="number" min="120" max="600" style="width:100%;padding:7px;border-radius:8px;background:#0b1220;color:#e8eefc;border:1px solid rgba(255,255,255,.16);font-size:12px"></label>
+            <label style="font-size:11.5px;color:#9fb2d0;display:block">单发伤害<input id="admDmg" type="number" min="2" max="120" style="width:100%;padding:7px;border-radius:8px;background:#0b1220;color:#e8eefc;border:1px solid rgba(255,255,255,.16);font-size:12px"></label>
+            <label style="font-size:11.5px;color:#9fb2d0;display:block">射速(s)<input id="admCd" type="number" min="0.06" max="2" step="0.02" style="width:100%;padding:7px;border-radius:8px;background:#0b1220;color:#e8eefc;border:1px solid rgba(255,255,255,.16);font-size:12px"></label>
+            <label style="font-size:11.5px;color:#9fb2d0;display:block">弹速<input id="admBul" type="number" min="300" max="2400" step="40" style="width:100%;padding:7px;border-radius:8px;background:#0b1220;color:#e8eefc;border:1px solid rgba(255,255,255,.16);font-size:12px"></label>
+            <label style="font-size:11.5px;color:#9fb2d0;display:block">技能冷却<input id="admSkillCd" type="number" min="0.5" max="40" step="0.5" style="width:100%;padding:7px;border-radius:8px;background:#0b1220;color:#e8eefc;border:1px solid rgba(255,255,255,.16);font-size:12px"></label>
+            <label style="font-size:11.5px;color:#9fb2d0;display:block">玩家半径<input id="admRadius" type="number" min="8" max="40" style="width:100%;padding:7px;border-radius:8px;background:#0b1220;color:#e8eefc;border:1px solid rgba(255,255,255,.16);font-size:12px"></label>
+          </div>
+          <div style="margin-bottom:8px">
+            <label style="font-size:11.5px;color:#9fb2d0;display:block">全员血量上限<input id="admHp" type="number" min="40" max="400" style="width:100%;padding:7px;border-radius:8px;background:#0b1220;color:#e8eefc;border:1px solid rgba(255,255,255,.16);font-size:12px"></label>
+          </div>
+          <div style="display:flex;gap:8px;margin-bottom:12px">
+            <button class="btn" id="btnAdmApply" style="flex:1;padding:8px;font-size:12px;white-space:nowrap">应用</button>
+            <button class="btn ghost" id="btnAdmReset" style="flex:1;padding:8px;font-size:12px;white-space:nowrap">恢复默认</button>
+          </div>
+          <div id="admTuneHint" style="font-size:11.5px;color:#7d8aa8;margin-bottom:12px;line-height:1.7"></div>
+          <div style="font-size:13px;font-weight:800;color:#67e8f9;margin:10px 0 6px">名字库（可批量清理测试名）</div>
+          <div style="display:flex;gap:8px;margin-bottom:8px">
+            <button class="btn ghost" id="btnAdmCleanTest" style="padding:7px 12px;font-size:12px;color:#ffb3bd">清理测试名</button>
+          </div>
           <div style="font-size:12px;color:#9fb2d0;margin-bottom:6px">已注册名字（点右侧删除）</div>
           <div id="adminList" style="display:flex;flex-direction:column;gap:6px"></div>
         </div>
@@ -897,12 +923,12 @@ body.fire-left #btnFire{left:18px !important;right:auto !important}
       </div>
     </div>
     <div class="overlay hidden" id="settingsScreen">
-      <div class="title">自定义设置 <span id="verTag" style="font-size:11px;color:#7d8aa8;font-weight:400;display:block;margin-top:2px">v2.5.8</span></div>
+      <div class="title">自定义设置 <span id="verTag" style="font-size:11px;color:#7d8aa8;font-weight:400;display:block;margin-top:2px">v2.5.9</span></div>
       <div id="settingsWrap" style="text-align:left;max-width:320px;line-height:2.2">
         <div>摇杆大小 <input type="range" id="setJoy" min="60" max="140" value="88" style="width:100%"></div>
         <div>开火键大小 <input type="range" id="setFire" min="50" max="120" value="74" style="width:100%"></div>
         <div>UI透明度 <input type="range" id="setAlpha" min="20" max="100" value="60" style="width:100%"></div>
-        <div>界面间距 <input type="range" id="setGap" min="0" max="28" value="10" style="width:100%"></div>
+        <div>界面边距 <input type="range" id="setGap" min="0" max="64" value="10" style="width:100%"></div>
         <div>移动灵敏度 <input type="range" id="setSens" min="30" max="150" value="80" style="width:100%"></div>
         <div>摇杆位置 <select id="setJoyPos" style="width:100%;padding:6px;border-radius:6px;background:#1a2340;color:#fff;border:1px solid rgba(255,255,255,.2)"><option value="left">左下角</option><option value="right">右下角</option></select></div>
         <div>开火键位置 <select id="setFirePos" style="width:100%;padding:6px;border-radius:6px;background:#1a2340;color:#fff;border:1px solid rgba(255,255,255,.2)"><option value="right">右下角</option><option value="left">左下角</option></select></div>
@@ -939,6 +965,7 @@ body.fire-left #btnFire{left:18px !important;right:auto !important}
         <div id="historyBox" style="display:none;margin-top:10px;border-top:1px solid rgba(255,255,255,.1);padding-top:10px">
           <div style="font-size:13px;font-weight:800;color:#67e8f9;margin-bottom:6px">修改历史</div>
           <div style="line-height:1.8">
+            <div><b style="color:#ffd34d">v2.5.9</b>　管理终端可改角色数值（移速/伤害/射速/弹速/技能冷却/血量/半径）并能批量清理测试名；界面边距上限提到 64px，左右面板真的会跟着变宽；突击手技能改成朝自己瞄准方向贴脸突刺，撞到的人吃 34 伤害；5V5 里「你」显示为你的名字；自检扩到 35 项</div>
             <div><b style="color:#ffd34d">v2.5.8</b>　对手子弹改成真正飞行的弹丸（0.6 秒飞完全程，枪口带一段短曳光），对面开枪能看见子弹飞过来；对手掉线超过 5 秒自动判你获胜</div>
             <div><b style="color:#ffd34d">v2.5.7</b>　联机对决能看到对手弹道了（开火角度跟着状态同步一起送，双方都看得到曳光）；暂停改成双方同意才生效，两边计时不再错位；设置里可自定义界面间距（全屏横屏都能调）；横屏隐藏顶部地图名；技能就绪不再一直闪动</div>
             <div><b style="color:#ffd34d">v2.5.6</b>　5V5 击杀上限提到 30；每日任务从 3 条增加到 5 条（新增「完成场次」任务）；联机结算页可以直接给对手点赞，双方都能点</div>
@@ -1060,8 +1087,8 @@ const MAPS = {
 const ROLES = {
   assault: { id:'assault', name:'突击手', icon:'⚡', color:'#ffd34d',
     speed:280, dmg:12, fireCD:0.28, bulletSpeed:760, bulletLife:1.2,
-    skill:{name:'疾风冲刺', key:'E', cd:5, dash:true,
-      desc:'朝瞄准方向猛冲 220px，机动拉身位', tag:'机动'},
+    skill:{name:'贴脸突刺', key:'E', cd:5, dash:true, dashDmg:34,
+      desc:'朝瞄准方向突刺，撞到的敌人直接吃 34 伤害', tag:'爆发'},
     ai:{ dash:{min:200,max:430}, shield:null, snipe:null, heal:null } },
   tank: { id:'tank', name:'重装', icon:'🛡️', color:'#7dd3fc',
     speed:220, dmg:12, fireCD:0.38, bulletSpeed:760, bulletLife:1.2,
@@ -1408,8 +1435,9 @@ function netGhostSkill(m){
 function castSkill(p){
   if(!p.alive || p.skillCD>0) return;
   const s=p.role.skill;
-  if(s.dash){ // 突击手：冲刺
-    p.dashT=0.18; p.dashVX=Math.cos(p.aim)*1200; p.dashVY=Math.sin(p.aim)*1200;
+  if(s.dash){ // 突击手：朝自己瞄准的方向突刺（不是自动对着对手），撞上的人直接吃伤害
+    p.dashT=0.22; p.dashVX=Math.cos(p.aim)*1250; p.dashVY=Math.sin(p.aim)*1250;
+    p.dashHits=[]; p.dashDmg=(s.dashDmg||34);
     sDash();
   } else if(s.shield){ // 重装：护盾
     p.shield=s.shield; p.shieldTimer=s.shieldDur;
@@ -1446,6 +1474,20 @@ function updateDash(p,dt){
   p.x=clamp(p.x,CFG.playerRadius,state.world.W-CFG.playerRadius);
   p.y=clamp(p.y,CFG.playerRadius,state.world.H-CFG.playerRadius);
   for(const o of state.world.obs) resolveCircleRect(p,o);
+  // 突刺贴脸：擦到的敌人吃伤害并被推一下（同一目标只算一次）
+  p.dashHits=p.dashHits||[];
+  for(const q of state.players){
+    if(!q.alive || q.team===p.team) continue;
+    if(p.dashHits.indexOf(q)>=0) continue;
+    const rr=CFG.playerRadius*2.2;
+    if(Math.hypot(q.x-p.x,q.y-p.y)<rr){
+      p.dashHits.push(q);
+      damagePlayer(q,{dmg:p.dashDmg||34, team:p.team, owner:p, skill:true});
+      q.x+=Math.cos(p.aim)*26; q.y+=Math.sin(p.aim)*26;
+      addFloater(q.x,q.y-26,'突刺 '+Math.round(p.dashDmg||34),'#ffd34d');
+      sHit();
+    }
+  }
   spawnParticle(prevX,prevY,0,0,p.team==='red'?'#ffd34d':'#7dd3fc',0.25,5); // 冲刺拖尾
 }
 
@@ -2188,7 +2230,7 @@ function drawPlayers(){
     // 名字：5V5 混战用兵种单字，一眼分得清队友是什么职业
     ctx2d.font='bold 12px "Microsoft YaHei",sans-serif';
     const shortRole={assault:'突',tank:'重',sniper:'神',medic:'医'}[p.role.id]||'';
-    const label=state.mode==='5v5'?(p.isHuman?'你':shortRole):p.name;
+    const label=state.mode==='5v5'?(p.isHuman?(currentNick().slice(0,5)||'你'):shortRole):p.name;
     ctx2d.lineWidth=2.5; ctx2d.strokeStyle='rgba(0,0,0,.65)'; ctx2d.strokeText(label,px,by-6); // 深色描边保证压在掩体上也看得清
     ctx2d.fillStyle=p.isHuman?'#ffd34d':(p.team==='red'?'#ffb3bd':'#a9ddff');
     ctx2d.fillText(label,px,by-6);
@@ -2332,7 +2374,7 @@ function updateHUD(){
   const p1 = state.netMode ? netMe() : localP();
   if(p1){
     hpFill.style.width=clamp(p1.hp/(p1.maxHp||CFG.maxHp),0,1)*100+'%';
-    p1Name.textContent=(state.netMode?'你':(state.mode==='1v1'?'P1':'玩家'))+' · '+p1.role.icon+' '+p1.role.name;
+    p1Name.textContent=(currentNick().slice(0,6)||'你')+' · '+p1.role.icon+' '+p1.role.name;
     p1Sub.textContent='击杀 '+p1.kills+' · 死亡 '+p1.deaths+(p1.shield>0?' · 护盾 '+Math.round(p1.shield):'');
     p1Icon.textContent=p1.role.icon;
     refreshSkillBox(panelP1.querySelector('.skillBox'), p1);
@@ -2948,6 +2990,24 @@ function showSelfCheck(){
   return list;
 }
 window.__selfCheck = runSelfCheck;
+/* 本轮新增能力检查：包一层，保证显示在自检列表里 */
+(function(){
+  const orig=runSelfCheck;
+  runSelfCheck=function(){
+    const list=orig.call(this)||[];
+    const ok2=(n,c,d)=>list.push({n, ok:!!c, d:d||''});
+    try{
+      const gapEl=document.getElementById('setGap');
+      ok2('界面边距可调到 64px', !!gapEl && +gapEl.max>=64, gapEl?('max='+gapEl.max):'');
+      ok2('终端调参控件齐全', ['admSpeed','admDmg','admCd','admBul','admSkillCd','admHp','btnAdmApply','btnAdmCleanTest','btnAdmReset'].every(id=>document.getElementById(id)));
+      ok2('突击手技能带突刺伤害', !!(ROLES.assault && ROLES.assault.skill && (ROLES.assault.skill.dashDmg||0)>0));
+      ok2('对手幽灵弹可飞行', typeof netGhostShot==='function');
+      ok2('5V5 用玩家名显示', (currentNick()||'').length>0, currentNick());
+    }catch(e){ ok2('新增检查执行', false, e.message); }
+    return list;
+  };
+  window.runSelfCheck=runSelfCheck;
+})();
 
 
 /* ================= 联机（1V1 真人对战） =================
@@ -3633,9 +3693,68 @@ document.getElementById('btnAdminLogin').addEventListener('click', ()=>{
   document.getElementById('adminErr').textContent='';
   document.getElementById('adminGate').style.display='none';
   document.getElementById('adminBody').style.display='block';
+  adminTuneFill();
   adminLoad();
 });
 document.getElementById('btnAdminClose').addEventListener('click', ()=>{ adminShow(false); location.href=location.pathname; });
+/* ---- 终端调参：写进本地存储，开局时套到 ROLES 上 ---- */
+function adminTuneLoad(){ return lsGet('gunAdminTune', {}); }
+function adminTuneApply(){
+  const t=adminTuneLoad();
+  if(t.roles) for(const id in t.roles){
+    const r=ROLES[id]; if(!r || !t.roles[id]) continue;
+    const v=t.roles[id];
+    if(v.speed) r.speed=v.speed;
+    if(v.dmg) r.dmg=v.dmg;
+    if(v.fireCD) r.fireCD=v.fireCD;
+    if(v.bulletSpeed) r.bulletSpeed=v.bulletSpeed;
+    if(v.skillCd && r.skill) r.skill.cd=v.skillCd;
+  }
+  if(t.maxHp) CFG.maxHp=t.maxHp;
+  if(t.playerRadius) CFG.playerRadius=t.playerRadius;
+}
+function adminTuneFill(){
+  const sel=document.getElementById('admRole'); if(!sel) return;
+  const t=adminTuneLoad(); const id=sel.value; const r=ROLES[id]; if(!r) return;
+  const v=(t.roles&&t.roles[id])||{};
+  const set=(el,val)=>{ const e=document.getElementById(el); if(e) e.value=val; };
+  set('admSpeed', v.speed||r.speed); set('admDmg', v.dmg||r.dmg);
+  set('admCd', v.fireCD||r.fireCD); set('admBul', v.bulletSpeed||r.bulletSpeed);
+  set('admSkillCd', v.skillCd||r.skill.cd); set('admRadius', t.playerRadius||CFG.playerRadius);
+  set('admHp', t.maxHp||CFG.maxHp);
+}
+function adminTuneSave(){
+  const sel=document.getElementById('admRole'); const id=sel.value;
+  const num=el=>{ const e=document.getElementById(el); const x=parseFloat(e&&e.value); return isFinite(x)?x:null; };
+  const t=adminTuneLoad(); t.roles=t.roles||{};
+  t.roles[id]={ speed:num('admSpeed'), dmg:num('admDmg'), fireCD:num('admCd'),
+                bulletSpeed:num('admBul'), skillCd:num('admSkillCd') };
+  t.maxHp=num('admHp'); t.playerRadius=num('admRadius');
+  lsSet('gunAdminTune', t);
+  adminTuneApply();
+  const hint=document.getElementById('admTuneHint');
+  if(hint) hint.textContent='已保存：'+ROLES[id].name+' 移速 '+ROLES[id].speed+' · 伤害 '+ROLES[id].dmg+' · 射速 '+ROLES[id].fireCD+'s · 技能CD '+ROLES[id].skill.cd+'s · 全员血量 '+CFG.maxHp;
+}
+document.getElementById('btnAdmApply').addEventListener('click', ()=>{ sClick(); adminTuneSave(); toastMsg('数值已应用，下一局生效'); });
+document.getElementById('btnAdmReset').addEventListener('click', ()=>{ sClick(); lsSet('gunAdminTune',{}); location.reload(); });
+document.getElementById('btnAdmCleanTest').addEventListener('click', async ()=>{
+  sClick();
+  const stat=document.getElementById('admTuneHint');
+  if(!(NET.client && NET.client.connected)){ if(stat) stat.textContent='中转未连接，先点刷新'; return; }
+  const pats=[/^[A-Za-z]{2,4}\d{3,4}$/i,/^体检\d+$/,/^测试\d*$/,/^[A-Za-z]{3,5}Test/i];
+  const targets=Object.entries(ADMIN.names).filter(([t,d])=>pats.some(p=>p.test(d.name||'')));
+  let n=0;
+  for(const [t,d] of targets){
+    try{
+      NET.client.publish(t,'',{qos:1,retain:true});
+      if(d.uid) NET.client.publish('gunfight9/card/'+fwKey(d.uid),'',{qos:1,retain:true});
+      n++;
+    }catch(e){}
+  }
+  if(stat) stat.textContent='已清理测试名 '+n+' 个（共命中 '+targets.length+'）';
+  setTimeout(adminLoad, 600);
+});
+document.getElementById('admRole').addEventListener('change', adminTuneFill);
 document.getElementById('btnAdminReload').addEventListener('click', adminLoad);
 document.getElementById('btnAdminLobby').addEventListener('click', async ()=>{
   await netOpen(); lobbyPublish(null); toastMsg('公告板已清空'); setTimeout(adminLoad, 600);
@@ -4296,6 +4415,7 @@ bindBtn('btnForceReload', ()=>{ const u=new URL(location.href); u.searchParams.s
   document.addEventListener('webkitfullscreenchange', syncText);
 })();
 function applySettings(){
+  try{ adminTuneApply(); }catch(e){}
   // 界面间距：顶部状态栏、左右面板、技能键的内外边距统一由 --uiGap 驱动
   {
     const gEl = document.getElementById('setGap');
