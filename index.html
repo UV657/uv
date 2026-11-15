@@ -897,7 +897,7 @@ body.fire-left #btnFire{left:18px !important;right:auto !important}
       </div>
     </div>
     <div class="overlay hidden" id="settingsScreen">
-      <div class="title">自定义设置 <span id="verTag" style="font-size:11px;color:#7d8aa8;font-weight:400;display:block;margin-top:2px">v2.5.7</span></div>
+      <div class="title">自定义设置 <span id="verTag" style="font-size:11px;color:#7d8aa8;font-weight:400;display:block;margin-top:2px">v2.5.8</span></div>
       <div id="settingsWrap" style="text-align:left;max-width:320px;line-height:2.2">
         <div>摇杆大小 <input type="range" id="setJoy" min="60" max="140" value="88" style="width:100%"></div>
         <div>开火键大小 <input type="range" id="setFire" min="50" max="120" value="74" style="width:100%"></div>
@@ -939,6 +939,7 @@ body.fire-left #btnFire{left:18px !important;right:auto !important}
         <div id="historyBox" style="display:none;margin-top:10px;border-top:1px solid rgba(255,255,255,.1);padding-top:10px">
           <div style="font-size:13px;font-weight:800;color:#67e8f9;margin-bottom:6px">修改历史</div>
           <div style="line-height:1.8">
+            <div><b style="color:#ffd34d">v2.5.8</b>　对手子弹改成真正飞行的弹丸（0.6 秒飞完全程，枪口带一段短曳光），对面开枪能看见子弹飞过来；对手掉线超过 5 秒自动判你获胜</div>
             <div><b style="color:#ffd34d">v2.5.7</b>　联机对决能看到对手弹道了（开火角度跟着状态同步一起送，双方都看得到曳光）；暂停改成双方同意才生效，两边计时不再错位；设置里可自定义界面间距（全屏横屏都能调）；横屏隐藏顶部地图名；技能就绪不再一直闪动</div>
             <div><b style="color:#ffd34d">v2.5.6</b>　5V5 击杀上限提到 30；每日任务从 3 条增加到 5 条（新增「完成场次」任务）；联机结算页可以直接给对手点赞，双方都能点</div>
             <div><b style="color:#ffd34d">v2.5.5</b>　好友分「互关 / 我关注 / 粉丝」三档，只有互关才能拉进联机；个人主页可看荣誉明细与获赞，明信片能点赞；主页数据改 3×3 排布</div>
@@ -1925,7 +1926,7 @@ function update(dt, rawDt){
     let dead=b.life<=0||b.x<-20||b.x>state.world.W+20||b.y<-20||b.y>state.world.H+20;
     if(!dead) for(const o of state.world.obs){
       if(b.x>o.x-b.r&&b.x<o.x+o.w+b.r&&b.y>o.y-b.r&&b.y<o.y+o.h+b.r){ dead=true; break; } }
-    if(!dead && b.noHit){ dead=true; }   // 对手的子弹只做视觉
+    if(!dead && b.noHit && !b.ghost){ dead=true; }   // 对手的子弹只做视觉；ghost 允许飞行
     if(!dead) for(const q of state.players){
       if(!q.alive||q.team===b.team) continue;
       const rr=CFG.playerRadius+b.r;
@@ -2203,7 +2204,7 @@ function drawBullets(){
       const k=Math.max(0,1-(now-t.t0)/400);
       const col = t.team==='blue' ? '#4dc3ff' : '#ff5b6e';
       ctx2d.globalAlpha=0.55*k;
-      ctx2d.strokeStyle=col; ctx2d.shadowColor=col; ctx2d.shadowBlur=12; ctx2d.lineWidth=4;
+      ctx2d.strokeStyle=col; ctx2d.shadowColor=col; ctx2d.shadowBlur=14; ctx2d.lineWidth=5;
       ctx2d.beginPath(); ctx2d.moveTo(t.x1,t.y1); ctx2d.lineTo(t.x2,t.y2); ctx2d.stroke();
       ctx2d.globalAlpha=0.9*k; ctx2d.fillStyle='#fff';
       ctx2d.beginPath(); ctx2d.arc(t.x1,t.y1,3.6,0,Math.PI*2); ctx2d.fill();
@@ -2412,7 +2413,7 @@ function startGame(){
   buildPlayers();
   state.bullets=[]; state.particles=[]; state.floaters=[]; killfeed.innerHTML='';
   state.scores={red:0,blue:0};
-  state.ended=false; state.running=false; state.paused=false; state.winner=null; state.shake=0;
+  state.ended=false; state.running=false; state.paused=false; window.__dropped=false; state.winner=null; state.shake=0;
   state.mvp=null; state.loserMvp=null;
   document.querySelectorAll('.confetti').forEach(e=>e.remove()); // 新局清掉上一局的彩带
   document.body.classList.add('in-game');
@@ -3063,6 +3064,7 @@ function netBind(){
   };
 }
 function netOnMsg(m){
+  NET.lastRcv=performance.now();
     if(m.t==='room'){ NET.code=m.code; NET.role='a'; netShowCode(m.code,'把房间码发给好友，等他进来'); }
     else if(m.t==='joined'){ NET.code=m.code; NET.role='b'; netStatus('已进房，等待房主开局…','#5eead4'); }
     else if(m.t==='peer'){
@@ -3282,6 +3284,15 @@ function netSend(obj, qos){
 function netTick(dt){
   if(!state.netMode || (!NET.ws && !NET.client)) return;
   const me=netMe(); if(!me) return;
+  // 对手掉线判定：连续 4 秒收不到对方任何消息，直接判我方获胜
+  if(state.running && !state.ended && NET.lastRcv && !window.__dropped){
+    if(performance.now()-NET.lastRcv > 5000){
+      window.__dropped=true;
+      toastMsg('对手掉线，本局判你获胜');
+      endMatch(netMyTeam());
+      return;
+    }
+  }
   NET.lastSend+=dt;
   if(NET.lastSend < 0.125) return;     // 公共中转限流约 10 条/秒，8Hz 实测零丢包
   NET.lastSend=0;
@@ -3311,9 +3322,12 @@ function netGhostShot(m){
   const x=(typeof m.x==='number')?m.x:foe.x, y=(typeof m.y==='number')?m.y:foe.y;
   const ang=(typeof m.ang==='number')?m.ang:(foe.aim||0);
   const team=foe.team||'red';
+  // 飞行子弹：0.6 秒飞完全程，玩家能看着子弹从对面飞过来
+  state.bullets.push({x,y,vx:Math.cos(ang)*700,vy:Math.sin(ang)*700,life:0.9,dmg:0,team,r:CFG.bulletRadius,
+                      owner:null,noHit:true,ghost:true});
   state.tracers=state.tracers||[];
   state.tracers.push({ x1:x+Math.cos(ang)*20, y1:y+Math.sin(ang)*20,
-                       x2:x+Math.cos(ang)*560, y2:y+Math.sin(ang)*560,
+                       x2:x+Math.cos(ang)*190, y2:y+Math.sin(ang)*190,
                        t0:performance.now(), team });
   foe.muzzleT=0.12;
   sShoot();
