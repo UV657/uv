@@ -633,6 +633,7 @@ body.fire-left #btnFire{left:18px !important;right:auto !important}
         style="width:min(80vw,320px);padding:12px 16px;border-radius:10px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.06);color:#e8eefc;font-size:16px;text-align:center;outline:none">
       <div id="nickTip" style="font-size:13px;color:#ff9f9f;min-height:18px;margin-top:6px"></div>
       <button class="btn primary" id="btnEnter" style="margin-top:2px">进入战场</button>
+      <button id="btnLoginBack" style="display:none;margin-top:10px;background:none;border:none;color:#8fa1bf;font-size:13px;cursor:pointer;text-decoration:underline">返回主菜单</button>
     </div>
 
     <!-- 主菜单 -->
@@ -783,6 +784,7 @@ body.fire-left #btnFire{left:18px !important;right:auto !important}
       <div class="netWrap">
         <div class="netTitle">1V1 联机对战</div>
         <div class="netHint" id="netHint">和真人对枪，需要服务器</div>
+        <button class="btn primary" id="btnNetQuick" style="width:100%;margin-bottom:8px">快速匹配（自动找对手）</button>
         <div class="netRow">
           <button class="btn" id="btnNetHost">创建房间</button>
           <button class="btn ghost" id="btnNetJoinMode">加入房间</button>
@@ -856,7 +858,7 @@ body.fire-left #btnFire{left:18px !important;right:auto !important}
       </div>
     </div>
     <div class="overlay hidden" id="settingsScreen">
-      <div class="title">自定义设置 <span id="verTag" style="font-size:11px;color:#7d8aa8;font-weight:400;display:block;margin-top:2px">v2.4.9</span></div>
+      <div class="title">自定义设置 <span id="verTag" style="font-size:11px;color:#7d8aa8;font-weight:400;display:block;margin-top:2px">v2.5.0</span></div>
       <div id="settingsWrap" style="text-align:left;max-width:320px;line-height:2.2">
         <div>摇杆大小 <input type="range" id="setJoy" min="60" max="140" value="88" style="width:100%"></div>
         <div>开火键大小 <input type="range" id="setFire" min="50" max="120" value="74" style="width:100%"></div>
@@ -896,6 +898,7 @@ body.fire-left #btnFire{left:18px !important;right:auto !important}
         <div id="historyBox" style="display:none;margin-top:10px;border-top:1px solid rgba(255,255,255,.1);padding-top:10px">
           <div style="font-size:13px;font-weight:800;color:#67e8f9;margin-bottom:6px">修改历史</div>
           <div style="line-height:1.8">
+            <div><b style="color:#ffd34d">v2.5.0</b>　联机加「快速匹配」：点一下自动找对手，不用换房号；改名修复（旧名字彻底释放、改名失败不扣次数、失败能点返回）；联机组件内嵌，不再依赖外部 CDN</div>
             <div><b style="color:#ffd34d">v2.4.9</b>　联机组件改成内嵌（不再依赖外部 CDN，国内网络也能连上）；中转连不上自动换备用；首页背景重做（全屏网格＋透视地面＋流光带＋漂浮光点）</div>
             <div><b style="color:#ffd34d">v2.4.8</b>　好友支持关键词搜人（输 uv 能找到名字带 uv 的人）；明信片扩到 8 种渐变卡面且点选立即生效；主菜单加科技背景</div>
             <div><b style="color:#ffd34d">v2.4.7</b>　建房与加入面板不再叠在一起；退出联机界面后房间还在；联机/好友断线会自动重连（之前一断就废）；新增「问题反馈」</div>
@@ -1159,6 +1162,27 @@ function nickClaim(n, uid){
   r[n]=uid; lsSet('gunNickReg', r); return true;
 }
 function nickLockedCount(){ return Object.keys(nickReg()).length; }
+/* 改名后必须把旧名字放出来：否则别人搜旧名还搜到你，旧名也永远没人能用 */
+function nickRelease(name, uid){
+  if(!name) return;
+  try{
+    const r=nickReg();
+    if(r[name] && fwKey(r[name])===fwKey(uid)){ delete r[name]; lsSet('gunNickReg', r); }
+  }catch(e){}
+  try{
+    if(FW.cli && FW.cli.connected) FW.cli.publish(nickTopicOf(name), '', {qos:1, retain:true});   // 空载荷 + retain = 清除保留消息
+  }catch(e){}
+}
+/* 扣了的改名额度要能退：名字重名被拒时不能白扣一次 */
+function refundRename(via){
+  try{
+    if(via==='free'){
+      const q=renameQuota(); lsSet('gunRenameLog', {ym:q.ym, used:Math.max(0,q.used-1)});
+    } else if(via==='card'){
+      lsSet('gunRenameCards', renameCards()+1);
+    }
+  }catch(e){}
+}
 function toastMsg(txt){
   const el=document.createElement('div');
   el.textContent=txt;
@@ -2616,6 +2640,7 @@ document.getElementById('btnExitFight').addEventListener('click', e=>{ e.prevent
 const nickInput=document.getElementById('nickInput'), loginScreen=document.getElementById('loginScreen');
 const savedNick=lsGetRaw('cs_nick');
 if(savedNick){
+  document.getElementById('btnLoginBack').style.display='none';
   nickClaim(savedNick, ensureUid()); nickInput.value=savedNick; loginScreen.classList.add('hidden'); menuScreen.classList.remove('hidden');
   // 后台只读复查：名字若已被别人抢注，提醒改名（不抢别人的名字、不打断进入）
   nickRemoteClaim(savedNick, ensureUid(), !UID_MIGRATED).then(r=>{
@@ -2634,14 +2659,25 @@ document.getElementById('btnEnter').addEventListener('click', async ()=>{
   if(tip) tip.textContent='正在校验代号（联网查重，约 2 秒）…';
   if(!nickClaim(n, uid)){ if(tip) tip.textContent='「'+n+'」在本机已被占用，换一个'; return; }
   const remote=await nickRemoteClaim(n, uid);
-  if(remote && remote.ok===false){ if(tip) tip.textContent='「'+n+'」'+ (remote.msg||'已被占用') +'，一个名字只能用一次'; return; }
+  if(remote && remote.ok===false){
+    if(tip) tip.textContent='「'+n+'」'+ (remote.msg||'已被占用') +'，一个名字只能用一次';
+    // 远端没占上，本地也别留占位，否则这个名字在这台机器上白白锁死
+    try{ const r=nickReg(); if(r[n] && fwKey(r[n])===fwKey(uid)){ delete r[n]; lsSet('gunNickReg', r); } }catch(e){}
+    return;
+  }
   const prevNick=lsGetRaw('cs_nick');
+  let spent=null;
   if(prevNick && prevNick!==n){
-    const sp=spendRename();
-    if(!sp.ok){ if(tip) tip.textContent='本月 '+RENAME_FREE+' 次改名已用完：去「我的主页」用 '+CARD_COST+' 荣誉换改名卡，或等下个月'; return; }
+    spent=spendRename();
+    if(!spent.ok){ nickRelease(n, uid); if(tip) tip.textContent='本月 '+RENAME_FREE+' 次改名已用完：去「我的主页」用 '+CARD_COST+' 荣誉换改名卡，或等下个月'; return; }
   }
   if(tip) tip.textContent='';
   lsSet('cs_nick', n);
+  if(prevNick && prevNick!==n){
+    nickRelease(prevNick, uid);          // 旧名字彻底放出来，别人才能用、也搜不到你了
+    const p1x=state.players.find(p=>p.isHuman); if(p1x) p1x.name=n;
+    toastMsg('改名成功：'+prevNick+' → '+n);
+  }
   loginScreen.classList.add('hidden'); menuScreen.classList.remove('hidden');
   fwInit().then(()=>{ fwPublishCard(); fwRenderList(); });
   updateBestRecord();
@@ -2893,7 +2929,81 @@ function netOnMsg(m){
       netSend({t:'start'}, 1);
     }
 }
+setInterval(()=>{
+  if(!state.netMode || !NET.lastPeer) return;
+  const gap=Date.now()-NET.lastPeer;
+  if(gap>3200 && !NET.peerWarn){ NET.peerWarn=true; toastMsg('对手掉线了，等他自己回来…'); }
+  else if(gap<900 && NET.peerWarn){ NET.peerWarn=false; toastMsg('对手回来了'); }
+}, 1600);
 /* 建房后直接列出好友，在线的点一下就邀请，不用回主菜单找 */
+/* ===== 快速匹配 =====
+ * 公告板：gunfight9/<端>/lobby 上挂一条保留消息（房间码 + 昵称 + 时间戳）。
+ * 点匹配时先看板上有没有人，有就进他的房；没有就自己开房挂牌等别人。
+ * 25 秒内有效、每 8 秒刷新一次，人走了公告自动过期，不会配到空房。
+ */
+function lobbyTopic(){ return 'gunfight9/'+netPlat()+'/lobby'; }
+function lobbyPublish(obj){
+  try{
+    if(!NET.client || !NET.client.connected) return;
+    NET.client.publish(lobbyTopic(), obj?JSON.stringify(obj):'', {qos:0, retain:true});
+  }catch(e){}
+}
+function lobbyClear(){
+  if(NET.lobbyTimer){ clearInterval(NET.lobbyTimer); NET.lobbyTimer=null; }
+  lobbyPublish(null);   // 空载荷 + retain = 撤下公告
+}
+function readLobbyBoard(myUid, skipCode){
+  return new Promise((done)=>{
+    if(!NET.client || !NET.client.connected){ done(null); return; }
+    let got=null, fin=false;
+    const end=()=>{ if(fin) return; fin=true; try{ NET.client.removeListener('message',h); }catch(e){}; try{ NET.client.unsubscribe(lobbyTopic()); }catch(e){}; done(got); };
+    const h=(t,p)=>{
+      if(fin || String(t)!==lobbyTopic()) return;
+      try{
+        const m=JSON.parse(p.toString());
+        if(!m || !m.code || !m.uid) return;
+        if(skipCode && m.code===skipCode) return;
+        if(myUid && fwKey(m.uid)===myUid) return;
+        if(Date.now()-(m.ts||0)>25000) return;
+        got=m; end();
+      }catch(e){}
+    };
+    try{ NET.client.on('message',h); NET.client.subscribe(lobbyTopic(),{qos:0}); }catch(e){}
+    setTimeout(end, 1200);
+  });
+}
+function netJoinByLobby(hit){
+  NET.role='b'; NET.code=hit.code;
+  try{ NET.client.subscribe(netTopic(hit.code,'b'),{qos:1}); }catch(e){}
+  try{ NET.client.publish(netTopic(hit.code,'a'), JSON.stringify({t:'join', name:currentNick()}), {qos:1}); }catch(e){}
+  netShowCode(hit.code, '已匹配到 '+hit.nick+'，正在进房…');
+  setTimeout(()=>{ if(!state.netMode) netStatus('对方没回应，换一个试试','#ff9f9f'); }, 4500);
+}
+function netQuickMatch(){
+  return new Promise(async (resolve)=>{
+    if(!await netOpen()){ resolve(false); return; }
+    NET.role='a'; NET.quit=false;
+    netStatus('正在找对手…','#8fa1bf');
+    const myUid=fwKey(FW.uid||ensureUid());
+    const hit=await readLobbyBoard(myUid, null);
+    if(hit){ netJoinByLobby(hit); resolve(true); return; }
+    // 没人等：自己开房，挂牌等人
+    NET.role='a'; NET.code=genRoomCode();
+    try{ NET.client.subscribe(netTopic(NET.code,'a'),{qos:1}); }catch(e){}
+    netShowCode(NET.code, '正在等人匹配…也可以把房号发给好友');
+    const beacon=()=>lobbyPublish({code:NET.code, nick:currentNick(), uid:FW.uid||ensureUid(), ts:Date.now()});
+    beacon();
+    if(NET.lobbyTimer) clearInterval(NET.lobbyTimer);
+    NET.lobbyTimer=setInterval(beacon, 8000);
+    // 两边同时点匹配会互相看不见；挂牌后再看一次板，谁后挂谁让位
+    setTimeout(async ()=>{
+      if(state.netMode || NET.role!=='a' || !NET.code) return;
+      const other=await readLobbyBoard(myUid, NET.code);
+      if(other && !state.netMode){ lobbyClear(); netJoinByLobby(other); }
+    }, 1700);
+    resolve(true);
+  });
+}
 function netRenderInviteList(){
   const box=document.getElementById('netFriendBox');
   if(!box) return;
@@ -2931,6 +3041,7 @@ function netShowCode(code, tip){
   setTimeout(netRenderInviteList, 60);
 }
 function startNetMatch(){
+  try{ lobbyClear(); }catch(e){}
   document.querySelectorAll('.overlay').forEach(e=>e.classList.add('hidden'));
   state.netMode=true;
   state.mode='1v1';
@@ -2976,7 +3087,7 @@ function netApplyState(m){
   foe.hp=m.hp; foe.alive=m.alive; foe.shield=m.sh||0;
   if(!foe.netInit){ foe.netInit=true; foe.x=m.x; foe.y=m.y; foe.aim=m.aim; }
   if(m.alive && !foe.alive) foe.alive=true;      // 对手复活
-  NET.peerOnline=true;
+  NET.peerOnline=true; NET.lastPeer=Date.now();
 }
 function netTakeHit(v){
   const me=netMe(); if(!me || !me.alive) return;
@@ -3564,6 +3675,7 @@ document.getElementById('btnNetHost').addEventListener('click', async ()=>{
   if(!NET.ws){ if(!await netOpen()) return; }
   netSend({t:'create'});
 });
+document.getElementById('btnNetQuick').addEventListener('click', ()=>{ sClick(); netQuickMatch(); });
 document.getElementById('btnNetJoinMode').addEventListener('click', ()=>{
   sClick();
   document.getElementById('netStatus').classList.add('hidden');      // 两块不能同时挂着，否则叠在一起
@@ -3589,6 +3701,7 @@ document.getElementById('btnNetJoin').addEventListener('click', async ()=>{
 });
 document.getElementById('btnNetBack').addEventListener('click', ()=>{
   sClick();
+  try{ lobbyClear(); }catch(e){}
   NET.want=false;
   if(NET.client){ try{ NET.client.end(true); }catch(e){} }
   NET.client=null;
@@ -3666,9 +3779,18 @@ document.getElementById('btnRename').addEventListener('click', ()=>{
   const ni=document.getElementById('nickInput'); ni.value=currentNick();
   document.getElementById('loginScreen').classList.remove('hidden');
   const tip=document.getElementById('nickTip'); if(tip) tip.textContent='本次改名后还剩 '+(renameLeft()-1)+' 次机会';
+  const bk=document.getElementById('btnLoginBack'); if(bk) bk.style.display='block';
   ni.focus();
 });
 
+document.getElementById('btnLoginBack').addEventListener('click', ()=>{
+  sClick();
+  const ni=document.getElementById('nickInput'); ni.value=lsGetRaw('cs_nick');
+  document.getElementById('nickTip').textContent='';
+  document.getElementById('btnLoginBack').style.display='none';
+  document.getElementById('loginScreen').classList.add('hidden');
+  document.getElementById('menuScreen').classList.remove('hidden');
+});
 /* 手机操作说明弹窗 */
 document.getElementById('btnTouchHelp').addEventListener('click', ()=>{
   document.getElementById('touchHelpBody').innerHTML = `
