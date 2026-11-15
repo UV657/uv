@@ -8,6 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="枪战对决">
 <meta name="theme-color" content="#0a1628">
+<link rel="icon" href='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 64 64%22%3E%3Crect width=%2264%22 height=%2264%22 rx=%2214%22 fill=%22%230a1628%22/%3E%3Cpath d=%22M32 12l14 8v16c0 10-14 16-14 16s-14-6-14-16V20z%22 fill=%22none%22 stroke=%22%2367e8f9%22 stroke-width=%223%22/%3E%3Ccircle cx=%2232%22 cy=%2234%22 r=%226%22 fill=%22%23ff5b6e%22/%3E%3C/svg%3E'>
 <link rel="manifest" href='data:application/manifest+json,{"name":"枪战对决","short_name":"枪战","start_url":".","display":"fullscreen","background_color":"%230a1628","theme_color":"%230a1628","orientation":"landscape"}'>
 <title>枪战对决 - 手机网页枪战游戏，1V1 联机对战免安装</title>
 <meta name="description" content="枪战对决是一款打开网页就能玩的手机枪战游戏：1V1 真人对战、5V5 团队战、4 种兵种与 4 把武器、段位晋升、皮肤与每日任务，手机横竖屏自适应，无需下载安装。">
@@ -43,6 +44,7 @@
 }
 </script>
 <style>
+@media (orientation:landscape){ #mapName{display:none !important} }
 /* ========== 全局样式：深色战场氛围，居中舞台 ========== */
 *{margin:0;padding:0;box-sizing:border-box}
 html,body{height:100%;overflow:hidden;position:fixed;width:100%}
@@ -69,7 +71,7 @@ body{
 
 /* ========== HUD ========== */
 #hud{position:absolute;inset:0;pointer-events:none}
-#topbar{position:absolute;top:0;left:0;right:0;display:flex;justify-content:space-between;align-items:center;padding:10px 16px}
+#topbar{position:absolute;top:0;left:0;right:0;display:flex;justify-content:space-between;align-items:center;padding:calc(var(--uiGap,10px) * .8) calc(var(--uiGap,10px) * 1.2)}
 /* 全局隐藏工具类：.hidden 必须真正隐藏（角色行/难度行/地图行都依赖它） */
 .hidden{display:none !important}
 /* 游戏内 HUD 默认隐藏，对局中才显示（放最后确保优先级） */
@@ -114,11 +116,11 @@ body.is-touch.in-game.paused-fight #btnExitFight{display:none !important}
 #hpFill.blue{background:linear-gradient(90deg,#38b6ff,#4dc3ff)}
 .ppSub{font-size:11px;color:#9fb2d0;margin-top:5px}
 /* 技能面板 */
-.skillBox{position:relative;width:44px;height:44px;border-radius:10px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.14);overflow:hidden;margin-top:8px}
+.skillBox{position:relative;width:44px;height:44px;border-radius:10px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.14);overflow:hidden;margin-top:var(--uiGap,8px)}
 .skillBox .skIcon{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:22px}
 .skillBox .skCd{position:absolute;left:0;right:0;bottom:0;background:rgba(0,0,0,.62);transition:height .1s linear}
 .skillBox .skCdNum{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;color:#fff;font-family:Consolas,monospace;text-shadow:0 1px 4px rgba(0,0,0,.9);pointer-events:none;z-index:2}
-.skillBox.ready .skIcon{animation:skReady 1.5s ease-in-out infinite}
+.skillBox.ready .skIcon{filter:drop-shadow(0 0 6px rgba(125,211,252,.55))}
 @keyframes skReady{0%,100%{filter:drop-shadow(0 0 0 rgba(125,211,252,0))}50%{filter:drop-shadow(0 0 9px rgba(125,211,252,.95))}}
 .skillBox .skKey{position:absolute;right:3px;top:2px;font-size:9px;background:rgba(0,0,0,.6);padding:1px 4px;border-radius:4px;color:#7dd3fc}
 .skillBox .skName{position:absolute;left:0;right:0;bottom:1px;font-size:8px;text-align:center;color:#fff;background:rgba(0,0,0,.5);border-radius:0 0 8px 8px}
@@ -828,6 +830,15 @@ body.fire-left #btnFire{left:18px !important;right:auto !important}
       </div>
     </div>
 
+    <!-- 联机暂停请求 -->
+    <div class="overlay hidden" id="pauseAskScreen" style="z-index:60">
+      <div class="title" style="font-size:20px">对手申请暂停</div>
+      <div class="sub" style="max-width:300px;line-height:1.7" id="pauseAskTip">同意后双方同时暂停，计时一起停。</div>
+      <div class="rowBtns">
+        <button class="btn" id="btnPauseOk">同 意</button>
+        <button class="btn ghost" id="btnPauseNo">拒绝</button>
+      </div>
+    </div>
     <!-- 暂停 -->
     <div class="overlay hidden" id="pauseScreen">
       <div class="title">已暂停</div>
@@ -861,7 +872,7 @@ body.fire-left #btnFire{left:18px !important;right:auto !important}
       <div class="title">问题反馈</div>
       <div style="width:min(94vw,430px);text-align:left">
         <div style="font-size:11.5px;color:#8fa1bf;margin-bottom:8px;line-height:1.6">写清楚你遇到的情况（哪一步、什么设备、报错文字），点发送会打开邮件客户端，内容已自动填好。</div>
-        <textarea id="fbText" maxlength="600" rows="6" placeholder="例如：建房后点邀请，对方没收到弹窗；我用的是手机豆包内浏览器" style="width:100%;box-sizing:border-box;padding:10px;border-radius:10px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.06);color:#e8eefc;font-size:13px;line-height:1.6;outline:none;resize:vertical"></textarea>
+        <textarea id="fbText" maxlength="600" rows="6" placeholder="例如：建房后点邀请，对方没收到弹窗；我用的是手机浏览器或电脑 Chrome" style="width:100%;box-sizing:border-box;padding:10px;border-radius:10px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.06);color:#e8eefc;font-size:13px;line-height:1.6;outline:none;resize:vertical"></textarea>
         <div style="display:flex;gap:8px;margin-top:10px">
           <button class="btn" id="fbSend" style="flex:1;padding:9px;font-size:13px">发送邮件</button>
           <button class="btn ghost" id="fbCopy" style="flex:1;padding:9px;font-size:13px">复制邮箱</button>
@@ -886,11 +897,12 @@ body.fire-left #btnFire{left:18px !important;right:auto !important}
       </div>
     </div>
     <div class="overlay hidden" id="settingsScreen">
-      <div class="title">自定义设置 <span id="verTag" style="font-size:11px;color:#7d8aa8;font-weight:400;display:block;margin-top:2px">v2.5.6</span></div>
+      <div class="title">自定义设置 <span id="verTag" style="font-size:11px;color:#7d8aa8;font-weight:400;display:block;margin-top:2px">v2.5.7</span></div>
       <div id="settingsWrap" style="text-align:left;max-width:320px;line-height:2.2">
         <div>摇杆大小 <input type="range" id="setJoy" min="60" max="140" value="88" style="width:100%"></div>
         <div>开火键大小 <input type="range" id="setFire" min="50" max="120" value="74" style="width:100%"></div>
         <div>UI透明度 <input type="range" id="setAlpha" min="20" max="100" value="60" style="width:100%"></div>
+        <div>界面间距 <input type="range" id="setGap" min="0" max="28" value="10" style="width:100%"></div>
         <div>移动灵敏度 <input type="range" id="setSens" min="30" max="150" value="80" style="width:100%"></div>
         <div>摇杆位置 <select id="setJoyPos" style="width:100%;padding:6px;border-radius:6px;background:#1a2340;color:#fff;border:1px solid rgba(255,255,255,.2)"><option value="left">左下角</option><option value="right">右下角</option></select></div>
         <div>开火键位置 <select id="setFirePos" style="width:100%;padding:6px;border-radius:6px;background:#1a2340;color:#fff;border:1px solid rgba(255,255,255,.2)"><option value="right">右下角</option><option value="left">左下角</option></select></div>
@@ -927,9 +939,10 @@ body.fire-left #btnFire{left:18px !important;right:auto !important}
         <div id="historyBox" style="display:none;margin-top:10px;border-top:1px solid rgba(255,255,255,.1);padding-top:10px">
           <div style="font-size:13px;font-weight:800;color:#67e8f9;margin-bottom:6px">修改历史</div>
           <div style="line-height:1.8">
+            <div><b style="color:#ffd34d">v2.5.7</b>　联机对决能看到对手弹道了（开火角度跟着状态同步一起送，双方都看得到曳光）；暂停改成双方同意才生效，两边计时不再错位；设置里可自定义界面间距（全屏横屏都能调）；横屏隐藏顶部地图名；技能就绪不再一直闪动</div>
             <div><b style="color:#ffd34d">v2.5.6</b>　5V5 击杀上限提到 30；每日任务从 3 条增加到 5 条（新增「完成场次」任务）；联机结算页可以直接给对手点赞，双方都能点</div>
             <div><b style="color:#ffd34d">v2.5.5</b>　好友分「互关 / 我关注 / 粉丝」三档，只有互关才能拉进联机；个人主页可看荣誉明细与获赞，明信片能点赞；主页数据改 3×3 排布</div>
-            <div><b style="color:#ffd34d">v2.5.4</b>　客机终于能玩（蓝队摇杆、面板改「你/对手」、联机用队伍色、出生点拉近、屏幕边缘指向对手）；修好段位条空白、改名剩次显示 98；关注会给对方发提示；新增管理终端 <b style="color:#67e8f9">?admin=1</b></div>
+            <div><b style="color:#ffd34d">v2.5.4</b>　客机终于能玩（蓝队摇杆、面板改「你/对手」、联机用队伍色、出生点拉近、屏幕边缘指向对手）；修好段位条空白、改名剩次显示 98；关注会给对方发提示</div>
             <div><b style="color:#ffd34d">v2.5.3</b>　人机兜底放宽到 12 秒（对方连中转就要几秒，9 秒会把还在路上的人抢掉）</div>
             <div><b style="color:#ffd34d">v2.5.2</b>　修加入方（蓝队）手机摇杆完全动不了、双方角色不一致、对方技能看不到；设置加「注销账号」；匹配 9 秒没人自动进人机局</div>
             <div><b style="color:#ffd34d">v2.5.1</b>　快速匹配加了回退：公告板上有死房时不会一直干等，4.8 秒后自动改开自己的房；离开页面自动撤公告</div>
@@ -1352,7 +1365,12 @@ function buildPlayers(){
 /* 发射子弹 */
 function shoot(p){
   const ang=p.aim;
-  if(state.netMode && p.isHuman){ netSend({t:'shot', x:Math.round(p.x), y:Math.round(p.y), ang:+ang.toFixed(2)}); }
+  if(state.netMode && p.isHuman){
+    // 开火不单独发消息（公共中转容易丢），先攒起来，跟着 8Hz 状态同步一起送
+    p.pendingShots=p.pendingShots||[];
+    p.pendingShots.push(+ang.toFixed(2));
+    if(p.pendingShots.length>4) p.pendingShots.splice(0, p.pendingShots.length-4);
+  }
   const sx=p.x+Math.cos(ang)*(CFG.playerRadius+6), sy=p.y+Math.sin(ang)*(CFG.playerRadius+6);
   const wp = p.weapon || WEAPONS.rifle;
   let dmg=Math.round(p.role.dmg*wp.dmgMul*(p.dmgBonus||1)), life=p.role.bulletLife*wp.lifeMul, spd=p.role.bulletSpeed*wp.spdMul;
@@ -1557,7 +1575,14 @@ window.addEventListener('keyup', e=>{ state.keys[e.code]=false; });
 
 function onBlur(){
   state.keys={}; state.keys2={}; state.mouse.down=false;
-  if(state.running && !state.ended && !state.paused){ state.paused=true; pauseScreen.classList.remove('hidden'); }
+  if(state.running && !state.ended && !state.paused){
+    if(state.netMode){
+      // 联机失焦不单边暂停，否则两边计时错位；只提示回来继续
+      if(NET.foeUid) toastMsg('窗口失去焦点，联机对局不会自动暂停');
+    } else {
+      applyPause(true, '');
+    }
+  }
 }
 window.addEventListener('blur', onBlur);
 document.addEventListener('visibilitychange', ()=>{ if(document.hidden) onBlur(); });
@@ -2170,6 +2195,22 @@ function drawPlayers(){
 }
 function drawBullets(){
   ctx2d.lineCap='round';
+  // 对手弹道的曳光残影
+  if(state.tracers && state.tracers.length){
+    const now=performance.now();
+    state.tracers=state.tracers.filter(t=>now-t.t0<400);
+    for(const t of state.tracers){
+      const k=Math.max(0,1-(now-t.t0)/400);
+      const col = t.team==='blue' ? '#4dc3ff' : '#ff5b6e';
+      ctx2d.globalAlpha=0.55*k;
+      ctx2d.strokeStyle=col; ctx2d.shadowColor=col; ctx2d.shadowBlur=12; ctx2d.lineWidth=4;
+      ctx2d.beginPath(); ctx2d.moveTo(t.x1,t.y1); ctx2d.lineTo(t.x2,t.y2); ctx2d.stroke();
+      ctx2d.globalAlpha=0.9*k; ctx2d.fillStyle='#fff';
+      ctx2d.beginPath(); ctx2d.arc(t.x1,t.y1,3.6,0,Math.PI*2); ctx2d.fill();
+      ctx2d.shadowBlur=0;
+    }
+    ctx2d.globalAlpha=1;
+  }
   for(const b of state.bullets){
     ctx2d.strokeStyle=b.team==='red'?'#ff5b6e':'#4dc3ff';
     ctx2d.shadowColor=b.team==='red'?'#ff5b6e':'#4dc3ff'; ctx2d.shadowBlur=10;
@@ -2389,8 +2430,26 @@ function startGame(){
     window.__ttTimer=setTimeout(()=>{ tt.style.opacity='0'; setTimeout(()=>{ if(tt.style.opacity==='0') tt.style.display='none'; },500); },8000);
   }
 }
+function netPauseAsk(){
+  if(!(NET.client && NET.code)) return;
+  netSend({t:'pauseAsk', from:currentNick()}, 1);
+  toastMsg('已申请暂停，等对手同意');
+}
+function applyPause(on, tip){
+  state.paused=on;
+  document.body.classList.toggle('paused-fight', on);
+  pauseScreen.classList.toggle('hidden', !on);
+  if(tip) pauseTip.textContent=tip;
+  else pauseTip.textContent = state.mode==='1v1' ? '按 P / Esc 继续' : '按 P / Esc 继续（失焦会自动暂停）';
+}
 function togglePause(){
   if(!state.running || state.ended) return;
+  // 联机对局：暂停必须双方同意，否则两边计时对不上
+  if(state.netMode && NET.foeUid){
+    if(state.paused){ applyPause(false); netSend({t:'pauseEnd'}, 1); return; }
+    netPauseAsk();
+    return;
+  }
   state.paused=!state.paused;
   document.body.classList.toggle('paused-fight', state.paused);
   pauseScreen.classList.toggle('hidden',!state.paused);
@@ -2840,7 +2899,7 @@ function runSelfCheck(){
   ok('本地存储可读写', lsOk);
 
   // 6. 设置项齐全
-  const sets=['setJoy','setFire','setAlpha','setSens','setJoyPos','setFirePos','setSkillPos','setAutoFire','setAutoAim','setRadarShow','setRadarSize','setRadarAlpha','setRadarPos'];
+  const sets=['setJoy','setFire','setAlpha','setSens','setJoyPos','setFirePos','setSkillPos','setAutoFire','setAutoAim','setRadarShow','setRadarSize','setRadarAlpha','setRadarPos','setGap'];
   const setMiss=sets.filter(id=>!document.getElementById(id));
   ok('设置项 DOM 齐全（'+sets.length+' 项）', setMiss.length===0, setMiss.length?'缺失: '+setMiss.join(','):'');
 
@@ -3017,6 +3076,14 @@ function netOnMsg(m){
     else if(m.t==='died'){ netRemoteDied(); }
     else if(m.t==='shot'){ netGhostShot(m); }
     else if(m.t==='skill'){ netGhostSkill(m); }
+    else if(m.t==='pauseAsk'){
+      if(state.paused){ netSend({t:'pauseOk'}, 1); return; }
+      window.__pauseFrom=m.from||'对手';
+      const box=document.getElementById('pauseAskScreen'); if(box) box.classList.remove('hidden');
+    }
+    else if(m.t==='pauseOk'){ applyPause(true, '双方已暂停，按 P / Esc 继续'); toastMsg('对手同意暂停'); }
+    else if(m.t==='pauseNo'){ applyPause(false, ''); toastMsg('对手拒绝了暂停'); }
+    else if(m.t==='pauseEnd'){ if(state.paused) applyPause(false, ''); }
     else if(m.t==='err'){ netStatus(m.msg,'#ff9f9f'); }
     else if(m.t==='join'){
       // 公共中转模式：房主收到入房请求，立刻开局并回通知
@@ -3218,11 +3285,14 @@ function netTick(dt){
   NET.lastSend+=dt;
   if(NET.lastSend < 0.125) return;     // 公共中转限流约 10 条/秒，8Hz 实测零丢包
   NET.lastSend=0;
+  const shots=(me.pendingShots && me.pendingShots.length) ? me.pendingShots.splice(0,4) : null;
   netSend({t:'state', x:Math.round(me.x), y:Math.round(me.y), aim:+me.aim.toFixed(2),
-           hp:Math.round(me.hp), alive:me.alive, shield:me.shield||0, sh:me.shield>0}, 1);
+           hp:Math.round(me.hp), alive:me.alive, shield:me.shield||0, sh:me.shield>0,
+           s:shots}, 1);
 }
 function netApplyState(m){
   const foe=netFoe(); if(!foe) return;
+  if(m.s && m.s.length){ for(const a of m.s){ netGhostShot({x:foe.x, y:foe.y, ang:a}); } }
   foe.netTX=m.x; foe.netTY=m.y; foe.netAim=m.aim;
   foe.hp=m.hp; foe.alive=m.alive; foe.shield=m.sh||0;
   if(!foe.netInit){ foe.netInit=true; foe.x=m.x; foe.y=m.y; foe.aim=m.aim; }
@@ -3236,10 +3306,16 @@ function netTakeHit(v){
   if(me.hp<=0){ me.hp=0; killPlayer(me, netFoe()); netSend({t:'died'}, 1); }
 }
 function netGhostShot(m){
-  // 对手开枪：只做视觉子弹，不参与本地判定（伤害由对方下发）
+  // 对手开枪：只做视觉，不参与本地判定（伤害由对方下发）
   const foe=netFoe(); if(!foe) return;
-  state.bullets.push({x:m.x,y:m.y,vx:Math.cos(m.ang)*760,vy:Math.sin(m.ang)*760,life:0.35,dmg:0,team:'blue',owner:null,noHit:true,ghost:true});
-  foe.muzzleT=0.09;
+  const x=(typeof m.x==='number')?m.x:foe.x, y=(typeof m.y==='number')?m.y:foe.y;
+  const ang=(typeof m.ang==='number')?m.ang:(foe.aim||0);
+  const team=foe.team||'red';
+  state.tracers=state.tracers||[];
+  state.tracers.push({ x1:x+Math.cos(ang)*20, y1:y+Math.sin(ang)*20,
+                       x2:x+Math.cos(ang)*560, y2:y+Math.sin(ang)*560,
+                       t0:performance.now(), team });
+  foe.muzzleT=0.12;
   sShoot();
 }
 
@@ -4206,6 +4282,12 @@ bindBtn('btnForceReload', ()=>{ const u=new URL(location.href); u.searchParams.s
   document.addEventListener('webkitfullscreenchange', syncText);
 })();
 function applySettings(){
+  // 界面间距：顶部状态栏、左右面板、技能键的内外边距统一由 --uiGap 驱动
+  {
+    const gEl = document.getElementById('setGap');
+    const gv = (gEl && gEl.value) || 10;
+    document.documentElement.style.setProperty('--uiGap', gv+'px');
+  }
   const s = lsGet('gunSettings', {});
   if(s.joy){ document.documentElement.style.setProperty('--joy', s.joy+'px'); }
   if(s.fire){ document.documentElement.style.setProperty('--fire', s.fire+'px'); }
@@ -4257,6 +4339,7 @@ function saveSettings(){
     joy: +document.getElementById('setJoy').value,
     fire: +document.getElementById('setFire').value,
     alpha: +document.getElementById('setAlpha').value,
+    gap: +document.getElementById('setGap').value,
     sens: +document.getElementById('setSens').value,
     joyPos: document.getElementById('setJoyPos').value,
     firePos: document.getElementById('setFirePos').value,
@@ -4280,7 +4363,7 @@ function saveSettings(){
   }
   applySettings();
 }
-['setJoy','setFire','setAlpha','setSens','setJoyPos','setFirePos','setSkillPos','setAutoFire','setAutoAim','setRadarShow','setRadarSize','setRadarAlpha','setRadarPos','setSkin','setAimStick'].forEach(id=>{
+['setJoy','setFire','setAlpha','setSens','setJoyPos','setFirePos','setSkillPos','setAutoFire','setAutoAim','setRadarShow','setRadarSize','setRadarAlpha','setRadarPos','setSkin','setAimStick','setGap'].forEach(id=>{
   document.getElementById(id).addEventListener('input', ()=>{ saveSettings(); });
 });
 applySettings();
@@ -4305,6 +4388,17 @@ document.getElementById('btnLikeFoe').addEventListener('click', async ()=>{
   await fwLike(uid);
   const b=document.getElementById('btnLikeFoe');
   if(b) b.textContent='已点赞 ♥ '+fwLikesOf(uid);
+});
+document.getElementById('btnPauseOk').addEventListener('click', ()=>{
+  sClick();
+  document.getElementById('pauseAskScreen').classList.add('hidden');
+  applyPause(true, '双方已暂停，按 P / Esc 继续');
+  netSend({t:'pauseOk'}, 1);
+});
+document.getElementById('btnPauseNo').addEventListener('click', ()=>{
+  sClick();
+  document.getElementById('pauseAskScreen').classList.add('hidden');
+  netSend({t:'pauseNo'}, 1);
 });
 bindBtn('btnAgain', restartGame);
 bindBtn('btnMenu', backToMenu);
