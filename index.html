@@ -1062,7 +1062,7 @@ body.is-touch .nhTime{display:none !important}
       </div>
     </div>
     <div class="overlay hidden" id="settingsScreen">
-      <div class="title">自定义设置 <span id="verTag" style="font-size:11px;color:#7d8aa8;font-weight:400;display:block;margin-top:2px">v2.7.11</span></div>
+      <div class="title">自定义设置 <span id="verTag" style="font-size:11px;color:#7d8aa8;font-weight:400;display:block;margin-top:2px">v2.7.12</span></div>
       <div id="settingsWrap" style="text-align:left;max-width:320px;line-height:2.2">
         <div>摇杆大小 <input type="range" id="setJoy" min="60" max="140" value="88" style="width:100%"></div>
         <div>开火键大小 <input type="range" id="setFire" min="50" max="120" value="74" style="width:100%"></div>
@@ -1106,6 +1106,7 @@ body.is-touch .nhTime{display:none !important}
         <div id="historyBox" style="display:none;margin-top:10px;border-top:1px solid rgba(255,255,255,.1);padding-top:10px">
           <div style="font-size:13px;font-weight:800;color:#67e8f9;margin-bottom:6px">修改历史</div>
           <div style="line-height:1.8">
+            <div><b style="color:#ffd34d">v2.7.12</b>　联机去掉屏幕边缘的对手方向箭头：敌人位置只由雷达和视野判断，不再有雷达之外的点位提示</div>
             <div><b style="color:#ffd34d">v2.7.11</b>　自检入口合并：设置里的「运行自检」按钮移除，统一从关于页「检查更新 + 自检（一键）」进入；有失败项时仍可跳进逐项详情</div>
             <div><b style="color:#ffd34d">v2.7.10</b>　版本检查改成两条路并发：轻量版本文件与本页首页同时抓，谁先拿到版本号用谁，13 秒兜底，双端都不再干等</div>
             <div><b style="color:#ffd34d">v2.7.9</b>　版本比对改用轻量版本文件（几百字节），点一下 1 秒内出结果；读不到时自动回退抓首页，15 秒兜底</div>
@@ -2227,26 +2228,6 @@ function lsGetRaw(key){ try{ return localStorage.getItem(key)||''; }catch(e){ re
 
 /* ================= 11. 渲染 ================= */
 /* 雷达小地图：实时显示所有人位置（借鉴同类作品，解决混战里“敌人在哪”的信息焦虑） */
-/* 对手在屏幕外时，屏幕边缘画一个方向箭头 */
-function drawFoeArrow(){
-  if(!state.netMode || !state.running) return;
-  const f=netFoe(), me=localP();
-  if(!f || !me) return;
-  const cw=canvas.width, ch=canvas.height;
-  const d=Math.hypot(f.x-me.x, f.y-me.y);
-  if(d<90) return;
-  let ang=Math.atan2(f.y-me.y, f.x-me.x);
-  if(VIEW.rot) ang += Math.PI/2;   // 竖屏时画面整体旋转了 90°
-  const r=Math.min(cw,ch)/2-26;
-  const cx=cw/2, cy=ch/2;
-  const x=cx+Math.cos(ang)*r, y=cy+Math.sin(ang)*r;
-  ctx2d.save();
-  ctx2d.globalAlpha=0.75;
-  ctx2d.translate(x,y); ctx2d.rotate(ang);
-  ctx2d.fillStyle='#ff8fa0';
-  ctx2d.beginPath(); ctx2d.moveTo(9,0); ctx2d.lineTo(-6,6); ctx2d.lineTo(-6,-6); ctx2d.closePath(); ctx2d.fill();
-  ctx2d.restore();
-}
 function drawRadar(){
   const W=state.world&&state.world.W, H=state.world&&state.world.H;
   if(!W || !H) return;
@@ -2328,7 +2309,6 @@ function render(){
   drawFloor(); drawObstacles(); drawPlayers(); drawBullets(); drawParticles(); drawFloaters();
   drawDanger();
   drawRadar();
-  drawFoeArrow();
 }
 
 /* 残血预警：血量低于 30 时屏幕边缘红色呼吸，血量越低越浓 */
