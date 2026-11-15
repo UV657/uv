@@ -1062,7 +1062,7 @@ body.is-touch .nhTime{display:none !important}
       </div>
     </div>
     <div class="overlay hidden" id="settingsScreen">
-      <div class="title">自定义设置 <span id="verTag" style="font-size:11px;color:#7d8aa8;font-weight:400;display:block;margin-top:2px">v2.7.8</span></div>
+      <div class="title">自定义设置 <span id="verTag" style="font-size:11px;color:#7d8aa8;font-weight:400;display:block;margin-top:2px">v2.7.9</span></div>
       <div id="settingsWrap" style="text-align:left;max-width:320px;line-height:2.2">
         <div>摇杆大小 <input type="range" id="setJoy" min="60" max="140" value="88" style="width:100%"></div>
         <div>开火键大小 <input type="range" id="setFire" min="50" max="120" value="74" style="width:100%"></div>
@@ -1107,6 +1107,7 @@ body.is-touch .nhTime{display:none !important}
         <div id="historyBox" style="display:none;margin-top:10px;border-top:1px solid rgba(255,255,255,.1);padding-top:10px">
           <div style="font-size:13px;font-weight:800;color:#67e8f9;margin-bottom:6px">修改历史</div>
           <div style="line-height:1.8">
+            <div><b style="color:#ffd34d">v2.7.9</b>　版本比对改用轻量版本文件（几百字节），点一下 1 秒内出结果；读不到时自动回退抓首页，15 秒兜底</div>
             <div><b style="color:#ffd34d">v2.7.8</b>　一键检测提速：自检结果立刻显示，版本比对改成边下边比、读到版本号就停（不再整页等待），15 秒超时兜底</div>
             <div><b style="color:#ffd34d">v2.7.7</b>　「检查更新 + 自检」合并成一键操作：点一下先跑完整自检（多少项通过、哪几项没过），再比对线上版本号，不用再单独进设置点自检；失败项可直接跳详情</div>
             <div><b style="color:#ffd34d">v2.7.6</b>　联机修复：对手子弹不再穿墙（打到障碍物就停）；加入房间不再被放到地图中间，双方各站本方出生点；客机顶栏红蓝两端显示正确的对手代号与自己代号</div>
@@ -4543,6 +4544,7 @@ function maintPublish(on){
 }
 /* ================= 管理终端（?admin=1） ================= */
 
+const VER_PROBE='https://uv657.github.io/uv/version.json';
 const ADMIN_PASS='liuweijun2026';     // 想改口令就改这一行
 const ADMIN={open:false, names:{}};
 function adminShow(on){ ADMIN.open=on; document.getElementById('adminScreen').classList.toggle('hidden', !on); }
@@ -5373,30 +5375,39 @@ document.getElementById('btnCheckUpdate').addEventListener('click', async ()=>{
   const setVer=(html)=>{ if(verLine.isConnected) verLine.innerHTML=html; };
   try{
     const base=location.href.split('?')[0].split('#')[0];
-    const ctl=(typeof AbortController!=='undefined') ? new AbortController() : null;
-    const timer=ctl ? setTimeout(()=>{ try{ctl.abort();}catch(e){} }, 15000) : null;
-    const res=await fetch(base+'?chk='+Date.now(), {cache:'no-store', signal: ctl? ctl.signal: undefined});
-    // 只流式读到 verTag 就停下，不用等整页几百 KB 下载完
-    let txt='';
-    if(res.body && res.body.getReader){
-      const rd=res.body.getReader(); const dec=new TextDecoder();
-      try{
-        while(true){
-          const {done,value}=await rd.read();
-          if(done) break;
-          txt+=dec.decode(value,{stream:true});
-          if(/id="verTag"[^>]*>v(\d+\.\d+\.\d+)/.test(txt)) break;
-          if(txt.length>400000) break;
-        }
-      }catch(e){}
-      try{ await rd.cancel(); }catch(e){}
-    } else {
-      txt=await res.text();
+    let remote='';
+    // 先问一个几字节的版本文件：正常 1 秒内就有结果，不必等整页几百 KB
+    verLine.textContent='版本检查中…';
+    try{
+      const vr=await fetch(VER_PROBE+'?t='+Date.now(), {cache:'no-store'});
+      if(vr.ok){ const vj=await vr.json(); if(vj && vj.v) remote=String(vj.v).replace(/^v/,''); }
+    }catch(e){}
+    if(!remote){
+      // 兜底：抓当前站首页，边下边找版本号，15 秒超时
+      const ctl=(typeof AbortController!=='undefined') ? new AbortController() : null;
+      const timer=ctl ? setTimeout(()=>{ try{ctl.abort();}catch(e){} }, 15000) : null;
+      const res=await fetch(base+'?chk='+Date.now(), {cache:'no-store', signal: ctl? ctl.signal: undefined});
+      let txt='';
+      if(res.body && res.body.getReader){
+        const rd=res.body.getReader(); const dec=new TextDecoder();
+        try{
+          while(true){
+            const {done,value}=await rd.read();
+            if(done) break;
+            txt+=dec.decode(value,{stream:true});
+            if(/id="verTag"[^>]*>v(\d+\.\d+\.\d+)/.test(txt)) break;
+            if(txt.length>400000) break;
+          }
+        }catch(e){}
+        try{ await rd.cancel(); }catch(e){}
+      } else {
+        txt=await res.text();
+      }
+      if(timer) clearTimeout(timer);
+      const m=txt.match(/id="verTag"[^>]*>v(\d+\.\d+\.\d+)/);
+      if(m) remote=m[1];
     }
-    if(timer) clearTimeout(timer);
-    const m=txt.match(/id="verTag"[^>]*>v(\d+\.\d+\.\d+)/);
-    if(!m){ setVer('版本检查：读不到线上版本号，稍后再试'); return; }
-    const remote=m[1];
+    if(!remote){ setVer('版本检查：读不到线上版本号，稍后再试'); return; }
     const cmp=(a,b)=>{ const x=a.split('.').map(Number), y=b.split('.').map(Number);
       for(let i=0;i<3;i++){ if(x[i]!==y[i]) return x[i]>y[i]?1:-1; } return 0; };
     if(cmp(remote,cur)>0){
