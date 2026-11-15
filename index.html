@@ -995,7 +995,7 @@ body.fire-left #btnFire{left:18px !important;right:auto !important}
       </div>
     </div>
     <div class="overlay hidden" id="settingsScreen">
-      <div class="title">自定义设置 <span id="verTag" style="font-size:11px;color:#7d8aa8;font-weight:400;display:block;margin-top:2px">v2.6.7</span></div>
+      <div class="title">自定义设置 <span id="verTag" style="font-size:11px;color:#7d8aa8;font-weight:400;display:block;margin-top:2px">v2.6.8</span></div>
       <div id="settingsWrap" style="text-align:left;max-width:320px;line-height:2.2">
         <div>摇杆大小 <input type="range" id="setJoy" min="60" max="140" value="88" style="width:100%"></div>
         <div>开火键大小 <input type="range" id="setFire" min="50" max="120" value="74" style="width:100%"></div>
@@ -1040,6 +1040,7 @@ body.fire-left #btnFire{left:18px !important;right:auto !important}
         <div id="historyBox" style="display:none;margin-top:10px;border-top:1px solid rgba(255,255,255,.1);padding-top:10px">
           <div style="font-size:13px;font-weight:800;color:#67e8f9;margin-bottom:6px">修改历史</div>
           <div style="line-height:1.8">
+            <div><b style="color:#ffd34d">v2.6.8</b>　维护模式生效：维护中「进入战场」按钮变灰不可点；正在对局或匹配中的玩家会被立即中断，本局按平局处理并返回登录页。关闭维护后自动恢复</div>
             <div><b style="color:#ffd34d">v2.6.7</b>　公告栏在所有页面都显示（含管理页面），不再隐藏，方便随时看当前公告</div>
             <div><b style="color:#ffd34d">v2.6.6</b>　新增违规账号处罚：被封禁的账号会停在登录页并显示解除时间与原因；被禁言的账号不能改名、不能邀请好友、不能点赞。公告栏在管理页面自动隐藏，不挡操作</div>
             <div><b style="color:#ffd34d">v2.6.5</b>　公告发布更稳：中转没连上会自动重连再发（最多等 9 秒），发布后主页顶部立刻出现</div>
@@ -2980,6 +2981,13 @@ if(savedNick){
   });
 }
 document.getElementById('btnEnter').addEventListener('click', async ()=>{
+  // 维护中不允许进入
+  if(NOTICE.maint){
+    const tEl0=document.getElementById('nickTip');
+    if(tEl0) tEl0.textContent='系统维护中，暂时无法进入战场';
+    toastMsg('系统维护中，稍后再来');
+    return;
+  }
   // 封号校验：档案号与输入代号都查（管理端可能按名字处罚）
   {
     const nm0=(document.getElementById('nickInput')&&document.getElementById('nickInput').value||'').trim();
@@ -3062,6 +3070,29 @@ function runSelfCheck(){
       const hit=!!banOf('1234567890','某人'); BAN.list=[]; return hit;
     })());
   ok('终端有全屏入口', !!document.getElementById('btnAdminFull'));
+  const mfs=['maintApply','maintBreak','maintGoLogin','maintBusy'];
+  const mmiss=mfs.filter(f=>{ try{ return typeof eval(f)!=='function'; }catch(e){ return true; } });
+  ok('维护模块齐全（4 个）', mmiss.length===0, mmiss.join(','));
+  ok('维护开启会禁用「进入战场」', (function(){
+      const old=NOTICE.maint, btn=document.getElementById('btnEnter');
+      try{
+        NOTICE.maint=true; window.__ADMIN_PAGE=true;   // 自检不触发跳转
+        maintApply();
+        const off=btn.disabled && /维护/.test(btn.textContent);
+        NOTICE.maint=false; maintApply();
+        const back=(!btn.disabled) && /进入战场/.test(btn.textContent);
+        return off && back;
+      } finally{ NOTICE.maint=old; window.__ADMIN_PAGE=false; maintApply(); }
+    })());
+  ok('维护中断会清掉匹配与对局', (function(){
+      const old=state.running;
+      try{
+        state.running=true;
+        const busy1=maintBusy();
+        state.running=false;
+        return busy1===true;
+      } finally{ state.running=old; }
+    })());
 
   // 3. 配置合法性
   ok('血量配置正常', CFG.maxHp>0 && CFG.respawnTime>0, 'HP'+CFG.maxHp+' 复活'+CFG.respawnTime+'s');
@@ -3837,6 +3868,46 @@ function fwShowInvite(m){
 
 
 
+
+/* ================= 维护模式：禁止进入 + 中断在局 ================= */
+function maintBusy(){
+  try{
+    return !!(state.running || state.netMode || NET.code || NET.role || NET.soloTimer || NET.lobbyTimer);
+  }catch(e){ return false; }
+}
+function maintGoLogin(){
+  // 关掉匹配/房间/对局残留
+  try{ if(NET.soloTimer){ clearTimeout(NET.soloTimer); NET.soloTimer=null; } }catch(e){}
+  try{ if(NET.lobbyTimer){ clearInterval(NET.lobbyTimer); NET.lobbyTimer=null; } }catch(e){}
+  try{ lobbyClear(); }catch(e){}
+  try{ if(NET.ws){ NET.ws.send(JSON.stringify({t:'leave'})); } }catch(e){}
+  try{ if(NET.client && NET.code) NET.client.unsubscribe(netTopic(NET.code,'a')); }catch(e){}
+  NET.code=null; NET.role=null; NET.code=null;
+  try{ state.netMode=false; state.running=false; state.ended=false; state.paused=false; }catch(e){}
+  document.body.classList.remove('in-game'); document.body.classList.remove('ended');
+  document.querySelectorAll('.overlay').forEach(el=>el.classList.add('hidden'));
+  const lg=document.getElementById('loginScreen'); if(lg) lg.classList.remove('hidden');
+}
+function maintBreak(){
+  let drew=false;
+  try{ if(state.running && !state.ended){ endMatch('draw'); drew=true; } }catch(e){}
+  maintGoLogin();
+  toastMsg(drew ? '系统维护，本局中断（按平局处理）' : '系统维护，已退出匹配');
+}
+function maintApply(){
+  const on=!!NOTICE.maint;
+  const btn=document.getElementById('btnEnter');
+  if(btn){
+    btn.disabled=on;
+    btn.style.opacity=on?'0.45':'';
+    btn.style.cursor=on?'not-allowed':'';
+    btn.textContent=on?'维护中，暂停进入':'进入战场';
+  }
+  const mb=document.getElementById('maintBar'); if(mb) mb.classList.toggle('hidden', !on);
+  if(window.__ADMIN_PAGE) return;   // 终端自己不被跳转，只更新状态显示
+  if(on && maintBusy()){ maintBreak(); }
+  else if(on){ maintGoLogin(); }   // 维护期间一律停在登录页
+}
 /* ================= 玩家处罚（封号 / 禁言） ================= */
 const BAN_TOPIC='gunfight9/ban';
 const BAN={list:[]};
@@ -3944,6 +4015,7 @@ async function noticeConnect(){
       } else if(topic===NOTICE_STATUS_TOPIC){
         NOTICE.maint = !!(o && o.mt);
         noticeRender();
+        try{ maintApply(); }catch(e){}
       } else if(topic===BAN_TOPIC){
         banApplyRaw(o);
         try{ if(ADMIN.open) admBanRender(); }catch(e){}
@@ -4155,6 +4227,7 @@ document.getElementById('adminList').addEventListener('click', async (e)=>{
 });
 function adminBoot(){
   if(!/[?&]admin=1/.test(location.search)) return;
+  window.__ADMIN_PAGE=true;   // 终端页不受维护跳转影响
   const nb=document.getElementById('noticeBar'), mb=document.getElementById('maintBar');
   if(nb){ nb.style.top='6px'; }        // 终端页公告条贴顶，不挡面板
   if(mb){ mb.style.top='52px'; }
@@ -4927,6 +5000,7 @@ document.getElementById('noticeBarClose').addEventListener('click', (ev)=>{ ev.s
 document.getElementById('btnNoticeClose').addEventListener('click', ()=> { sClick(); noticeClose(); });
 /* ---- 启动：读缓存 + 连中转拉公告 ---- */
 setTimeout(()=>{ try{ noticeBoot(); }catch(e){} }, 1600);
+setTimeout(()=>{ try{ if(!window.__ADMIN_PAGE) maintApply(); }catch(e){} }, 4200);
 
 document.getElementById('profUidLine').addEventListener('click', async ()=>{
   const uid=ensureUid();
