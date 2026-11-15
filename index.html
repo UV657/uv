@@ -1062,7 +1062,7 @@ body.is-touch .nhTime{display:none !important}
       </div>
     </div>
     <div class="overlay hidden" id="settingsScreen">
-      <div class="title">自定义设置 <span id="verTag" style="font-size:11px;color:#7d8aa8;font-weight:400;display:block;margin-top:2px">v2.7.6</span></div>
+      <div class="title">自定义设置 <span id="verTag" style="font-size:11px;color:#7d8aa8;font-weight:400;display:block;margin-top:2px">v2.7.7</span></div>
       <div id="settingsWrap" style="text-align:left;max-width:320px;line-height:2.2">
         <div>摇杆大小 <input type="range" id="setJoy" min="60" max="140" value="88" style="width:100%"></div>
         <div>开火键大小 <input type="range" id="setFire" min="50" max="120" value="74" style="width:100%"></div>
@@ -1099,7 +1099,7 @@ body.is-touch .nhTime{display:none !important}
         <div><b style="color:#e8eefc">制作人</b>　刘伟骏</div>
         <div style="margin-top:6px">独立开发者。一个人从零写的网页枪战游戏，纯 HTML 单文件，没用任何游戏引擎。从画第一个圆点开始，一步一步改到现在。</div>
         <div style="margin-top:6px"><b style="color:#e8eefc">技术</b>　Canvas 2D · 原生 JS · MQTT 公网联机 · PWA 可装到桌面</div>
-        <button class="btn ghost" id="btnCheckUpdate" style="width:100%;margin-top:10px;padding:7px;font-size:12px">检查是否最新版本</button>
+        <button class="btn ghost" id="btnCheckUpdate" style="width:100%;margin-top:10px;padding:7px;font-size:12px">检查更新 + 自检（一键）</button>
         <div id="updHint" style="font-size:11.5px;color:#9fb2d0;margin-top:6px;line-height:1.7"></div>
         <button class="btn ghost" id="btnHistory" style="width:100%;margin-top:10px;padding:7px;font-size:12px">查看修改历史</button>
         <button class="btn ghost" id="btnFeedback" style="width:100%;margin-top:8px;padding:7px;font-size:12px">问题反馈</button>
@@ -1107,6 +1107,7 @@ body.is-touch .nhTime{display:none !important}
         <div id="historyBox" style="display:none;margin-top:10px;border-top:1px solid rgba(255,255,255,.1);padding-top:10px">
           <div style="font-size:13px;font-weight:800;color:#67e8f9;margin-bottom:6px">修改历史</div>
           <div style="line-height:1.8">
+            <div><b style="color:#ffd34d">v2.7.7</b>　「检查更新 + 自检」合并成一键操作：点一下先跑完整自检（多少项通过、哪几项没过），再比对线上版本号，不用再单独进设置点自检；失败项可直接跳详情</div>
             <div><b style="color:#ffd34d">v2.7.6</b>　联机修复：对手子弹不再穿墙（打到障碍物就停）；加入房间不再被放到地图中间，双方各站本方出生点；客机顶栏红蓝两端显示正确的对手代号与自己代号</div>
             <div><b style="color:#ffd34d">v2.7.5</b>　管理终端新增「单人调参」：填玩家代号 + 选属性（移速 / 伤害 / 射速 / 弹速 / 技能冷却 / 血量上限）+ 数值，只对这个代号生效，同角色其他人和 AI 都不受影响，对局中改了立即生效</div>
             <div><b style="color:#ffd34d">v2.7.4</b>　彻底去掉射击光效：不再画曳光束、枪口火花和子弹拖尾，开火只有一颗实心弹头飞出去，1V1 / 5V5 / 联机全部一视同仁</div>
@@ -3254,6 +3255,7 @@ function runSelfCheck(){
     })());
   ok('开火只出实心弹头（无光束）', shoot.toString().indexOf('state.tracers.push')<0);
   ok('保留消息通道用支持 retained 的中转', (typeof NT_BROKER==='string' && NT_BROKER.indexOf('hivemq')>0 && MQTT_BROKER.indexOf('hivemq')>0));
+  ok('检查更新按钮同时跑自检', (document.getElementById('btnCheckUpdate')||{textContent:''}).textContent.indexOf('自检')>=0);
   ok('联机不再把人塞到地图中间', startNetMatch.toString().indexOf('320 : 640')<0);
   ok('对手弹道会被墙挡住', netGhostShot.toString().indexOf('maxDist:maxD')>0 && rayClear(0,0,0,100)>=0);
   ok('1v1 顶栏按队伍取名', updateHUD.toString().indexOf("p.team==='red'")>0);
@@ -5351,28 +5353,45 @@ document.addEventListener('click', (e)=>{
 document.getElementById('btnCheckUpdate').addEventListener('click', async ()=>{
   sClick();
   const hint=document.getElementById('updHint');
-  hint.textContent='正在检查…';
+  hint.innerHTML='<span style="color:#9fd0ff">正在自检 + 检查版本…</span>';
+  // 第一步：先跑完整自检（点一次就能顺手把功能体检做了）
+  let selfList=[], selfErr='';
+  try{ selfList=runSelfCheck(); }catch(e){ selfErr=(e&&e.message)||String(e); }
+  const bad=selfList.filter(x=>!x.ok);
+  const pass=selfList.filter(x=>x.ok).length;
+  const selfLine = selfErr ? ('<b style="color:#ff9f9f">自检执行出错：'+selfErr+'</b>')
+    : (bad.length ? ('<b style="color:#ffd34d">自检 '+selfList.length+' 项，'+bad.length+' 项没通过：'+bad.slice(0,3).map(x=>x.n).join('、')+(bad.length>3?' 等':'')+'</b>')
+      : ('<b style="color:#86efac">自检 '+selfList.length+' 项全部通过</b>'));
+  // 第二步：比对线上版本号
   const cur=(document.getElementById('verTag').textContent||'').trim().replace(/^v/,'');
   try{
     const base=location.href.split('?')[0].split('#')[0];
     const res=await fetch(base+'?chk='+Date.now(), {cache:'no-store'});
     const txt=await res.text();
     const m=txt.match(/id="verTag"[^>]*>v(\d+\.\d+\.\d+)/);
-    if(!m){ hint.textContent='读不到线上版本号，稍后再试'; return; }
+    if(!m){ hint.innerHTML=selfLine+'<br>版本检查：读不到线上版本号，稍后再试'; return; }
     const remote=m[1];
     const cmp=(a,b)=>{ const x=a.split('.').map(Number), y=b.split('.').map(Number);
       for(let i=0;i<3;i++){ if(x[i]!==y[i]) return x[i]>y[i]?1:-1; } return 0; };
     if(cmp(remote,cur)>0){
-      hint.innerHTML='发现新版本 v'+remote+'（当前 v'+cur+'）<br>';
+      hint.innerHTML=selfLine+'<br>版本检查：发现新版本 v'+remote+'（当前 v'+cur+'）<br>';
       const b=document.createElement('button');
       b.className='btn'; b.style.cssText='width:100%;margin-top:6px;padding:7px;font-size:12px';
       b.textContent='更新到最新版'; b.onclick=()=>{ location.href=base+'?v='+Date.now(); };
       hint.appendChild(b);
     } else {
-      hint.textContent='已是最新版（v'+cur+'）';
+      hint.innerHTML=selfLine+'<br>版本检查：已是最新版（v'+cur+'）';
+    }
+    // 自检有失败项时给一个“看详情”入口，直接跳到逐项列表
+    if(bad.length && !selfErr){
+      const bd=document.createElement('button');
+      bd.className='btn ghost'; bd.style.cssText='width:100%;margin-top:6px;padding:7px;font-size:12px';
+      bd.textContent='查看自检详情（'+bad.length+' 项未过）';
+      bd.onclick=()=>{ try{ showSelfCheck(); }catch(e){} };
+      hint.appendChild(bd);
     }
   }catch(e){
-    hint.textContent='检查失败：'+e.message+'（可能是网络或文件协议限制）';
+    hint.innerHTML=selfLine+'<br>版本检查失败：'+e.message+'（可能是网络或文件协议限制）';
   }
 });
 /* ---- 终端：全屏 ---- */
