@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -44,6 +44,11 @@
 }
 </script>
 <style>
+html,body{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;touch-action:manipulation;overscroll-behavior:none}
+input,textarea,select{-webkit-user-select:text;user-select:text}
+/* 只允许在档案号 / 名字这两处选中复制 */
+.copyable{-webkit-user-select:text !important;user-select:text !important;cursor:copy}
+
 @media (orientation:landscape){ #mapName{display:none !important} }
 /* ========== 全局样式：深色战场氛围，居中舞台 ========== */
 *{margin:0;padding:0;box-sizing:border-box}
@@ -229,8 +234,9 @@ body.is-touch #touchLayer{display:block}
 #btnSkill{position:fixed;right:90px;bottom:90px;width:52px;height:52px;border-radius:50%;background:rgba(255,211,77,.25);border:2px solid rgba(255,211,77,.7);color:#ffe9a8;font-size:16px;font-weight:800;display:none;align-items:center;justify-content:center;z-index:50;pointer-events:auto;touch-action:none;font-family:inherit}
 body.is-touch.in-game #btnSkill{display:flex}
 #btnSkill.on{background:rgba(255,211,77,.55)}
+#btnSkill{transition:background .25s ease, border-color .25s ease}
 #btnSkill{position:fixed}
-#skillRing{position:absolute;inset:-5px;border-radius:50%;pointer-events:none;
+#skillRing{position:absolute;inset:-3px;border-radius:50%;pointer-events:none;
   background:conic-gradient(#ffd34d 0 var(--deg,0deg), rgba(6,10,20,.72) var(--deg,0deg) 360deg);
   -webkit-mask:radial-gradient(circle, transparent 52%, #000 56%);
   mask:radial-gradient(circle, transparent 52%, #000 56%);
@@ -288,7 +294,9 @@ body.is-touch #panelP1, body.is-touch #panelP2{padding:3px 8px !important;font-s
 body.is-touch #hpBar{height:5px !important}
 body.is-touch .ppHead{font-size:9px !important;margin-bottom:2px !important}
 body.is-touch #topbar{font-size:11px !important;top:2px !important;gap:6px !important;padding:2px 8px !important;padding-left:54px !important}
-body.is-touch #topbar > *:nth-child(n+3){display:none}
+body.is-touch #topbar > *:nth-child(n+3){display:flex;font-size:11px;padding:3px 7px}
+#topbar > *{flex:none;white-space:nowrap}
+body.is-touch #topbar{padding-right:8px !important}
 body.is-touch #roomCode{font-size:32px !important;letter-spacing:4px !important}
 /* 选人/房间界面移动端适配 */
 body.is-touch .roleRow{flex-wrap:wrap !important;gap:8px !important}
@@ -772,8 +780,9 @@ body.fire-left #btnFire{left:18px !important;right:auto !important}
         <div class="profHead">
           <div class="profAva" id="profAva">战</div>
           <div class="profInfo">
-            <div class="profNick" id="profNick">玩家</div>
-            <div class="profSub" id="profSub">生涯战绩 · 本地保存</div>
+            <div class="profNick copyable" id="profNick">玩家</div>
+            <div class="profSub" id="profSub"></div>
+            <div class="profSub copyable" id="profUidLine" style="font-size:11px;color:#67e8f9;letter-spacing:.5px;margin-top:2px"></div>
           </div>
           <button class="profRename" id="btnRename">改名</button>
         </div>
@@ -923,7 +932,7 @@ body.fire-left #btnFire{left:18px !important;right:auto !important}
       </div>
     </div>
     <div class="overlay hidden" id="settingsScreen">
-      <div class="title">自定义设置 <span id="verTag" style="font-size:11px;color:#7d8aa8;font-weight:400;display:block;margin-top:2px">v2.5.9</span></div>
+      <div class="title">自定义设置 <span id="verTag" style="font-size:11px;color:#7d8aa8;font-weight:400;display:block;margin-top:2px">v2.6.0</span></div>
       <div id="settingsWrap" style="text-align:left;max-width:320px;line-height:2.2">
         <div>摇杆大小 <input type="range" id="setJoy" min="60" max="140" value="88" style="width:100%"></div>
         <div>开火键大小 <input type="range" id="setFire" min="50" max="120" value="74" style="width:100%"></div>
@@ -965,6 +974,7 @@ body.fire-left #btnFire{left:18px !important;right:auto !important}
         <div id="historyBox" style="display:none;margin-top:10px;border-top:1px solid rgba(255,255,255,.1);padding-top:10px">
           <div style="font-size:13px;font-weight:800;color:#67e8f9;margin-bottom:6px">修改历史</div>
           <div style="line-height:1.8">
+            <div><b style="color:#ffd34d">v2.6.0</b>　修技能键冷却结束时的弹跳（现在位置、大小完全不动，只改光圈）；手机端 5V5 顶部重新显示蓝队击杀数（之前第三块比分被藏掉了）；全站禁止长按选中复制文字，只有档案号和名字可以选；关掉双指缩放和双击放大</div>
             <div><b style="color:#ffd34d">v2.5.9</b>　管理终端可改角色数值（移速/伤害/射速/弹速/技能冷却/血量/半径）并能批量清理测试名；界面边距上限提到 64px，左右面板真的会跟着变宽；突击手技能改成朝自己瞄准方向贴脸突刺，撞到的人吃 34 伤害；5V5 里「你」显示为你的名字；自检扩到 35 项</div>
             <div><b style="color:#ffd34d">v2.5.8</b>　对手子弹改成真正飞行的弹丸（0.6 秒飞完全程，枪口带一段短曳光），对面开枪能看见子弹飞过来；对手掉线超过 5 秒自动判你获胜</div>
             <div><b style="color:#ffd34d">v2.5.7</b>　联机对决能看到对手弹道了（开火角度跟着状态同步一起送，双方都看得到曳光）；暂停改成双方同意才生效，两边计时不再错位；设置里可自定义界面间距（全屏横屏都能调）；横屏隐藏顶部地图名；技能就绪不再一直闪动</div>
@@ -1628,6 +1638,9 @@ function onBlur(){
   }
 }
 window.addEventListener('blur', onBlur);
+['gesturestart','gesturechange','gestureend'].forEach(ev=>document.addEventListener(ev, e=>e.preventDefault(), {passive:false}));
+document.addEventListener('touchmove', e=>{ if(e.touches && e.touches.length>1) e.preventDefault(); }, {passive:false});
+document.addEventListener('dblclick', e=>e.preventDefault(), {passive:false});
 document.addEventListener('visibilitychange', ()=>{ if(document.hidden) onBlur(); });
 
 function resize(){
@@ -2356,11 +2369,8 @@ function updateSkillBtn(){
     num.textContent=Math.ceil(cd); btn.classList.remove('on'); ring.style.opacity='1';
     if(lbl) lbl.style.opacity='0';          // 冷却时把"技"字让位给秒数，避免叠字
   } else {
-    num.textContent=''; btn.classList.add('on'); ring.style.opacity='0';
+    num.textContent=''; btn.classList.add('on'); ring.style.opacity='.28';
     if(lbl) lbl.style.opacity='1';
-  }
-  if(cd<=0 && !__skillReadyPrev){    // 刚转满：闪一下提示
-    btn.animate([{transform:'scale(1)'},{transform:'scale(1.18)'},{transform:'scale(1)'}],{duration:320,easing:'ease-out'});
   }
   __skillReadyPrev = cd<=0;
 }
@@ -4087,6 +4097,8 @@ function renderProfile(){
   ava.textContent=nick.slice(0,1);
   const rnBtn=document.getElementById('btnRename');
   if(rnBtn) rnBtn.textContent = '改名';
+  const uidEl=document.getElementById('profUidLine');
+  if(uidEl) uidEl.textContent='档案号 '+ensureUid()+'（长按可复制）';
   const subEl=document.getElementById('profSub');
   if(subEl) subEl.textContent = '';   // 名字规则、改名额度都收进说明书，主页不再挂说明
   const wr = v.matches ? Math.round(v.wins/v.matches*100) : 0;
