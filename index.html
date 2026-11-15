@@ -454,7 +454,7 @@ body.fire-left #btnFire{left:18px !important;right:auto !important}
 /* 标题发光，压住背景不抢字 */
 #menuScreen .title{text-shadow:0 0 22px rgba(56,189,248,.5),0 0 46px rgba(34,211,238,.25)}
 /* 背景层在最底，其它内容一律压在它上面（否则不透明底会盖住卡片） */
-#menuScreen > *:not(.bgFx){position:relative;z-index:1}
+#menuScreen > *:not(.bgFx){position:relative;z-index:1;flex:none}
 @media (prefers-reduced-motion:reduce){
   .bgNet,.bgGrid,.bgStreak,.bgDots span,.bgGlow,.bgScan,.fwCardBar{animation:none}
 }
@@ -490,6 +490,27 @@ body.fire-left #btnFire{left:18px !important;right:auto !important}
 .scRow.ok .scI{color:#33e08a}
 .scRow.bad .scI{color:#ff5b6e}
 .scRow i{color:#7d8aa8;font-style:normal}
+/* ===== 首页公告栏 ===== */
+.noticeHome{width:100%;max-width:340px;background:linear-gradient(180deg,rgba(103,232,249,.10),rgba(59,130,246,.06));border:1px solid rgba(103,232,249,.32);border-radius:12px;padding:10px 13px;cursor:pointer;text-align:left}
+.noticeHome:active{filter:brightness(1.15)}
+.nhHead{display:flex;align-items:center;gap:7px;margin-bottom:6px}
+.nhDot{width:6px;height:6px;border-radius:50%;background:#67e8f9;box-shadow:0 0 8px #67e8f9;flex:none}
+.nhLabel{font-size:12.5px;font-weight:800;color:#9df1ff;letter-spacing:.5px}
+.nhCount{font-size:10.5px;color:#7d8aa8;background:rgba(255,255,255,.07);padding:1px 6px;border-radius:8px}
+.nhAll{margin-left:auto;font-size:11.5px;color:#67e8f9}
+.nhMain{font-size:12.5px;color:#dbe9ff;line-height:1.7;word-break:break-word}
+.nhTitle{font-weight:800;color:#eaf6ff;margin-bottom:2px}
+.nhTime{font-size:10.5px;color:#7d8aa8;margin-top:3px}
+.nhEmpty{font-size:11.5px;color:#7d8aa8}
+.nlCard{background:rgba(9,14,26,.95);border:1px solid rgba(103,232,249,.22);border-radius:12px;padding:12px 14px;margin-bottom:9px;cursor:pointer;text-align:left}
+.nlCard:active{filter:brightness(1.15)}
+.nlCard.exp{opacity:.62;border-color:rgba(255,255,255,.12)}
+.nlTitle{font-size:14px;font-weight:800;color:#e8f6ff;line-height:1.4;word-break:break-word}
+.nlTime{font-size:10.5px;color:#7d8aa8;margin-top:4px}
+.nlBody{font-size:12px;color:#b7c8e2;line-height:1.7;margin-top:6px;word-break:break-word}
+body.is-touch .noticeHome{padding:8px 11px !important;gap:0 !important}
+body.is-touch .nhMain{font-size:11.5px !important;line-height:1.6 !important;max-height:34px;overflow:hidden}
+body.is-touch .nhTime{display:none !important}
 /* ===== 个人主页 ===== */
 #profileScreen{justify-content:flex-start !important;align-items:center;overflow-y:auto;padding:18px 14px}
 #profileScreen .rowBtns{justify-content:center;width:100%}
@@ -657,6 +678,15 @@ body.fire-left #btnFire{left:18px !important;right:auto !important}
       <div class="sub">选择模式开始战斗</div>
       <div id="bestRecord" style="display:none;font-size:13px;color:#ffd700;background:rgba(255,215,0,.1);padding:6px 16px;border-radius:20px;border:1px solid rgba(255,215,0,.3)"></div>
       <div id="dailyTask" style="font-size:12px;color:#9fb2d0;background:rgba(255,255,255,.04);padding:8px 14px;border-radius:10px;border:1px solid rgba(255,255,255,.08);max-width:340px;line-height:1.8"></div>
+      <div id="noticeHome" class="noticeHome" style="display:none">
+        <div class="nhHead">
+          <span class="nhDot"></span>
+          <span class="nhLabel">公告栏</span>
+          <span class="nhCount" id="nhCount"></span>
+          <span class="nhAll" id="btnNoticeAll">全部 ›</span>
+        </div>
+        <div class="nhMain" id="nhMain"></div>
+      </div>
       <div class="modeGrid">
         <div class="modeCard" id="mode5v5">
           <div class="mcName red">5V5 团队战</div>
@@ -826,7 +856,7 @@ body.fire-left #btnFire{left:18px !important;right:auto !important}
     <div id="maintBar" class="hidden" style="position:fixed;top:calc(env(safe-area-inset-top,0px) + 62px);left:52px;right:52px;max-width:430px;margin:0 auto;z-index:40;background:rgba(255,140,90,.16);border:1px solid rgba(255,150,80,.5);border-radius:12px;padding:7px 12px;font-size:12px;color:#ffd0ad;text-align:center">系统维护中，匹配暂停</div>
     <style>body.in-game #noticeBar,body.in-game #maintBar{display:none !important}</style>
     <!-- 全服公告 -->
-    <div class="overlay hidden" id="noticeScreen" style="align-items:flex-start;justify-content:center;overflow-y:auto;padding:26px 16px">
+    <div class="overlay hidden" id="noticeScreen" style="align-items:flex-start;justify-content:center;overflow-y:auto;padding:26px 16px;z-index:70">
       <div style="width:100%;max-width:520px;background:rgba(9,14,26,.96);border:1px solid rgba(103,232,249,.3);border-radius:16px;padding:18px 18px 16px;text-align:left">
         <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px">
           <div style="font-size:12px;color:#67e8f9;letter-spacing:1px">全服公告</div>
@@ -835,6 +865,19 @@ body.fire-left #btnFire{left:18px !important;right:auto !important}
         <div id="noticeTitle" style="font-size:18px;font-weight:900;color:#e8f6ff;line-height:1.4;word-break:break-word"></div>
         <div id="noticeTime" style="font-size:11px;color:#7d8aa8;margin-top:5px"></div>
         <div id="noticeBody" style="font-size:13.5px;color:#c7d5ea;line-height:1.85;margin-top:12px;white-space:pre-wrap;word-break:break-word"></div>
+      </div>
+    </div>
+    <!-- 历史公告列表 -->
+    <div class="overlay hidden" id="noticeListScreen" style="align-items:flex-start;justify-content:center;overflow-y:auto;padding:26px 16px">
+      <div style="width:100%;max-width:520px">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px">
+          <div>
+            <div style="font-size:12px;color:#67e8f9;letter-spacing:1px">公告栏</div>
+            <div id="nlSum" style="font-size:11px;color:#7d8aa8;margin-top:3px"></div>
+          </div>
+          <button class="btn ghost" id="btnNoticeListBack" style="padding:5px 12px;font-size:12px">返回</button>
+        </div>
+        <div id="noticeListBox"></div>
       </div>
     </div>
     <!-- 个人主页 -->
@@ -995,7 +1038,7 @@ body.fire-left #btnFire{left:18px !important;right:auto !important}
       </div>
     </div>
     <div class="overlay hidden" id="settingsScreen">
-      <div class="title">自定义设置 <span id="verTag" style="font-size:11px;color:#7d8aa8;font-weight:400;display:block;margin-top:2px">v2.6.8</span></div>
+      <div class="title">自定义设置 <span id="verTag" style="font-size:11px;color:#7d8aa8;font-weight:400;display:block;margin-top:2px">v2.6.9</span></div>
       <div id="settingsWrap" style="text-align:left;max-width:320px;line-height:2.2">
         <div>摇杆大小 <input type="range" id="setJoy" min="60" max="140" value="88" style="width:100%"></div>
         <div>开火键大小 <input type="range" id="setFire" min="50" max="120" value="74" style="width:100%"></div>
@@ -1040,6 +1083,7 @@ body.fire-left #btnFire{left:18px !important;right:auto !important}
         <div id="historyBox" style="display:none;margin-top:10px;border-top:1px solid rgba(255,255,255,.1);padding-top:10px">
           <div style="font-size:13px;font-weight:800;color:#67e8f9;margin-bottom:6px">修改历史</div>
           <div style="line-height:1.8">
+            <div><b style="color:#ffd34d">v2.6.9</b>　公告栏移到首页（每日任务下方），一眼能看到最新公告；点「全部」可查看历史公告，过期公告灰显保留。修复公告详情被历史列表挡住点不到关闭、以及置顶公告没有排到最前的问题</div>
             <div><b style="color:#ffd34d">v2.6.8</b>　维护模式生效：维护中「进入战场」按钮变灰不可点；正在对局或匹配中的玩家会被立即中断，本局按平局处理并返回登录页。关闭维护后自动恢复</div>
             <div><b style="color:#ffd34d">v2.6.7</b>　公告栏在所有页面都显示（含管理页面），不再隐藏，方便随时看当前公告</div>
             <div><b style="color:#ffd34d">v2.6.6</b>　新增违规账号处罚：被封禁的账号会停在登录页并显示解除时间与原因；被禁言的账号不能改名、不能邀请好友、不能点赞。公告栏在管理页面自动隐藏，不挡操作</div>
@@ -3084,6 +3128,26 @@ function runSelfCheck(){
         return off && back;
       } finally{ NOTICE.maint=old; window.__ADMIN_PAGE=false; maintApply(); }
     })());
+  ok('首页有公告卡（个人主页下方）', !!document.getElementById('noticeHome') && !!document.getElementById('btnNoticeAll'));
+  ok('公告能看历史列表', !!document.getElementById('noticeListScreen') && !!document.getElementById('noticeListBox'));
+  ok('过期公告会过滤但不丢历史', (function(){
+      const old=NOTICE.list.slice();
+      try{
+        const now=Date.now();
+        NOTICE.list=[
+          {id:'n'+String(now-1000).slice(0,13), title:'A', body:'a', ts:now, until:now+3600000, pin:false},
+          {id:'n'+String(now-7200000).slice(0,13), title:'B', body:'b', ts:now-7200000, until:now-3600000, pin:false}
+        ];
+        const live=noticeLive();
+        return live.length===1 && live[0].title==='A' && NOTICE.list.length===2;
+      } finally{ NOTICE.list=old; noticeRender(); }
+    })());
+  ok('公告详情层级高于历史列表', (function(){
+      const d=document.getElementById('noticeScreen'), l=document.getElementById('noticeListScreen');
+      if(!d||!l) return false;
+      const zd=parseInt(getComputedStyle(d).zIndex||'10'), zl=parseInt(getComputedStyle(l).zIndex||'10');
+      return zd>zl;
+    })());
   ok('维护中断会清掉匹配与对局', (function(){
       const old=state.running;
       try{
@@ -3943,13 +4007,13 @@ function banToast(b){
 /* ================= 全服公告（所有玩家主页可见） ================= */
 const NOTICE_TOPIC='gunfight9/notice';
 const NOTICE_STATUS_TOPIC='gunfight9/status';
-const NOTICE={cur:null, list:[], conn:false, tried:false, maint:false};
+const NOTICE={fromList:false, cur:null, list:[], conn:false, tried:false, maint:false};
 const NT={cli:null};
 function noticeLoad(){
   try{ const c=lsGet('gunNoticeList',[]); if(Array.isArray(c)) NOTICE.list=c; }catch(e){}
 }
 function noticeSave(){
-  try{ lsSet('gunNoticeList', NOTICE.list.slice(0,6)); }catch(e){}
+  try{ lsSet('gunNoticeList', NOTICE.list.slice(0,10)); }catch(e){}
 }
 function noticeSanitize(o){
   if(!o || typeof o!=='object') return null;
@@ -3965,7 +4029,7 @@ function noticeApply(o){
   if(!n) return;
   NOTICE.list = NOTICE.list.filter(x=>x.id!==n.id);
   NOTICE.list.unshift(n);
-  NOTICE.list = NOTICE.list.filter(x=> !x.until || Date.now()<x.until ).slice(0,6);
+  NOTICE.list = NOTICE.list.slice(0,10);   // 历史保留 10 条，过期只标灰不删
   const seen=lsGet('gunNoticeSeen','');
   NOTICE.cur = (n.id!==seen) ? n : (NOTICE.list.find(x=>x.id!==seen)||null);
   if(n.pin) NOTICE.cur=n;
@@ -3974,28 +4038,123 @@ function noticeApply(o){
 function noticeDelete(){
   NOTICE.list=[]; NOTICE.cur=null; noticeSave(); noticeRender();
 }
+function noticeExpired(n){ return !!(n && n.until && Date.now()>=n.until); }
+function noticeFmtTime(ts){
+  const d=new Date(ts||Date.now()), p2=n=>String(n).padStart(2,'0');
+  return d.getFullYear()+'-'+p2(d.getMonth()+1)+'-'+p2(d.getDate())+' '+p2(d.getHours())+':'+p2(d.getMinutes());
+}
+function noticeLive(){
+  // 置顶优先，其次按时间倒序（保证首页卡与横幅显示的确实是"第一条该看的"）
+  return (NOTICE.list||[]).filter(x=>!noticeExpired(x))
+    .sort((a,b)=> ((b.pin?1:0)-(a.pin?1:0)) || ((b.ts||0)-(a.ts||0)));
+}
 function noticeRender(){
   const bar=document.getElementById('noticeBar'), t=document.getElementById('noticeBarTitle');
   const mb=document.getElementById('maintBar');
   if(mb) mb.classList.toggle('hidden', !NOTICE.maint);
-  if(!bar) return;
-  if(!NOTICE.cur){ bar.classList.add('hidden'); return; }
-  t.textContent=(NOTICE.cur.pin?'[置顶] ':'')+NOTICE.cur.title;
-  bar.classList.remove('hidden');
+  // 首页（菜单）有公告卡，顶部横幅只在登录页显示，避免同一条挂两遍；未读才显示
+  const loginEl=document.getElementById('loginScreen');
+  const inLogin=!!(loginEl && !loginEl.classList.contains('hidden'));
+  const seen=lsGet('gunNoticeSeen','');
+  const top=noticeLive()[0]||null;
+  if(bar){
+    if(!top || !inLogin || top.id===seen){ bar.classList.add('hidden'); }
+    else { t.textContent=(top.pin?'[置顶] ':'')+top.title; bar.classList.remove('hidden'); }
+  }
+  renderNoticeHome();
 }
-function noticeOpen(){
-  if(!NOTICE.cur) return;
-  document.getElementById('noticeTitle').textContent=NOTICE.cur.title;
-  const d=new Date(NOTICE.cur.ts||Date.now());
-  const p2=n=>String(n).padStart(2,'0');
-  document.getElementById('noticeTime').textContent=d.getFullYear()+'-'+p2(d.getMonth()+1)+'-'+p2(d.getDate())+' '+p2(d.getHours())+':'+p2(d.getMinutes());
-  document.getElementById('noticeBody').textContent=NOTICE.cur.body||'（无正文）';
+function renderNoticeHome(){
+  const box=document.getElementById('noticeHome');
+  if(!box) return;
+  const live=noticeLive();
+  if(!live.length){ box.style.display='none'; return; }
+  box.style.display='block';
+  const cnt=document.getElementById('nhCount');
+  if(cnt){ cnt.textContent = live.length>1 ? (live.length+' 条') : ''; }
+  const main=document.getElementById('nhMain');
+  if(!main) return;
+  main.textContent='';
+  const top=live[0];
+  const h=document.createElement('div'); h.className='nhTitle';
+  h.textContent=(top.pin?'[置顶] ':'')+top.title;
+  const prev=(top.body||'').replace(/\s+/g,' ').trim();
+  const p=document.createElement('div'); p.style.color='#b7c8e2';
+  p.textContent = prev.length>46 ? prev.slice(0,46)+'…' : (prev||'（无正文）');
+  const tm=document.createElement('div'); tm.className='nhTime';
+  tm.textContent=noticeFmtTime(top.ts);
+  main.appendChild(h); main.appendChild(p); main.appendChild(tm);
+}
+function noticeOpenList(){
+  const box=document.getElementById('noticeListBox');
+  const sum=document.getElementById('nlSum');
+  if(box){
+    box.textContent='';
+    const all=(NOTICE.list||[]).slice().sort((a,b)=> ((b.pin?1:0)-(a.pin?1:0)) || ((b.ts||0)-(a.ts||0)));
+    if(sum) sum.textContent = all.length? ('共 '+all.length+' 条 · 过期公告会灰显') : '';
+    if(!all.length){
+      const d=document.createElement('div'); d.className='nhEmpty'; d.textContent='暂无公告';
+      box.appendChild(d);
+    }else{
+      all.forEach(n=>{
+        const card=document.createElement('div');
+        card.className='nlCard'+(noticeExpired(n)?' exp':'');
+        const h=document.createElement('div'); h.className='nlTitle';
+        h.textContent=(n.pin?'[置顶] ':'')+n.title;
+        const tm=document.createElement('div'); tm.className='nlTime';
+        tm.textContent=noticeFmtTime(n.ts)+(noticeExpired(n)?' · 已过期':'');
+        const b=document.createElement('div'); b.className='nlBody';
+        const bd=(n.body||'').replace(/\s+/g,' ').trim();
+        b.textContent = bd.length>72 ? bd.slice(0,72)+'…' : (bd||'（无正文）');
+        card.appendChild(h); card.appendChild(tm); card.appendChild(b);
+        card.addEventListener('click', ()=>{ sClick(); noticeOpenItem(n.id); });
+        box.appendChild(card);
+      });
+    }
+  }
+  document.getElementById('noticeListScreen').classList.remove('hidden');
+}
+/* 首页公告卡交互 */
+(function(){
+  const home=document.getElementById('noticeHome');
+  const all=document.getElementById('btnNoticeAll');
+  if(home) home.addEventListener('click', ()=>{ sClick(); noticeOpenList(); });
+  if(all) all.addEventListener('click', (e)=>{ e.stopPropagation(); sClick(); noticeOpenList(); });
+  const back=document.getElementById('btnNoticeListBack');
+  if(back) back.addEventListener('click', ()=>{ sClick(); document.getElementById('noticeListScreen').classList.add('hidden'); });
+  // 菜单显隐时刷新：菜单里用首页卡，其他页面用顶部横幅
+  const menu=document.getElementById('menuScreen');
+  const login=document.getElementById('loginScreen');
+  if(window.MutationObserver){
+    const obs=new MutationObserver(()=>{ try{ noticeRender(); }catch(e){} });
+    if(menu) obs.observe(menu,{attributes:true,attributeFilter:['class']});
+    if(login) obs.observe(login,{attributes:true,attributeFilter:['class']});
+  }
+})();
+function noticeOpenItem(id){
+  const n=(NOTICE.list||[]).find(x=>x.id===id) || NOTICE.cur;
+  if(!n) return;
+  // 从历史列表进详情时先收列表，避免两层叠加把「关闭」挡住
+  NOTICE.fromList = !document.getElementById('noticeListScreen').classList.contains('hidden');
+  document.getElementById('noticeListScreen').classList.add('hidden');
+  document.getElementById('noticeTitle').textContent=(n.pin?'[置顶] ':'')+n.title;
+  document.getElementById('noticeTime').textContent=noticeFmtTime(n.ts)+(noticeExpired(n)?'（已过期）':'');
+  document.getElementById('noticeBody').textContent=n.body||'（无正文）';
   document.getElementById('noticeScreen').classList.remove('hidden');
 }
+function noticeOpen(){
+  const top=noticeLive()[0] || NOTICE.cur;
+  if(!top) return;
+  noticeOpenItem(top.id);
+}
 function noticeClose(){
-  if(NOTICE.cur) lsSet('gunNoticeSeen', NOTICE.cur.id);
+  const top=noticeLive()[0] || NOTICE.cur;
+  if(top) lsSet('gunNoticeSeen', top.id);
   document.getElementById('noticeScreen').classList.add('hidden');
-  NOTICE.cur=null; noticeRender();
+  if(NOTICE.fromList){   // 从历史列表进来的，关掉详情回列表
+    NOTICE.fromList=false;
+    document.getElementById('noticeListScreen').classList.remove('hidden');
+  }
+  noticeRender();
 }
 async function noticeConnect(){
   if(NT.cli && NT.cli.connected){ NOTICE.conn=true; return true; }
@@ -4029,8 +4188,7 @@ function noticeBoot(){
   if(NOTICE.tried) return; NOTICE.tried=true;
   noticeLoad();
   banLoad();
-  NOTICE.list = NOTICE.list.filter(x=> !x.until || Date.now()<x.until );
-  NOTICE.cur = NOTICE.list.find(x=> x.id!==lsGet('gunNoticeSeen','')) || null;
+  NOTICE.cur = NOTICE.list.find(x=> x.id!==lsGet('gunNoticeSeen','') && (!x.until||Date.now()<x.until)) || null;
   if(NOTICE.list.some(x=>x.pin)) NOTICE.cur = NOTICE.list.find(x=>x.pin);
   noticeRender();
   noticeConnect();
