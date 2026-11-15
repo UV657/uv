@@ -722,6 +722,7 @@ body.fire-left #btnFire{left:18px !important;right:auto !important}
         <div id="netStatus" class="netStatus hidden">
           <div class="netCode" id="netCodeShow">----</div>
           <div class="netWait" id="netWait">把房间码发给好友，等待他加入</div>
+          <div id="netFriendBox" class="hidden" style="width:100%;margin-top:14px;text-align:left"></div>
         </div>
         <div class="rowBtns"><button class="btn ghost" id="btnNetBack">返回</button></div>
       </div>
@@ -766,7 +767,7 @@ body.fire-left #btnFire{left:18px !important;right:auto !important}
       </div>
     </div>
     <div class="overlay hidden" id="settingsScreen">
-      <div class="title">自定义设置 <span id="verTag" style="font-size:11px;color:#7d8aa8;font-weight:400;display:block;margin-top:2px">v2.4.4</span></div>
+      <div class="title">自定义设置 <span id="verTag" style="font-size:11px;color:#7d8aa8;font-weight:400;display:block;margin-top:2px">v2.4.5</span></div>
       <div id="settingsWrap" style="text-align:left;max-width:320px;line-height:2.2">
         <div>摇杆大小 <input type="range" id="setJoy" min="60" max="140" value="88" style="width:100%"></div>
         <div>开火键大小 <input type="range" id="setFire" min="50" max="120" value="74" style="width:100%"></div>
@@ -805,6 +806,7 @@ body.fire-left #btnFire{left:18px !important;right:auto !important}
         <div id="historyBox" style="display:none;margin-top:10px;border-top:1px solid rgba(255,255,255,.1);padding-top:10px">
           <div style="font-size:13px;font-weight:800;color:#67e8f9;margin-bottom:6px">修改历史</div>
           <div style="line-height:1.8">
+            <div><b style="color:#ffd34d">v2.4.5</b>　明信片不再跳回首页；名字查重从 8 秒压到 2 秒；建房后直接列出好友，点一下就邀请</div>
             <div><b style="color:#ffd34d">v2.4.4</b>　自检改成逐项扫描动画（进度条＋实时计数），按钮加了按下反馈</div>
             <div><b style="color:#ffd34d">v2.4.3</b>　按纯数字档案号也能直接搜到人（之前只认带 # 的旧号）</div>
             <div><b style="color:#ffd34d">v2.4.2</b>　档案号改成 10 位纯数字，号段扩到 90 亿个；老档案号自动迁移，昵称归属跟着走</div>
@@ -2532,7 +2534,7 @@ document.getElementById('btnEnter').addEventListener('click', async ()=>{
   const uid=ensureUid();
   // 允许重名：和主流射击游戏一致，同名玩家靠档案号区分，不拦人
   // 服务器在全网范围内再查一次（连不上就只靠本机登记表）
-  if(tip) tip.textContent='正在校验代号（联网查重，约 8 秒）…';
+  if(tip) tip.textContent='正在校验代号（联网查重，约 2 秒）…';
   if(!nickClaim(n, uid)){ if(tip) tip.textContent='「'+n+'」在本机已被占用，换一个'; return; }
   const remote=await nickRemoteClaim(n, uid);
   if(remote && remote.ok===false){ if(tip) tip.textContent='「'+n+'」'+ (remote.msg||'已被占用') +'，一个名字只能用一次'; return; }
@@ -2544,7 +2546,7 @@ document.getElementById('btnEnter').addEventListener('click', async ()=>{
   if(tip) tip.textContent='';
   lsSet('cs_nick', n);
   loginScreen.classList.add('hidden'); menuScreen.classList.remove('hidden');
-  fwInit().then(()=>fwRenderList());
+  fwInit().then(()=>{ fwPublishCard(); fwRenderList(); });
   updateBestRecord();
   updateDailyTask();
   const p1=state.players.find(p=>p.isHuman); if(p1) p1.name=n;
@@ -2769,6 +2771,34 @@ function netOnMsg(m){
       netSend({t:'start'}, 1);
     }
 }
+/* 建房后直接列出好友，在线的点一下就邀请，不用回主菜单找 */
+function netRenderInviteList(){
+  const box=document.getElementById('netFriendBox');
+  if(!box) return;
+  box.classList.remove('hidden');
+  const list=fwFriends();
+  if(!list.length){
+    box.innerHTML='<div style="font-size:11.5px;color:#8fa1bf;text-align:center;line-height:1.7">还没有好友<br>回主菜单点「好友」，搜名字或档案号关注一个</div>';
+    return;
+  }
+  box.innerHTML='<div style="font-size:11px;color:#8fa1bf;margin-bottom:6px">拉好友进来</div>'
+    + list.map(f=>{
+      const on=fwOnline(f.uid);
+      return '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:7px 0;border-top:1px solid rgba(255,255,255,.07)">'
+        +'<span style="font-size:12.5px;color:#dbe6f7;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'
+        +'<i style="color:'+(on?'#5eead4':'#5b6b82')+';font-style:normal">●</i> '+esc(f.name)+'</span>'
+        + (on
+           ? '<button class="btn" data-netinv="'+esc(f.uid)+'" style="padding:5px 14px;font-size:11.5px;flex:none">邀请</button>'
+           : '<span style="font-size:11px;color:#5b6b82;flex:none">离线</span>')
+        +'</div>';
+    }).join('');
+  box.onclick=(ev)=>{
+    const b=ev.target.closest('[data-netinv]');
+    if(!b) return;
+    sClick(); fwInvite(b.getAttribute('data-netinv'));
+  };
+}
+
 function netShowCode(code, tip){
   NET.code=code;
   const box=document.getElementById('netStatus'), cd=document.getElementById('netCodeShow'), wt=document.getElementById('netWait');
@@ -2776,6 +2806,7 @@ function netShowCode(code, tip){
   if(cd) cd.textContent=code;
   if(wt) wt.textContent=tip;
   netStatus('房间已创建','#5eead4');
+  setTimeout(netRenderInviteList, 60);
 }
 function startNetMatch(){
   document.querySelectorAll('.overlay').forEach(e=>e.classList.add('hidden'));
@@ -2845,38 +2876,59 @@ const NICK_TOPIC_PREFIX = 'gunfight9/nick/';
 function nickTopicOf(n){ return NICK_TOPIC_PREFIX + n.replace(/[\/+#]/g,'').slice(0,24); }
 function nickRemoteClaim(name, uid, probeOnly){
   return new Promise((resolve)=>{
+    // 好友通道已经连好就直接借用：省掉建连的 1~2 秒，整轮查重压到 2 秒左右
+    const shared = !!(FW.cli && FW.cli.connected);
+    const waitMs = shared ? 1500 : 2600;
     const go=async ()=>{
-      let lib=window.mqtt;
-      if(!lib){ try{ lib=await loadMqttLib(); }catch(e){ resolve({ok:true, offline:true}); return; } }
-      const cid='gk_'+Date.now().toString(36)+Math.random().toString(36).slice(2,8);
-      const c=lib.connect(MQTT_BROKER,{clientId:cid,clean:true,connectTimeout:8000,reconnectPeriod:0});
+      let c=FW.cli, own=false;
+      if(!shared){
+        let lib=window.mqtt;
+        if(!lib){ try{ lib=await loadMqttLib(); }catch(e){ resolve({ok:true, offline:true}); return; } }
+        const cid='gk_'+Date.now().toString(36)+Math.random().toString(36).slice(2,8);
+        c=lib.connect(MQTT_BROKER,{clientId:cid,clean:true,connectTimeout:8000,reconnectPeriod:0});
+        own=true;
+      }
+      const topic=nickTopicOf(name);
       let done=false;
-      const finish=(v)=>{ if(done) return; done=true; clearTimeout(timer); try{c.end(true);}catch(e){} resolve(v); };
-      const timer=setTimeout(()=>finish({ok:true, offline:true}), 16000);   // 连不上就不拦人
-      c.on('connect',()=>{
-        const topic=nickTopicOf(name);
-        c.subscribe(topic,{qos:1},()=>{
-          setTimeout(()=>{                      // 订阅后 2.6 秒仍没有保留消息 = 这个名字没人占
-            if(done) return;
-            if(probeOnly){ finish({ok:true, free:true}); return; }   // 只查询不抢名
-            // 必须等 PUBACK 再断开，否则保留消息可能没真正写入中转
-            c.publish(topic, JSON.stringify({uid, n:name}), {qos:1, retain:true}, (err)=>{
-              if(err) finish({ok:true, offline:true});
-              else setTimeout(()=>finish({ok:true, claimed:true}), 250);
-            });
-          }, 2600);
-        });
-      });
-      c.on('message',(t,p)=>{
+      const finish=(v)=>{
+        if(done) return; done=true; clearTimeout(timer); clearTimeout(hardTimer);
+        try{ c.removeListener('message', onMsg); }catch(e){}
+        if(own){ try{ c.end(true); }catch(e){} }
+        else { try{ c.unsubscribe(topic); }catch(e){} }
+        resolve(v);
+      };
+      const hardTimer=setTimeout(()=>finish({ok:true, offline:true}), 16000);   // 连不上就不拦人
+      const onMsg=(t,p)=>{
+        if(t!==topic || done) return;
         try{
           const m=JSON.parse(p.toString());
           if(m.uid===uid) finish({ok:true, mine:true});
           else finish({ok:false, msg:'这个名字已经有人用了'});
         }catch(e){}
-      });
-      c.on('error',()=>finish({ok:true, offline:true}));
+      };
+      c.on('message', onMsg);
+      const timer=setTimeout(()=>{ }, 0);   // 占位，保持变量可用
+      const subscribe=()=>{
+        c.subscribe(topic,{qos:1},()=>{
+          setTimeout(()=>{                      // 窗口内没有保留消息 = 这个名字没人占
+            if(done) return;
+            if(probeOnly){ finish({ok:true, free:true}); return; }   // 只查询不抢名
+            // 必须等 PUBACK 再算完成，否则保留消息可能没真正写入中转
+            c.publish(topic, JSON.stringify({uid, n:name}), {qos:1, retain:true}, (err)=>{
+              if(err) finish({ok:true, offline:true});
+              else setTimeout(()=>finish({ok:true, claimed:true}), 200);
+            });
+          }, waitMs);
+        });
+      };
+      if(shared) subscribe();
+      else {
+        const timer0=setTimeout(()=>finish({ok:true, offline:true}), 16000);
+        c.on('connect', ()=>{ clearTimeout(timer0); subscribe(); });
+        c.on('error', ()=>finish({ok:true, offline:true}));
+      }
     };
-    if(window.mqtt) go();
+    if(shared || window.mqtt) go();
     else loadMqttLib().then(go).catch(()=>resolve({ok:true, offline:true}));
   });
 }
@@ -3188,6 +3240,8 @@ function fwShowCard(uid){
       +'<button class="btn" data-inv="'+esc(uid)+'" style="flex:1;padding:9px;font-size:13px">拉他进房间</button>'
       +'<button class="btn ghost" data-copyuid="'+esc(uid)+'" style="flex:1;padding:9px;font-size:13px">复制档案号</button></div>'});
   }
+  FW.cardFrom = document.getElementById('profileScreen').classList.contains('hidden') ? 'friend' : 'profile';
+  document.querySelectorAll('.overlay').forEach(ov=>{ if(ov.id!=='cardScreen') ov.classList.add('hidden'); });
   document.getElementById('cardScreen').classList.remove('hidden');
 }
 
@@ -3436,7 +3490,9 @@ bindBtn('fwClose', ()=>{ sClick(); document.getElementById('friendScreen').class
 bindBtn('fwSearchBtn', ()=>{ sClick(); fwDoSearch(); });
 bindBtn('fwRefresh', ()=>{ sClick(); fwWatchFriends(); fwRenderList(); toastMsg('已刷新'); });
 bindBtn('btnMyCard', ()=>{ sClick(); fwShowCard(FW.uid||ensureUid()); });
-bindBtn('cardClose', ()=>{ sClick(); document.getElementById('cardScreen').classList.add('hidden'); });
+bindBtn('cardClose', ()=>{ sClick(); document.getElementById('cardScreen').classList.add('hidden');
+  const back = (FW.cardFrom==='profile') ? 'profileScreen' : 'friendScreen';
+  document.getElementById(back).classList.remove('hidden'); });
 bindBtn('inviteReject', ()=>{ sClick(); FW.invite=null; document.getElementById('inviteScreen').classList.add('hidden'); });
 bindBtn('inviteAccept', ()=>{
   sClick();
@@ -3701,6 +3757,8 @@ window.onerror=function(msg,src,line,col,err){
   },130);
 })();
 
+/* 预热：登录页就把中转连上，等玩家输名字时通道已就绪，查重只需 1.5 秒 */
+setTimeout(()=>{ try{ fwInit(); }catch(e){} }, 600);
 state.world=CFG.modes['5v5'];
 resetSelectors();
 resize();
