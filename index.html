@@ -404,6 +404,13 @@ body.fire-left #btnFire{left:18px !important;right:auto !important}
 .scWrap{width:min(96vw,460px)}
 .scTitle{font-size:17px;font-weight:800;color:#e8eefc;margin-bottom:10px;text-align:center}
 .scBody{display:flex;flex-direction:column;gap:5px;font-size:12.5px}
+.scRow{opacity:0;transform:translateX(-8px);animation:scIn .22s ease-out forwards}
+@keyframes scIn{to{opacity:1;transform:none}}
+.scBar{height:4px;border-radius:3px;background:rgba(255,255,255,.12);overflow:hidden;margin:4px 0 6px}
+.scBar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#38bdf8,#5eead4);animation:scFill .85s ease-out forwards}
+@keyframes scFill{from{width:0}to{width:100%}}
+.btn{transition:transform .1s ease,filter .1s ease}
+.btn:active{transform:scale(.96);filter:brightness(1.18)}
 .scSum{font-size:14px;font-weight:800;text-align:center;margin-bottom:6px;color:#5eead4}
 .scRow{display:flex;gap:8px;align-items:flex-start;background:rgba(255,255,255,.04);border-radius:7px;padding:7px 10px}
 .scRow.ok{border-left:3px solid #33e08a}
@@ -759,7 +766,7 @@ body.fire-left #btnFire{left:18px !important;right:auto !important}
       </div>
     </div>
     <div class="overlay hidden" id="settingsScreen">
-      <div class="title">自定义设置 <span id="verTag" style="font-size:11px;color:#7d8aa8;font-weight:400;display:block;margin-top:2px">v2.4.3</span></div>
+      <div class="title">自定义设置 <span id="verTag" style="font-size:11px;color:#7d8aa8;font-weight:400;display:block;margin-top:2px">v2.4.4</span></div>
       <div id="settingsWrap" style="text-align:left;max-width:320px;line-height:2.2">
         <div>摇杆大小 <input type="range" id="setJoy" min="60" max="140" value="88" style="width:100%"></div>
         <div>开火键大小 <input type="range" id="setFire" min="50" max="120" value="74" style="width:100%"></div>
@@ -798,6 +805,7 @@ body.fire-left #btnFire{left:18px !important;right:auto !important}
         <div id="historyBox" style="display:none;margin-top:10px;border-top:1px solid rgba(255,255,255,.1);padding-top:10px">
           <div style="font-size:13px;font-weight:800;color:#67e8f9;margin-bottom:6px">修改历史</div>
           <div style="line-height:1.8">
+            <div><b style="color:#ffd34d">v2.4.4</b>　自检改成逐项扫描动画（进度条＋实时计数），按钮加了按下反馈</div>
             <div><b style="color:#ffd34d">v2.4.3</b>　按纯数字档案号也能直接搜到人（之前只认带 # 的旧号）</div>
             <div><b style="color:#ffd34d">v2.4.2</b>　档案号改成 10 位纯数字，号段扩到 90 亿个；老档案号自动迁移，昵称归属跟着走</div>
             <div><b style="color:#ffd34d">v2.4.1</b>　关于我们去掉了年龄与学校，界面上的零散提示统一收进说明书</div>
@@ -2626,11 +2634,26 @@ function showSelfCheck(){
   const list=runSelfCheck();
   const pass=list.filter(x=>x.ok).length;
   const body=document.getElementById('scBody');
-  body.innerHTML='<div class="scSum" style="color:'+(pass===list.length?'#5eead4':'#ff9f9f')+'">'+pass+' / '+list.length+' 项通过</div>'
-    + list.map(x=>'<div class="scRow '+(x.ok?'ok':'bad')+'"><span class="scI">'+(x.ok?'✓':'✗')+'</span><span>'+x.n+(x.d?' <i>'+x.d+'</i>':'')+'</span></div>').join('');
   document.querySelectorAll('.overlay').forEach(e=>e.classList.add('hidden'));
   document.getElementById('selfCheckScreen').classList.remove('hidden');
-  console.log('[自检]', pass+'/'+list.length, list.filter(x=>!x.ok));
+  // 先显示扫描中，再逐项揭晓，避免一瞬间刷满看着像张静态图
+  body.innerHTML='<div class="scSum" style="color:#9fd0ff" id="scSum">正在检查 '+list.length+' 项…</div>'
+    +'<div class="scBar"><i></i></div><div id="scRows"></div>';
+  const rows=document.getElementById('scRows');
+  let i=0;
+  const timer=setInterval(()=>{
+    if(i>=list.length){
+      clearInterval(timer);
+      const sm=document.getElementById('scSum');
+      if(sm){ sm.style.color=(pass===list.length?'#5eead4':'#ff9f9f'); sm.textContent=pass+' / '+list.length+' 项通过'; }
+      console.log('[自检]', pass+'/'+list.length, list.filter(x=>!x.ok));
+      return;
+    }
+    const x=list[i++];
+    rows.insertAdjacentHTML('beforeend','<div class="scRow '+(x.ok?'ok':'bad')+'"><span class="scI">'+(x.ok?'✓':'✗')+'</span><span>'+x.n+(x.d?' <i>'+x.d+'</i>':'')+'</span></div>');
+    const sm=document.getElementById('scSum');
+    if(sm) sm.textContent='正在检查 '+i+' / '+list.length+' 项…';
+  }, 32);
   return list;
 }
 window.__selfCheck = runSelfCheck;
