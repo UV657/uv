@@ -581,7 +581,47 @@ body.fire-left #btnFire{left:18px !important;right:auto !important}
         <button class="btn ghost" id="btnHelp">玩法说明书</button>
         <button class="btn ghost" id="btnTouchHelp">手机操作说明</button>
         <button class="btn ghost" id="btnNet">联机对战</button>
+        <button class="btn ghost" id="btnFriends">好友 <span id="fwBadge" style="color:#5eead4;font-weight:800"></span></button>
         <button class="btn ghost" id="btnShare">分享给好友</button>
+      </div>
+    </div>
+
+    <!-- 好友面板 -->
+    <div class="overlay hidden" id="friendScreen">
+      <div style="width:100%;max-width:360px;text-align:left">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+          <div class="title" style="margin:0;font-size:22px">好友</div>
+          <button id="fwClose" style="width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);color:#cdd9f0;font-size:16px;cursor:pointer">✕</button>
+        </div>
+        <div style="display:flex;gap:8px">
+          <input id="fwQuery" maxlength="20" placeholder="输名字或 #档案号 搜索" style="flex:1;padding:11px;border-radius:10px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.06);color:#e8eefc;font-size:14px;outline:none">
+          <button class="btn" id="fwSearchBtn" style="padding:0 18px;font-size:14px">搜索</button>
+        </div>
+        <div id="fwHint" style="font-size:11.5px;color:#7d8aa8;margin-top:8px;line-height:1.6">搜到的人会显示他的明信片，关注后就能看到他是否在线、一键拉进房间。</div>
+        <div id="fwResult" style="margin-top:10px"></div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-top:16px;border-top:1px solid rgba(255,255,255,.1);padding-top:12px">
+          <div style="font-size:13px;font-weight:800;color:#67e8f9">我的好友 <span id="fwCount" style="color:#9fb2d0;font-weight:400">0</span></div>
+          <button id="fwRefresh" style="font-size:11px;color:#9fb2d0;background:none;border:none;cursor:pointer">刷新在线状态</button>
+        </div>
+        <div id="fwList" style="margin-top:8px;max-height:46vh;overflow-y:auto"></div>
+      </div>
+    </div>
+
+    <!-- 明信片弹窗 -->
+    <div class="overlay hidden" id="cardScreen">
+      <div id="cardBody" style="width:100%;max-width:340px"></div>
+      <div class="rowBtns" style="margin-top:14px"><button class="btn" id="cardClose">关 闭</button></div>
+    </div>
+
+    <!-- 收到好友邀请 -->
+    <div class="overlay hidden" id="inviteScreen">
+      <div style="background:rgba(10,18,32,.96);border:1px solid rgba(94,234,212,.5);border-radius:16px;padding:22px 20px;max-width:320px;text-align:center">
+        <div style="font-size:13px;color:#5eead4;font-weight:800;letter-spacing:1px">联机邀请</div>
+        <div id="inviteText" style="font-size:15px;color:#e8eefc;line-height:1.9;margin:12px 0 18px">好友邀请你对战</div>
+        <div style="display:flex;gap:10px;justify-content:center">
+          <button class="btn" id="inviteAccept" style="padding:10px 24px;font-size:14px">接受</button>
+          <button class="btn ghost" id="inviteReject" style="padding:10px 24px;font-size:14px">拒绝</button>
+        </div>
       </div>
     </div>
 
@@ -609,6 +649,7 @@ body.fire-left #btnFire{left:18px !important;right:auto !important}
         <div class="profGrid" id="profGrid"></div>
         <div class="profTitle">最近对局</div>
         <div class="profList" id="profList"></div>
+        <div class="rowBtns" style="margin-bottom:8px"><button class="btn ghost" id="btnMyCard">我的明信片</button></div>
         <div class="rowBtns"><button class="btn" id="btnProfileBack">返 回</button></div>
       </div>
     </div>
@@ -720,7 +761,7 @@ body.fire-left #btnFire{left:18px !important;right:auto !important}
       </div>
     </div>
     <div class="overlay hidden" id="settingsScreen">
-      <div class="title">自定义设置 <span id="verTag" style="font-size:11px;color:#7d8aa8;font-weight:400;display:block;margin-top:2px">v2.3.1127</span></div>
+      <div class="title">自定义设置 <span id="verTag" style="font-size:11px;color:#7d8aa8;font-weight:400;display:block;margin-top:2px">v2.4.0</span></div>
       <div id="settingsWrap" style="text-align:left;max-width:320px;line-height:2.2">
         <div>摇杆大小 <input type="range" id="setJoy" min="60" max="140" value="88" style="width:100%"></div>
         <div>开火键大小 <input type="range" id="setFire" min="50" max="120" value="74" style="width:100%"></div>
@@ -760,6 +801,7 @@ body.fire-left #btnFire{left:18px !important;right:auto !important}
         <div id="historyBox" style="display:none;margin-top:10px;border-top:1px solid rgba(255,255,255,.1);padding-top:10px">
           <div style="font-size:13px;font-weight:800;color:#67e8f9;margin-bottom:6px">修改历史</div>
           <div style="line-height:1.8">
+            <div><b style="color:#ffd34d">v2.4.0</b>　好友系统：搜人关注、个人明信片、在线状态、一键拉进房间；名字与档案号全网唯一，每月限改 3 次或消耗改名卡</div>
             <div><b style="color:#ffd34d">v2.3.1127</b>　个人主页移到左上角，设置里加「关于我们」与修改历史</div>
             <div><b style="color:#ffd34d">v2.3.1126</b>　代号全网唯一：一个名字只能用一次</div>
             <div><b style="color:#ffd34d">v2.3.1125</b>　电脑/手机双端分离：电脑键鼠、手机触屏，两端联机互不相通</div>
@@ -2472,9 +2514,15 @@ document.getElementById('btnEnter').addEventListener('click', async ()=>{
   if(!nickClaim(n, uid)){ if(tip) tip.textContent='「'+n+'」在本机已被占用，换一个'; return; }
   const remote=await nickRemoteClaim(n, uid);
   if(remote && remote.ok===false){ if(tip) tip.textContent='「'+n+'」'+ (remote.msg||'已被占用') +'，一个名字只能用一次'; return; }
+  const prevNick=lsGetRaw('cs_nick');
+  if(prevNick && prevNick!==n){
+    const sp=spendRename();
+    if(!sp.ok){ if(tip) tip.textContent='本月 '+RENAME_FREE+' 次改名已用完：去「我的主页」用 '+CARD_COST+' 荣誉换改名卡，或等下个月'; return; }
+  }
   if(tip) tip.textContent='';
   lsSet('cs_nick', n);
   loginScreen.classList.add('hidden'); menuScreen.classList.remove('hidden');
+  fwInit().then(()=>fwRenderList());
   updateBestRecord();
   updateDailyTask();
   const p1=state.players.find(p=>p.isHuman); if(p1) p1.name=n;
@@ -2762,7 +2810,7 @@ function nickRemoteClaim(name, uid, probeOnly){
   return new Promise((resolve)=>{
     const go=async ()=>{
       let lib=window.mqtt;
-      if(!lib){ try{ lib=await loadMqttLib(); mq=lib; }catch(e){ resolve({ok:true, offline:true}); return; } }
+      if(!lib){ try{ lib=await loadMqttLib(); }catch(e){ resolve({ok:true, offline:true}); return; } }
       const cid='gk_'+Date.now().toString(36)+Math.random().toString(36).slice(2,8);
       const c=lib.connect(MQTT_BROKER,{clientId:cid,clean:true,connectTimeout:8000,reconnectPeriod:0});
       let done=false;
@@ -2795,6 +2843,316 @@ function nickRemoteClaim(name, uid, probeOnly){
     else loadMqttLib().then(go).catch(()=>resolve({ok:true, offline:true}));
   });
 }
+
+/* ===== 2.4 好友系统：明信片 / 在线状态 / 邀请 =====
+   依然没有服务器：明信片和在线状态都发到公共中转的保留消息里，
+   谁订阅谁就能读到最新一张。 */
+const FW = {
+  cli:null, uid:null, inited:false, ready:false,
+  online:{},      // uid -> {name, ts}
+  cards:{},       // uid -> 明信片
+  beatTimer:null, invite:null
+};
+/* 档案号以 # 开头，而 MQTT 主题里的 # / + 是通配符，直接用会让中转踢掉连接，必须清洗。
+   清洗后的值同时作为本地缓存与比对的 key，避免「主题里没#、本地有#」对不上。 */
+function fwKey(u){ return String(u||'').replace(/^#/,'').replace(/[\/+#]/g,''); }
+function fwTopic(kind,id){ return 'gunfight9/'+kind+'/'+fwKey(id); }
+function esc(t){ return String(t==null?'':t).replace(/[<>&"']/g, c=>({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;',"'":'&#39;'}[c])); }
+function fwFriends(){ return lsGet('gunFriends', []); }
+function fwSaveFriends(a){ lsSet('gunFriends', a); }
+function fwCardLocal(){ const c=lsGet('gunCard', {}); return {sig:(c.sig||''), color:(c.color||'cyan')}; }
+
+/* 生成自己的明信片内容 */
+function fwMyCard(){
+  const p=profLoad(), ri=rankInfo(), loc=fwCardLocal();
+  return {
+    uid: ensureUid(),
+    name: currentNick(),
+    sig: (loc.sig||'').slice(0,40),
+    color: loc.color||'cyan',
+    rank: ri.name, pts: ri.pts,
+    kills: p.kills||0, wins: p.wins||0, matches: p.matches||0, best: p.best||0,
+    ts: Date.now()
+  };
+}
+function fwOnline(uid){
+  if(fwKey(uid)===fwKey(FW.uid)) return true;   // 自己当然在线
+  const o=FW.online[fwKey(uid)];
+  if(!o) return false;
+  return (Date.now()-o.ts) < 120000;      // 两分钟没心跳算离线
+}
+function fwPublishCard(){
+  if(!FW.cli || !FW.cli.connected) return;
+  const c=fwMyCard();
+  FW.cards[fwKey(c.uid)]=c;          // 自己也记一份，搜索时立刻能返回
+  FW.cli.publish(fwTopic('card',c.uid), JSON.stringify(c), {qos:1, retain:true});
+  FW.cli.publish(fwTopic('uid',c.uid), JSON.stringify({name:c.name}), {qos:1, retain:true});
+}
+function fwBeat(){
+  if(!FW.cli || !FW.cli.connected) return;
+  FW.cli.publish(fwTopic('online',FW.uid), JSON.stringify({name:currentNick(), ts:Date.now()}), {qos:1, retain:true});
+}
+function fwWatchFriends(){
+  if(!FW.cli || !FW.cli.connected) return;
+  for(const f of fwFriends()){
+    FW.cli.subscribe(fwTopic('online',f.uid), {qos:1});
+    FW.cli.subscribe(fwTopic('card',f.uid), {qos:1});
+  }
+}
+function fwOnMsg(topic, payload){
+  try{
+    const parts=topic.split('/'); const kind=parts[1], id=parts[2];
+    if(!kind || !id) return;
+    const m=JSON.parse(payload.toString());
+    if(kind==='online'){ FW.online[id]=m; fwRenderList(); }
+    else if(kind==='card'){ FW.cards[id]=m; fwRenderList(); }
+    else if(kind==='invite' && id===fwKey(FW.uid)){ fwShowInvite(m); }
+  }catch(e){}
+}
+function fwInit(){
+  if(FW.inited) return Promise.resolve(FW.cli);
+  FW.inited=true; FW.uid=ensureUid();
+  const go=(lib)=>{
+    if(!lib || typeof lib.connect!=='function'){ FW.lastErr='lib无效:'+(typeof lib); throw new Error('mqtt lib invalid'); }
+    const cid='fw_'+Date.now().toString(36)+Math.random().toString(36).slice(2,9);
+    const c=lib.connect(MQTT_BROKER,{clientId:cid,clean:true,connectTimeout:8000,reconnectPeriod:5000});
+    FW.cli=c;
+    c.on('connect', ()=>{
+      FW.ready=true;
+      c.subscribe(fwTopic('invite',FW.uid), {qos:1});
+      c.subscribe(fwTopic('card',FW.uid), {qos:1});
+      fwPublishCard(); fwBeat(); fwWatchFriends(); fwRenderList();
+    });
+    c.on('message', fwOnMsg);
+    c.on('error', (e)=>{ FW.log=(FW.log||[]).concat('err:'+(e&&e.message||e)); });
+    c.on('close', ()=>{ FW.log=(FW.log||[]).concat('close'); });
+    c.on('offline', ()=>{ FW.log=(FW.log||[]).concat('offline'); });
+    c.on('reconnect', ()=>{ FW.log=(FW.log||[]).concat('reconnect'); });
+    if(!FW.beatTimer) FW.beatTimer=setInterval(fwBeat, 40000);
+  };
+  if(window.mqtt){ go(window.mqtt); return Promise.resolve(FW.cli); }
+  return loadMqttLib().then(lib=>{ go(lib); return FW.cli; })
+    .catch((err)=>{ FW.lastErr=String(err && err.stack || err); FW.inited=false; return null; });
+}
+
+/* 按名字或 #档案号查一个人 */
+function fwLookup(q){
+  return new Promise((resolve)=>{
+    q=String(q||'').trim();
+    if(!q) return resolve({err:'empty'});
+    if(!FW.cli || !FW.cli.connected) return resolve({err:'offline'});
+    const after=(uid)=>{
+      if(!uid) return resolve({err:'nocard'});
+      if(FW.cards[fwKey(uid)]) return resolve({card:FW.cards[fwKey(uid)]});
+      const topic=fwTopic('card',uid); let done=false;
+      const h=(t,p)=>{ if(t!==topic||done) return; done=true; FW.cli.removeListener('message',h);
+        try{ resolve({card:JSON.parse(p.toString())}); }catch(e){ resolve({err:'nocard'}); } };
+      FW.cli.on('message',h);
+      FW.cli.subscribe(topic,{qos:1});
+      setTimeout(()=>{ if(!done){ FW.cli.removeListener('message',h); resolve({err:'nocard'}); } }, 2600);
+    };
+    if(q.startsWith('#')) return after(q.toUpperCase());
+    const nickT='gunfight9/nick/'+q.replace(/[\/+#]/g,'').slice(0,24); let done=false;
+    const h=(t,p)=>{ if(t!==nickT||done) return; done=true; FW.cli.removeListener('message',h);
+      let uid=null; try{ uid=JSON.parse(p.toString()).uid; }catch(e){}
+      after(uid); };
+    FW.cli.on('message',h);
+    FW.cli.subscribe(nickT,{qos:1});
+    setTimeout(()=>{ if(!done){ FW.cli.removeListener('message',h); resolve({err:'notfound'}); } }, 2600);
+  });
+}
+
+/* 关注 / 取关 */
+function fwFollow(card){
+  const list=fwFriends();
+  if(list.some(f=>f.uid===card.uid)){ toastMsg('已经在好友里了'); return; }
+  list.push({uid:card.uid, name:card.name, addedAt:Date.now()});
+  fwSaveFriends(list);
+  if(FW.cli && FW.cli.connected){
+    FW.cli.subscribe(fwTopic('online',card.uid),{qos:1});
+    FW.cli.subscribe(fwTopic('card',card.uid),{qos:1});
+  }
+  toastMsg('已关注 '+card.name);
+  fwRenderList(); fwRenderResult(card, true);
+}
+function fwUnfollow(uid){
+  fwSaveFriends(fwFriends().filter(f=>f.uid!==uid));
+  toastMsg('已取消关注');
+  fwRenderList();
+}
+
+/* 拉好友进房间 */
+function fwInvite(uid){
+  if(!FW.cli || !FW.cli.connected){ toastMsg('好友服务还没连上，等两秒再试'); return; }
+  if(!NET.code){ toastMsg('先点「联机对战」创建房间，再邀请他'); return; }
+  FW.cli.publish(fwTopic('invite',uid), JSON.stringify({from:FW.uid, fromName:currentNick(), code:NET.code}), {qos:1});
+  toastMsg('邀请已发出，等他接受');
+}
+function fwShowInvite(m){
+  if(!m || !m.code) return;
+  FW.invite=m;
+  const t=document.getElementById('inviteText');
+  if(t) t.innerHTML='<b>'+esc(m.fromName||'好友')+'</b> 邀请你 1V1 对战<br><span style="font-size:12px;color:#9fb2d0">房间码 '+esc(m.code)+'</span>';
+  document.getElementById('inviteScreen').classList.remove('hidden');
+}
+
+/* ---- 改名额度：每月 3 次，用光要靠改名卡 ---- */
+const RENAME_FREE=3, CARD_COST=500;
+function renameQuota(){
+  const d=new Date(), ym=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
+  const r=lsGet('gunRenameLog',{ym:ym,used:0});
+  if(r.ym!==ym) return {left:RENAME_FREE, ym, used:0};
+  return {left:Math.max(0,RENAME_FREE-r.used), ym, used:r.used};
+}
+function renameCards(){ return lsGet('gunRenameCards',0); }
+function spendRename(){
+  const q=renameQuota();
+  if(q.left>0){ lsSet('gunRenameLog',{ym:q.ym, used:q.used+1}); return {ok:true, via:'free', left:q.left-1}; }
+  const c=renameCards();
+  if(c>0){ lsSet('gunRenameCards', c-1); return {ok:true, via:'card', left:0}; }
+  return {ok:false};
+}
+function buyRenameCard(){
+  const h=lsGet('gunHonor',0);
+  if(h<CARD_COST) return false;
+  lsSet('gunHonor', h-CARD_COST);
+  lsSet('gunRenameCards', renameCards()+1);
+  return true;
+}
+
+
+/* ---- 明信片外观 ---- */
+const CARD_THEMES={
+  cyan:{a:'#22d3ee',b:'#0e7490'}, gold:{a:'#fbbf24',b:'#92400e'},
+  pink:{a:'#f472b6',b:'#831843'}, green:{a:'#34d399',b:'#065f46'},
+  violet:{a:'#a78bfa',b:'#4c1d95'}
+};
+function fwCardHtml(card, opts){
+  opts=opts||{};
+  const th=CARD_THEMES[card.color]||CARD_THEMES.cyan;
+  const wr=card.matches?Math.round(card.wins/card.matches*100):0;
+  return '<div style="border-radius:16px;overflow:hidden;border:1px solid rgba(255,255,255,.16);background:linear-gradient(145deg,'+th.b+'22,#0b1224 60%);">'
+    +'<div style="height:6px;background:linear-gradient(90deg,'+th.a+','+th.b+')"></div>'
+    +'<div style="padding:16px 16px 12px">'
+    +'<div style="display:flex;align-items:center;gap:12px">'
+    +'<div style="width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,'+th.a+','+th.b+');display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:900;color:#04121c">'+esc((card.name||'?').slice(0,1))+'</div>'
+    +'<div style="flex:1;min-width:0"><div style="font-size:17px;font-weight:800;color:#e8eefc;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(card.name||'匿名')+'</div>'
+    +'<div style="font-size:11px;color:#8fa1bf;margin-top:2px">'+esc(card.uid||'')+' · '+esc(card.rank||'青铜')+'</div></div>'
+    +(fwOnline(card.uid)?'<span style="font-size:10px;color:#5eead4;border:1px solid rgba(94,234,212,.4);border-radius:10px;padding:2px 8px">在线</span>'
+      :'<span style="font-size:10px;color:#7d8aa8;border:1px solid rgba(255,255,255,.18);border-radius:10px;padding:2px 8px">离线</span>')
+    +'</div>'
+    +'<div style="margin-top:12px;font-size:12px;color:#b6c4dc;line-height:1.7;min-height:20px">'+(card.sig?esc(card.sig):'<span style="color:#5d6c86">这个人还没写签名</span>')+'</div>'
+    +'<div style="display:flex;gap:8px;margin-top:14px">'
+    +'<div style="flex:1;text-align:center;background:rgba(255,255,255,.05);border-radius:10px;padding:8px 4px"><div style="font-size:16px;font-weight:800;color:#e8eefc">'+(card.kills||0)+'</div><div style="font-size:10px;color:#8fa1bf">击杀</div></div>'
+    +'<div style="flex:1;text-align:center;background:rgba(255,255,255,.05);border-radius:10px;padding:8px 4px"><div style="font-size:16px;font-weight:800;color:#e8eefc">'+wr+'%</div><div style="font-size:10px;color:#8fa1bf">胜率</div></div>'
+    +'<div style="flex:1;text-align:center;background:rgba(255,255,255,.05);border-radius:10px;padding:8px 4px"><div style="font-size:16px;font-weight:800;color:#e8eefc">'+(card.pts||0)+'</div><div style="font-size:10px;color:#8fa1bf">段位分</div></div>'
+    +'</div>'
+    +(opts.actions||'')
+    +'</div></div>';
+}
+
+/* 搜索结果区 */
+function fwRenderResult(card, followed, errText){
+  const el=document.getElementById('fwResult'); if(!el) return;
+  if(errText){ el.innerHTML='<div style="font-size:12px;color:#ff9f9f;padding:8px 2px">'+esc(errText)+'</div>'; return; }
+  if(!card){ el.innerHTML=''; return; }
+  const isFriend=fwFriends().some(f=>f.uid===card.uid);
+  const me=card.uid===FW.uid;
+  let act='';
+  if(me){ act='<div style="margin-top:12px;font-size:11.5px;color:#8fa1bf;text-align:center">这就是你自己</div>'; }
+  else if(isFriend){ act='<div style="margin-top:12px;font-size:11.5px;color:#5eead4;text-align:center">已关注</div>'; }
+  else {
+    act='<div style="display:flex;gap:8px;margin-top:12px">'
+      +'<button class="btn" data-follow="'+esc(card.uid)+'" style="flex:1;padding:9px;font-size:13px">关注他</button>'
+      +'<button class="btn ghost" data-carduid="'+esc(card.uid)+'" style="flex:1;padding:9px;font-size:13px">看明信片</button></div>';
+  }
+  el.innerHTML=fwCardHtml(card,{actions:act});
+  FW.lastSearch=card;
+}
+
+/* 好友列表 */
+function fwRenderList(){
+  const el=document.getElementById('fwList'); if(!el) return;
+  const list=fwFriends();
+  const cnt=document.getElementById('fwCount'); if(cnt) cnt.textContent=list.length;
+  const badge=document.getElementById('fwBadge');
+  if(badge){
+    const on=list.filter(f=>fwOnline(f.uid)).length;
+    badge.textContent = on? '('+on+')' : '';
+  }
+  if(!list.length){
+    el.innerHTML='<div style="font-size:12px;color:#7d8aa8;text-align:center;padding:18px 0">还没有好友，上面搜个名字关注一个</div>';
+    return;
+  }
+  el.innerHTML=list.map(f=>{
+    const on=fwOnline(f.uid);
+    return '<div style="display:flex;align-items:center;gap:10px;padding:9px 10px;margin-bottom:7px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:11px">'
+      +'<div style="width:9px;height:9px;border-radius:50%;background:'+(on?'#5eead4':'#4b5563')+';box-shadow:'+(on?'0 0 8px #5eead4':'none')+'"></div>'
+      +'<div style="flex:1;min-width:0"><div style="font-size:13.5px;font-weight:700;color:#e8eefc;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(f.name)+'</div>'
+      +'<div style="font-size:10px;color:#7d8aa8">'+esc(f.uid)+(on?' · 在线':' · 离线')+'</div></div>'
+      +'<button data-inv="'+esc(f.uid)+'" style="font-size:11px;padding:5px 10px;border-radius:8px;border:1px solid rgba(94,234,212,.45);background:rgba(94,234,212,.12);color:#9ff5e6;cursor:pointer;'+(on?'':'opacity:.5')+'">邀请</button>'
+      +'<button data-carduid="'+esc(f.uid)+'" style="font-size:11px;padding:5px 8px;border-radius:8px;border:1px solid rgba(255,255,255,.18);background:none;color:#9fb2d0;cursor:pointer">卡片</button>'
+      +'<button data-unfollow="'+esc(f.uid)+'" style="font-size:11px;padding:5px 7px;border-radius:8px;border:none;background:none;color:#7d8aa8;cursor:pointer">×</button>'
+      +'</div>';
+  }).join('');
+}
+
+/* 打开好友面板 */
+function fwOpen(){
+  document.getElementById('fwResult').innerHTML='';
+  document.getElementById('fwHint').textContent='正在连接好友服务…';
+  document.getElementById('fwQuery').value='';
+  fwRenderList();
+  fwInit().then(()=>{
+    const h=document.getElementById('fwHint');
+    if(FW.ready) h.textContent='输名字或 #档案号 搜人；关注后能看到在线状态、一键拉进房间。';
+    else h.textContent='好友服务正在连接（首次约 5~10 秒），连不上就检查网络。';
+    fwWatchFriends(); fwRenderList();
+  });
+  document.getElementById('friendScreen').classList.remove('hidden');
+  document.getElementById('menuScreen').classList.add('hidden');
+}
+async function fwDoSearch(){
+  const q=document.getElementById('fwQuery').value.trim();
+  const hint=document.getElementById('fwHint');
+  if(!q){ fwRenderResult(null,false,'先输入名字或档案号'); return; }
+  hint.textContent='搜索中…';
+  const r=await fwLookup(q);
+  if(r && r.card){
+    hint.textContent='找到 '+r.card.name;
+    fwRenderResult(r.card,false);
+  } else {
+    const msg = (!r||r.err==='offline') ? '好友服务没连上，检查网络'
+      : (r.err==='notfound' ? '没这个代号的人：要么名字打错了，要么他还没注册' : '查到名字了，但对方还没发布明信片');
+    hint.textContent=msg;
+    fwRenderResult(null,false);
+  }
+}
+function fwShowCard(uid){
+  const card=FW.cards[fwKey(uid)] || (FW.lastSearch && fwKey(FW.lastSearch.uid)===fwKey(uid) ? FW.lastSearch : null) || (fwKey(uid)===fwKey(FW.uid) ? fwMyCard() : null);
+  if(!card){ toastMsg('还没拿到他的明信片，点刷新试试'); return; }
+  const el=document.getElementById('cardBody');
+  const own = (fwKey(uid)===fwKey(FW.uid));
+  if(own){
+    const loc=fwCardLocal();
+    el.innerHTML=fwCardHtml(card,{actions:'<div style="margin-top:14px">'
+      +'<div style="font-size:11px;color:#8fa1bf;margin-bottom:6px">我的签名（最多 40 字，别人搜到你就能看到）</div>'
+      +'<input id="cardSig" maxlength="40" value="'+esc(loc.sig)+'" placeholder="写一句想对来客说的话" style="width:100%;padding:10px;border-radius:9px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.06);color:#e8eefc;font-size:13px;outline:none;box-sizing:border-box">'
+      +'<div style="display:flex;gap:8px;margin-top:10px;align-items:center"><span style="font-size:11px;color:#8fa1bf">卡面</span>'
+      +['cyan','gold','pink','green','violet'].map(k=>'<button data-theme="'+k+'" style="width:26px;height:26px;border-radius:50%;border:2px solid '+(loc.color===k?CARD_THEMES[k].a:'transparent')+';background:'+CARD_THEMES[k].a+';cursor:pointer"></button>').join('')
+      +'</div>'
+      +'<button class="btn" id="cardSave" style="width:100%;margin-top:12px;padding:9px;font-size:13px">保存并发布</button>'
+      +'<div style="font-size:10.5px;color:#7d8aa8;margin-top:8px;text-align:center">改名额度：本月还剩 '+renameQuota().left+'/'+RENAME_FREE+' 次 · 改名卡 '+renameCards()+' 张</div>'
+      +'<button class="btn ghost" id="cardBuyRename" style="width:100%;margin-top:8px;padding:8px;font-size:12px">用 '+CARD_COST+' 荣誉换一张改名卡（现有 '+lsGet('gunHonor',0)+'）</button>'
+      +'</div>'});
+  } else {
+    el.innerHTML=fwCardHtml(card,{actions:'<div style="margin-top:12px;display:flex;gap:8px">'
+      +'<button class="btn" data-inv="'+esc(uid)+'" style="flex:1;padding:9px;font-size:13px">拉他进房间</button>'
+      +'<button class="btn ghost" data-copyuid="'+esc(uid)+'" style="flex:1;padding:9px;font-size:13px">复制档案号</button></div>'});
+  }
+  document.getElementById('cardScreen').classList.remove('hidden');
+}
+
 function remoteNickCheck(name, uid){
   return new Promise((resolve)=>{
     const url=netUrl();
@@ -2852,9 +3210,9 @@ function renderProfile(){
   const rnBtn=document.getElementById('btnRename');
   if(rnBtn) rnBtn.textContent = '改名';
   const subEl=document.getElementById('profSub');
-  if(subEl) subEl.textContent = nickOwner(nick)===ensureUid()
+  if(subEl) subEl.textContent = (nickOwner(nick)===ensureUid()
     ? '昵称已登记 · 他人不可重名'
-    : '昵称未登记';
+    : '昵称未登记') + ' · 本月改名 ' + renameQuota().left + '/' + RENAME_FREE + ' 次 · 改名卡 ' + renameCards() + ' 张';
   const wr = v.matches ? Math.round(v.wins/v.matches*100) : 0;
   const kd = v.deaths ? (v.kills/v.deaths).toFixed(2) : String(v.kills);
   const dd=dailyInit(), dailyDone=dd.tasks.filter(t=>t.done).length;
@@ -3035,6 +3393,61 @@ bindBtn('btnShare', ()=>{
 });
 /* 设置面板 */
 bindBtn('btnSettings', ()=>{ menuScreen.classList.add('hidden'); settingsScreen.classList.remove('hidden'); });
+
+/* ---- 2.4 好友面板 / 明信片事件 ---- */
+bindBtn('btnFriends', ()=>{ initAudio(); sClick(); fwOpen(); });
+bindBtn('fwClose', ()=>{ sClick(); document.getElementById('friendScreen').classList.add('hidden'); document.getElementById('menuScreen').classList.remove('hidden'); });
+bindBtn('fwSearchBtn', ()=>{ sClick(); fwDoSearch(); });
+bindBtn('fwRefresh', ()=>{ sClick(); fwWatchFriends(); fwRenderList(); toastMsg('已刷新'); });
+bindBtn('btnMyCard', ()=>{ sClick(); fwShowCard(FW.uid||ensureUid()); });
+bindBtn('cardClose', ()=>{ sClick(); document.getElementById('cardScreen').classList.add('hidden'); });
+bindBtn('inviteReject', ()=>{ sClick(); FW.invite=null; document.getElementById('inviteScreen').classList.add('hidden'); });
+bindBtn('inviteAccept', ()=>{
+  sClick();
+  const m=FW.invite;
+  document.getElementById('inviteScreen').classList.add('hidden');
+  if(!m) return;
+  const inp=document.getElementById('netCode');
+  if(inp) inp.value=m.code;
+  FW.invite=null;
+  const btn=document.getElementById('btnNetJoin');
+  if(btn) btn.click();
+  else toastMsg('房间码 '+(m.code||'')+'，去联机页手动输入');
+});
+const fwQ=document.getElementById('fwQuery');
+if(fwQ) fwQ.addEventListener('keydown', e=>{ if(e.key==='Enter'){ e.preventDefault(); fwQ.blur(); fwDoSearch(); } });
+document.addEventListener('click', (e)=>{
+  const t=e.target.closest ? e.target.closest('[data-follow],[data-inv],[data-carduid],[data-unfollow],[data-copyuid],[data-theme],[data-cardbuy]') : null;
+  if(!t) return;
+  if(t.dataset.follow){ if(FW.lastSearch) fwFollow(FW.lastSearch); }
+  else if(t.dataset.inv){ fwInvite(t.dataset.inv); }
+  else if(t.dataset.carduid){ fwShowCard(t.dataset.carduid); }
+  else if(t.dataset.unfollow){ fwUnfollow(t.dataset.unfollow); }
+  else if(t.dataset.copyuid){
+    const u=t.dataset.copyuid;
+    if(navigator.clipboard) navigator.clipboard.writeText(u).then(()=>toastMsg('已复制 '+u)).catch(()=>toastMsg(u));
+    else toastMsg(u);
+  }
+  else if(t.dataset.theme){
+    const loc=fwCardLocal(); loc.color=t.dataset.theme; lsSet('gunCard', loc);
+    document.querySelectorAll('[data-theme]').forEach(b=>{ b.style.borderColor = (b.dataset.theme===t.dataset.theme)?CARD_THEMES[b.dataset.theme].a:'transparent'; });
+  }
+});
+document.addEventListener('click', (e)=>{
+  const save=e.target.closest ? e.target.closest('#cardSave') : null;
+  if(save){
+    const sigEl=document.getElementById('cardSig');
+    const loc=fwCardLocal(); loc.sig=(sigEl?sigEl.value:'').slice(0,40); lsSet('gunCard', loc);
+    fwPublishCard(); toastMsg('明信片已发布');
+    fwShowCard(FW.uid||ensureUid());
+  }
+  const buy=e.target.closest ? e.target.closest('#cardBuyRename') : null;
+  if(buy){
+    if(buyRenameCard()){ toastMsg('换到一张改名卡'); fwShowCard(FW.uid||ensureUid()); renderProfile(); }
+    else toastMsg('荣誉点不够，还差 '+(CARD_COST-lsGet('gunHonor',0))+' 点');
+  }
+});
+
 bindBtn('btnHistory', ()=>{
   sClick();
   const b=document.getElementById('historyBox');
