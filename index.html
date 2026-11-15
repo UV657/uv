@@ -399,6 +399,39 @@ body.fire-left #btnFire{left:18px !important;right:auto !important}
 .netStatus{width:100%;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:14px;padding:14px;text-align:center}
 .netCode{font-size:34px;font-weight:900;letter-spacing:8px;color:#ffd34d;font-variant-numeric:tabular-nums}
 .netWait{font-size:12.5px;color:#8fa1bf;margin-top:6px;line-height:1.6}
+/* ===== 主菜单科技背景 ===== */
+.bgFx{position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:0}
+.bgGrid{position:absolute;left:-30%;right:-30%;top:-30%;bottom:-30%;
+  background-image:linear-gradient(rgba(56,189,248,.32) 1px,transparent 1px),
+                    linear-gradient(90deg,rgba(56,189,248,.32) 1px,transparent 1px);
+  background-size:56px 56px;
+  transform:perspective(520px) rotateX(62deg) translateZ(0);
+  animation:gridRun 14s linear infinite;
+  mask-image:radial-gradient(85% 75% at 50% 62%, #000 34%, transparent 82%);
+  -webkit-mask-image:radial-gradient(85% 75% at 50% 62%, #000 34%, transparent 82%)}
+@keyframes gridRun{from{transform:perspective(520px) rotateX(62deg) translateY(0)}to{transform:perspective(520px) rotateX(62deg) translateY(56px)}}
+.bgGlow{position:absolute;border-radius:50%;filter:blur(56px);opacity:.72;will-change:transform}
+.g1{width:80%;height:48%;left:-20%;top:-8%;background:radial-gradient(circle,#22d3ee,transparent 72%);animation:glowFloat1 16s ease-in-out infinite}
+.g2{width:70%;height:46%;right:-16%;bottom:-6%;background:radial-gradient(circle,#a78bfa,transparent 72%);animation:glowFloat2 20s ease-in-out infinite}
+@keyframes glowFloat1{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(8%,6%) scale(1.12)}}
+@keyframes glowFloat2{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(-7%,-5%) scale(1.1)}}
+.bgScan{position:absolute;left:-10%;right:-10%;height:2px;top:0;
+  background:linear-gradient(90deg,transparent,rgba(125,211,252,.85),transparent);
+  box-shadow:0 0 18px rgba(125,211,252,.6);animation:scanRun 7.5s linear infinite;opacity:.7}
+@keyframes scanRun{0%{top:-3%}100%{top:103%}}
+@media (prefers-reduced-motion:reduce){.bgGrid,.g1,.g2,.bgScan,.fwCardBar{animation:none}}
+/* ===== 明信片卡面 ===== */
+.fwCard{position:relative;border-radius:16px;overflow:hidden;border:1px solid rgba(255,255,255,.18);background:#0b1224;
+  box-shadow:0 10px 30px -12px rgba(0,0,0,.8), inset 0 1px 0 rgba(255,255,255,.06)}
+.fwCard::before{content:'';position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(120% 85% at 12% -10%, var(--ca)33, transparent 62%),
+             radial-gradient(90% 70% at 110% 120%, var(--cb)2b, transparent 60%)}
+.fwCard::after{content:'';position:absolute;inset:0;pointer-events:none;opacity:.35;
+  background-image:linear-gradient(rgba(255,255,255,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.05) 1px,transparent 1px);
+  background-size:18px 18px;mask-image:linear-gradient(180deg,rgba(0,0,0,.7),transparent 70%)}
+.fwCardBar{height:4px;position:relative;z-index:1;
+  background:linear-gradient(90deg,var(--ca),var(--cb),var(--ca));background-size:200% 100%;animation:cardFlow 5s linear infinite}
+@keyframes cardFlow{to{background-position:200% 0}}
 /* ===== 自检 ===== */
 #selfCheckScreen{justify-content:flex-start !important;align-items:center;overflow-y:auto;padding:16px 14px}
 .scWrap{width:min(96vw,460px)}
@@ -565,6 +598,7 @@ body.fire-left #btnFire{left:18px !important;right:auto !important}
 
     <!-- 主菜单 -->
     <div class="overlay hidden" id="menuScreen">
+      <div class="bgFx" aria-hidden="true"><div class="bgGrid"></div><div class="bgGlow g1"></div><div class="bgGlow g2"></div><div class="bgScan"></div></div>
       <button id="btnSettings" style="position:absolute;top:14px;right:14px;width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);color:#cdd9f0;font-size:18px;cursor:pointer;z-index:10">⚙</button>
       <button id="btnProfileTop" title="我的主页" style="position:absolute;top:14px;left:14px;width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#22d3ee,#3b82f6);border:1px solid rgba(140,200,255,.5);color:#04121c;font-size:15px;font-weight:800;cursor:pointer;z-index:10;display:flex;align-items:center;justify-content:center;padding:0">我</button>
       <div class="title">枪战对决</div>
@@ -604,6 +638,7 @@ body.fire-left #btnFire{left:18px !important;right:auto !important}
         </div>
         <div id="fwHint" style="font-size:11.5px;color:#7d8aa8;margin-top:8px;line-height:1.6">搜到的人会显示他的明信片，关注后就能看到他是否在线、一键拉进房间。</div>
         <div id="fwResult" style="margin-top:10px"></div>
+        <div id="fwCand" style="margin-top:8px"></div>
         <div style="display:flex;align-items:center;justify-content:space-between;margin-top:16px;border-top:1px solid rgba(255,255,255,.1);padding-top:12px">
           <div style="font-size:13px;font-weight:800;color:#67e8f9">我的好友 <span id="fwCount" style="color:#9fb2d0;font-weight:400">0</span></div>
           <button id="fwRefresh" style="font-size:11px;color:#9fb2d0;background:none;border:none;cursor:pointer">刷新在线状态</button>
@@ -782,7 +817,7 @@ body.fire-left #btnFire{left:18px !important;right:auto !important}
       </div>
     </div>
     <div class="overlay hidden" id="settingsScreen">
-      <div class="title">自定义设置 <span id="verTag" style="font-size:11px;color:#7d8aa8;font-weight:400;display:block;margin-top:2px">v2.4.7</span></div>
+      <div class="title">自定义设置 <span id="verTag" style="font-size:11px;color:#7d8aa8;font-weight:400;display:block;margin-top:2px">v2.4.8</span></div>
       <div id="settingsWrap" style="text-align:left;max-width:320px;line-height:2.2">
         <div>摇杆大小 <input type="range" id="setJoy" min="60" max="140" value="88" style="width:100%"></div>
         <div>开火键大小 <input type="range" id="setFire" min="50" max="120" value="74" style="width:100%"></div>
@@ -822,6 +857,7 @@ body.fire-left #btnFire{left:18px !important;right:auto !important}
         <div id="historyBox" style="display:none;margin-top:10px;border-top:1px solid rgba(255,255,255,.1);padding-top:10px">
           <div style="font-size:13px;font-weight:800;color:#67e8f9;margin-bottom:6px">修改历史</div>
           <div style="line-height:1.8">
+            <div><b style="color:#ffd34d">v2.4.8</b>　好友支持关键词搜人（输 uv 能找到名字带 uv 的人）；明信片扩到 8 种渐变卡面且点选立即生效；主菜单加科技背景</div>
             <div><b style="color:#ffd34d">v2.4.7</b>　建房与加入面板不再叠在一起；退出联机界面后房间还在；联机/好友断线会自动重连（之前一断就废）；新增「问题反馈」</div>
             <div><b style="color:#ffd34d">v2.4.6</b>　修自检按钮在部分内置浏览器里点不开（音频初始化报错打断了点击）；全部按钮都做了容错</div>
             <div><b style="color:#ffd34d">v2.4.5</b>　明信片不再跳回首页；名字查重从 8 秒压到 2 秒；建房后直接列出好友，点一下就邀请</div>
@@ -3145,17 +3181,21 @@ function buyRenameCard(){
 
 /* ---- 明信片外观 ---- */
 const CARD_THEMES={
-  cyan:{a:'#22d3ee',b:'#0e7490'}, gold:{a:'#fbbf24',b:'#92400e'},
-  pink:{a:'#f472b6',b:'#831843'}, green:{a:'#34d399',b:'#065f46'},
-  violet:{a:'#a78bfa',b:'#4c1d95'}
+  cyan:{a:'#22d3ee',b:'#0e7490',t:'青蓝'}, gold:{a:'#fbbf24',b:'#92400e',t:'琥珀'},
+  pink:{a:'#f472b6',b:'#831843',t:'玫红'}, green:{a:'#34d399',b:'#065f46',t:'翡翠'},
+  violet:{a:'#a78bfa',b:'#4c1d95',t:'紫罗兰'},
+  /* 渐变卡面：两道色 + 光斑，比纯色有层次 */
+  aurora:{a:'#67e8f9',b:'#c084fc',t:'极光'},
+  sunset:{a:'#fb923c',b:'#f43f5e',t:'落日'},
+  steel:{a:'#94a3b8',b:'#1e40af',t:'钢蓝'}
 };
 function fwCardHtml(card, opts){
   opts=opts||{};
   const th=CARD_THEMES[card.color]||CARD_THEMES.cyan;
   const wr=card.matches?Math.round(card.wins/card.matches*100):0;
-  return '<div style="border-radius:16px;overflow:hidden;border:1px solid rgba(255,255,255,.16);background:linear-gradient(145deg,'+th.b+'22,#0b1224 60%);">'
-    +'<div style="height:6px;background:linear-gradient(90deg,'+th.a+','+th.b+')"></div>'
-    +'<div style="padding:16px 16px 12px">'
+  return '<div class="fwCard" style="--ca:'+th.a+';--cb:'+th.b+'">'
+    +'<div class="fwCardBar"></div>'
+    +'<div style="padding:16px 16px 12px;position:relative;z-index:1">'
     +'<div style="display:flex;align-items:center;gap:12px">'
     +'<div style="width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,'+th.a+','+th.b+');display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:900;color:#04121c">'+esc((card.name||'?').slice(0,1))+'</div>'
     +'<div style="flex:1;min-width:0"><div style="font-size:17px;font-weight:800;color:#e8eefc;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(card.name||'匿名')+'</div>'
@@ -3237,31 +3277,81 @@ function fwOpen(){
 async function fwDoSearch(){
   const q=document.getElementById('fwQuery').value.trim();
   const hint=document.getElementById('fwHint');
-  if(!q){ fwRenderResult(null,false,'先输入名字或档案号'); return; }
+  if(!q){ fwRenderResult(null,false,'先输入名字或档案号'); fwRenderCands([],q); return; }
   hint.textContent='搜索中…';
+  fwRenderCands([],q);
   const r=await fwLookup(q);
   if(r && r.card){
     hint.textContent='找到 '+r.card.name;
     fwRenderResult(r.card,false);
+    return;
+  }
+  if(r && r.err==='offline'){
+    hint.textContent='好友服务没连上，检查网络';
+    fwRenderResult(null,false); return;
+  }
+  // 精确没有 → 找名字里带关键词的人（输入 uv 也能找到 uv657 这种）
+  hint.textContent='精确没找到，正在找相似的…';
+  const cands=await fwSearchAll(q);
+  if(cands.length){
+    hint.textContent='没有叫「'+q+'」的人，找到 '+cands.length+' 个名字带它的';
+    fwRenderResult(null,false);
+    fwRenderCands(cands,q);
   } else {
-    const msg = (!r||r.err==='offline') ? '好友服务没连上，检查网络'
-      : (r.err==='notfound' ? '没这个代号的人：要么名字打错了，要么他还没注册' : '查到名字了，但对方还没发布明信片');
-    hint.textContent=msg;
+    hint.textContent=(r && r.err==='nocard') ? '查到名字了，但对方还没发布明信片' : '没找到这个人，名字可能打错了';
     fwRenderResult(null,false);
   }
 }
+/* 名字精确匹配不到时，扫一遍全网名字做「包含」匹配。
+   中转会把 nick/ 下所有保留消息一次性推过来，所以 1.8 秒内就能收齐。 */
+function fwSearchAll(q){
+  return new Promise((resolve)=>{
+    if(!FW.cli || !FW.cli.connected) return resolve([]);
+    const base='gunfight9/nick/';
+    const found=[]; let done=false;
+    const h=(t,p)=>{
+      if(String(t).indexOf(base)!==0) return;
+      const nm=String(t).slice(base.length);
+      if(!nm) return;
+      if(nm.toLowerCase().indexOf(String(q).toLowerCase())<0) return;
+      try{ const m=JSON.parse(p.toString());
+        if(m && m.uid && fwKey(m.uid)!==fwKey(FW.uid)) found.push({name:nm, uid:m.uid});
+      }catch(e){}
+    };
+    const fin=()=>{ if(done) return; done=true;
+      try{ FW.cli.removeListener('message',h); }catch(e){}
+      try{ FW.cli.unsubscribe(base+'+'); }catch(e){}
+      resolve(found.slice(0,12));
+    };
+    FW.cli.on('message',h);
+    FW.cli.subscribe(base+'+',{qos:0});
+    setTimeout(fin, 1800);
+  });
+}
+function fwRenderCands(list, q){
+  const el=document.getElementById('fwCand');
+  if(!el) return;
+  if(!list || !list.length){ el.innerHTML=''; return; }
+  el.innerHTML='<div style="font-size:11px;color:#8fa1bf;margin:2px 0 6px">名字里带「'+esc(q)+'」的人，点一个看他</div>'
+    + list.map(c=>'<div data-carduid="'+esc(c.uid)+'" style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:9px 11px;border-radius:9px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);margin-bottom:5px;cursor:pointer">'
+        +'<span style="font-size:13px;color:#dbe6f7">'+esc(c.name)+'</span>'
+        +'<span style="font-size:11px;color:#7d8aa8;flex:none">'+esc(c.uid)+'</span></div>').join('');
+}
+
 function fwShowCard(uid){
-  const card=FW.cards[fwKey(uid)] || (FW.lastSearch && fwKey(FW.lastSearch.uid)===fwKey(uid) ? FW.lastSearch : null) || (fwKey(uid)===fwKey(FW.uid) ? fwMyCard() : null);
+  const own = (fwKey(uid)===fwKey(FW.uid));
+  // 自己的卡片永远按本地最新配置画，否则换完颜色会被缓存里的旧卡片盖回去
+  const card = own ? fwMyCard()
+    : (FW.cards[fwKey(uid)] || (FW.lastSearch && fwKey(FW.lastSearch.uid)===fwKey(uid) ? FW.lastSearch : null));
   if(!card){ toastMsg('还没拿到他的明信片，点刷新试试'); return; }
   const el=document.getElementById('cardBody');
-  const own = (fwKey(uid)===fwKey(FW.uid));
   if(own){
     const loc=fwCardLocal();
     el.innerHTML=fwCardHtml(card,{actions:'<div style="margin-top:14px">'
       +'<div style="font-size:11px;color:#8fa1bf;margin-bottom:6px">我的签名（最多 40 字，别人搜到你就能看到）</div>'
       +'<input id="cardSig" maxlength="40" value="'+esc(loc.sig)+'" placeholder="写一句想对来客说的话" style="width:100%;padding:10px;border-radius:9px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.06);color:#e8eefc;font-size:13px;outline:none;box-sizing:border-box">'
       +'<div style="display:flex;gap:8px;margin-top:10px;align-items:center"><span style="font-size:11px;color:#8fa1bf">卡面</span>'
-      +['cyan','gold','pink','green','violet'].map(k=>'<button data-theme="'+k+'" style="width:26px;height:26px;border-radius:50%;border:2px solid '+(loc.color===k?CARD_THEMES[k].a:'transparent')+';background:'+CARD_THEMES[k].a+';cursor:pointer"></button>').join('')
+      +Object.keys(CARD_THEMES).map(k=>'<button data-theme="'+k+'" title="'+CARD_THEMES[k].t+'" style="width:28px;height:28px;border-radius:50%;border:2px solid '+(loc.color===k?'#fff':'rgba(255,255,255,.25)')+';background:linear-gradient(135deg,'+CARD_THEMES[k].a+','+CARD_THEMES[k].b+');cursor:pointer;box-shadow:'+(loc.color===k?'0 0 0 2px rgba(255,255,255,.15)':'none')+'"></button>').join('')
       +'</div>'
       +'<button class="btn" id="cardSave" style="width:100%;margin-top:12px;padding:9px;font-size:13px">保存并发布</button>'
       +'<div style="font-size:10.5px;color:#7d8aa8;margin-top:8px;text-align:center">改名额度：本月还剩 '+renameQuota().left+'/'+RENAME_FREE+' 次 · 改名卡 '+renameCards()+' 张</div>'
@@ -3571,8 +3661,12 @@ document.addEventListener('click', (e)=>{
     else toastMsg(u);
   }
   else if(t.dataset.theme){
-    const loc=fwCardLocal(); loc.color=t.dataset.theme; lsSet('gunCard', loc);
-    document.querySelectorAll('[data-theme]').forEach(b=>{ b.style.borderColor = (b.dataset.theme===t.dataset.theme)?CARD_THEMES[b.dataset.theme].a:'transparent'; });
+    const k=t.dataset.theme;
+    const loc=fwCardLocal(); loc.color=k; lsSet('gunCard', loc);
+    sClick();
+    fwShowCard(FW.uid||ensureUid());            // 立刻重绘，卡面颜色当场就变
+    try{ fwPublishCard(); }catch(e){}
+    toastMsg('卡面换成'+(CARD_THEMES[k]?CARD_THEMES[k].t:k));
   }
 });
 document.addEventListener('click', (e)=>{
