@@ -1062,7 +1062,7 @@ body.is-touch .nhTime{display:none !important}
       </div>
     </div>
     <div class="overlay hidden" id="settingsScreen">
-      <div class="title">自定义设置 <span id="verTag" style="font-size:11px;color:#7d8aa8;font-weight:400;display:block;margin-top:2px">v2.7.5</span></div>
+      <div class="title">自定义设置 <span id="verTag" style="font-size:11px;color:#7d8aa8;font-weight:400;display:block;margin-top:2px">v2.7.6</span></div>
       <div id="settingsWrap" style="text-align:left;max-width:320px;line-height:2.2">
         <div>摇杆大小 <input type="range" id="setJoy" min="60" max="140" value="88" style="width:100%"></div>
         <div>开火键大小 <input type="range" id="setFire" min="50" max="120" value="74" style="width:100%"></div>
@@ -1107,6 +1107,7 @@ body.is-touch .nhTime{display:none !important}
         <div id="historyBox" style="display:none;margin-top:10px;border-top:1px solid rgba(255,255,255,.1);padding-top:10px">
           <div style="font-size:13px;font-weight:800;color:#67e8f9;margin-bottom:6px">修改历史</div>
           <div style="line-height:1.8">
+            <div><b style="color:#ffd34d">v2.7.6</b>　联机修复：对手子弹不再穿墙（打到障碍物就停）；加入房间不再被放到地图中间，双方各站本方出生点；客机顶栏红蓝两端显示正确的对手代号与自己代号</div>
             <div><b style="color:#ffd34d">v2.7.5</b>　管理终端新增「单人调参」：填玩家代号 + 选属性（移速 / 伤害 / 射速 / 弹速 / 技能冷却 / 血量上限）+ 数值，只对这个代号生效，同角色其他人和 AI 都不受影响，对局中改了立即生效</div>
             <div><b style="color:#ffd34d">v2.7.4</b>　彻底去掉射击光效：不再画曳光束、枪口火花和子弹拖尾，开火只有一颗实心弹头飞出去，1V1 / 5V5 / 联机全部一视同仁</div>
             <div><b style="color:#ffd34d">v2.7.3</b>　去掉开火时枪口的圆形光晕，只留曳光束、细火花和后坐力</div>
@@ -2479,6 +2480,19 @@ function drawPlayers(){
     ctx2d.fillText(label,px,by-6);
   }
 }
+/* 射线到障碍物的最远直线距离（步进采样，够用且便宜） */
+function rayClear(x,y,ang,dist){
+  const step=10; let d=0;
+  const obs=(state.world && state.world.obs) || [];
+  while(d<dist){
+    d+=step;
+    const px=x+Math.cos(ang)*d, py=y+Math.sin(ang)*d;
+    for(const o of obs){
+      if(px>o.x && px<o.x+o.w && py>o.y && py<o.y+o.h) return Math.max(0, d-step);
+    }
+  }
+  return dist;
+}
 function drawBullets(){
   ctx2d.lineCap='round';
   /* 只画子弹本体：实心小队色弹头，不带光束、拖尾、白热或任何发光 */
@@ -2493,10 +2507,12 @@ function drawBullets(){
     state.ghostShots=state.ghostShots.filter(g=>now-g.t0 < g.life*1000);
     for(const g of state.ghostShots){
       const t=(now-g.t0)/1000;
+      const trav=g.spd*t;
+      if(typeof g.maxDist==='number' && trav>g.maxDist) continue;   // 已经打到墙，这一帧就不再画
       const rgb = g.team==='blue' ? '77,195,255' : '255,91,110';
       ctx2d.fillStyle='rgb('+rgb+')';
       ctx2d.beginPath();
-      ctx2d.arc(g.x+Math.cos(g.ang)*g.spd*t, g.y+Math.sin(g.ang)*g.spd*t, 3, 0, Math.PI*2);
+      ctx2d.arc(g.x+Math.cos(g.ang)*trav, g.y+Math.sin(g.ang)*trav, 3, 0, Math.PI*2);
       ctx2d.fill();
     }
   }
@@ -2626,13 +2642,13 @@ function updateHUD(){
   updateSkillBtn();
   updateFireCd();
   if(state.mode==='1v1'){
-    // 红方=自己（显示自己的代号），蓝方=对手（真人用对手名字，人机用 AI 名字）
-    const me=(typeof localP==='function'? localP(): null);
-    const foe=state.players.find(p=>p.team==='blue')||null;
-    const meN=shortName(playerName(me) || (isTouch?'我':'P1'));
-    const foeN=shortName(playerName(foe));
-    scoreRed.textContent=meN+' '+state.scores.red;
-    scoreBlue.textContent=foeN+' '+state.scores.blue;
+    // 红蓝两端都按队伍取人：房主在红、客机在蓝，双向显示才不会把自己写成对面
+    const redP=state.players.find(p=>p.team==='red')||null;
+    const blueP=state.players.find(p=>p.team==='blue')||null;
+    const redN=shortName(playerName(redP) || (isTouch?'我':'P1'));
+    const blueN=shortName(playerName(blueP) || '对手');
+    scoreRed.textContent=redN+' '+state.scores.red;
+    scoreBlue.textContent=blueN+' '+state.scores.blue;
   }else{
     scoreRed.textContent='红队 '+state.scores.red;
     scoreBlue.textContent='蓝队 '+state.scores.blue;
@@ -3238,6 +3254,9 @@ function runSelfCheck(){
     })());
   ok('开火只出实心弹头（无光束）', shoot.toString().indexOf('state.tracers.push')<0);
   ok('保留消息通道用支持 retained 的中转', (typeof NT_BROKER==='string' && NT_BROKER.indexOf('hivemq')>0 && MQTT_BROKER.indexOf('hivemq')>0));
+  ok('联机不再把人塞到地图中间', startNetMatch.toString().indexOf('320 : 640')<0);
+  ok('对手弹道会被墙挡住', netGhostShot.toString().indexOf('maxDist:maxD')>0 && rayClear(0,0,0,100)>=0);
+  ok('1v1 顶栏按队伍取名', updateHUD.toString().indexOf("p.team==='red'")>0);
   ok('单人调参模块齐全', ['ptuneLoad','ptuneSave','ptuneRole','ptuneHp','ptunePublish','ptuneApplyRaw','ptuneApplyLive'].every(n=>typeof window[n]==='function'));
   ok('单人调参按代号只改该玩家', (function(){
       try{
@@ -3747,12 +3766,9 @@ function startNetMatch(){
   state.players.forEach(p=>{ p.isHuman=false; p.isRemote=false; });
   const me=state.players.find(p=>p.team===myTeam);
   const foe=state.players.find(p=>p.team===foeTeam);
-  // 联机出生点拉到地图中部两侧（间距 320），开局就能看见对手；两端按同一规则算，位置天然一致
-  const midY=(state.world.H||600)/2;
-  const posOf=(t)=>({ x: t==='red' ? 320 : 640, y: midY });
-  if(me){ me.isHuman=true; me.name=currentNick(); const p0=posOf(myTeam); me.x=p0.x; me.y=p0.y; me.alive=true; me.hp=me.maxHp||CFG.maxHp; }
-  if(foe){ const p1=posOf(foeTeam);
-    foe.isRemote=true; foe.isHuman=false; foe.name='对手'; foe.x=p1.x; foe.y=p1.y; foe.alive=true; foe.hp=foe.maxHp||CFG.maxHp; }
+  // 各自站在本方出生点（红蓝两端），不要把加入方硬塞到地图中间
+  if(me){ me.isHuman=true; me.name=currentNick(); me.alive=true; me.hp=me.maxHp||CFG.maxHp; }
+  if(foe){ foe.isRemote=true; foe.isHuman=false; foe.name='对手'; foe.alive=true; foe.hp=foe.maxHp||CFG.maxHp; }
   state.running=true;
   if(NET.role==='b') netSend({t:'hello', name:currentNick()});
 }
@@ -3798,6 +3814,7 @@ function netTick(dt){
 }
 function netApplyState(m){
   const foe=netFoe(); if(!foe) return;
+  if(NET.foeName) foe.name=NET.foeName;
   if(m.s && m.s.length){
     for(const it of m.s){
       if(typeof it==='number') netGhostShot({x:foe.x, y:foe.y, ang:it});
@@ -3830,8 +3847,10 @@ function netGhostShot(m){
   const now=performance.now();
   for(let i=0;i<beams;i++){
     const a3=beams>1 ? ang + (i-(beams-1)/2)*(wp.spread||0.1)*0.9 : ang;
-    state.ghostShots.push({ x:x+Math.cos(ang)*(CFG.playerRadius+6), y:y+Math.sin(ang)*(CFG.playerRadius+6),
-                            ang:a3, spd, t0:now, life:1.0, team, w:m.w||'rifle' });
+    const gx=x+Math.cos(a3)*(CFG.playerRadius+6), gy=y+Math.sin(a3)*(CFG.playerRadius+6);
+    // 打墙就停：预先把这条射线撞到障碍物的距离算出来，避免子弹视觉穿墙
+    const maxD=(typeof rayClear==='function') ? rayClear(gx,gy,a3,spd*1.0) : spd*1.0;
+    state.ghostShots.push({ x:gx, y:gy, ang:a3, spd, t0:now, life:1.0, team, w:m.w||'rifle', maxDist:maxD });
   }
   if(state.ghostShots.length>80) state.ghostShots.splice(0, state.ghostShots.length-80);
   foe.muzzleT=0.12;
