@@ -801,6 +801,7 @@ body.fire-left #btnFire{left:18px !important;right:auto !important}
       <span style="font-size:14px;flex:none">📢</span>
       <div id="noticeBarTitle" style="flex:1;min-width:0;font-size:12.5px;font-weight:800;color:#a5f3fc;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></div>
       <span style="flex:none;font-size:11px;color:#67e8f9;border:1px solid rgba(103,232,249,.4);border-radius:999px;padding:1px 7px">查看</span>
+      <span id="noticeBarClose" style="flex:none;width:20px;height:20px;line-height:20px;text-align:center;border-radius:50%;background:rgba(255,255,255,.1);color:#9fb2d0;font-size:12px">✕</span>
     </div>
     <div id="maintBar" class="hidden" style="position:fixed;top:calc(env(safe-area-inset-top,0px) + 62px);left:52px;right:52px;max-width:430px;margin:0 auto;z-index:40;background:rgba(255,140,90,.16);border:1px solid rgba(255,150,80,.5);border-radius:12px;padding:7px 12px;font-size:12px;color:#ffd0ad;text-align:center">系统维护中，匹配暂停</div>
     <style>body.in-game #noticeBar,body.in-game #maintBar{display:none !important}</style>
@@ -974,7 +975,7 @@ body.fire-left #btnFire{left:18px !important;right:auto !important}
       </div>
     </div>
     <div class="overlay hidden" id="settingsScreen">
-      <div class="title">自定义设置 <span id="verTag" style="font-size:11px;color:#7d8aa8;font-weight:400;display:block;margin-top:2px">v2.6.3</span></div>
+      <div class="title">自定义设置 <span id="verTag" style="font-size:11px;color:#7d8aa8;font-weight:400;display:block;margin-top:2px">v2.6.4</span></div>
       <div id="settingsWrap" style="text-align:left;max-width:320px;line-height:2.2">
         <div>摇杆大小 <input type="range" id="setJoy" min="60" max="140" value="88" style="width:100%"></div>
         <div>开火键大小 <input type="range" id="setFire" min="50" max="120" value="74" style="width:100%"></div>
@@ -1019,6 +1020,7 @@ body.fire-left #btnFire{left:18px !important;right:auto !important}
         <div id="historyBox" style="display:none;margin-top:10px;border-top:1px solid rgba(255,255,255,.1);padding-top:10px">
           <div style="font-size:13px;font-weight:800;color:#67e8f9;margin-bottom:6px">修改历史</div>
           <div style="line-height:1.8">
+            <div><b style="color:#ffd34d">v2.6.4</b>　主页公告条右侧加了叉，看完直接点掉，不会再挡视野；5V5 给本人加了青色脉冲圈和向外扩散的水波纹，头顶标「你」，人多也能一眼找到自己</div>
             <div><b style="color:#ffd34d">v2.6.3</b>　界面边距上限加到 120，开火键、技能键、左右血量面板、击杀提示都会跟着边距一起往中间收，手机两边明显更宽；红队蓝队比分字号统一；技能选「跟随摇杆」后真的按摇杆方向出手（不再被自动瞄准带偏）</div>
             <div><b style="color:#ffd34d">v2.6.2</b>　主页新增全服公告，登录页和主菜单顶部都能看到，点一下看正文，可以关掉；红蓝比分字号统一；技能「跟随摇杆」现在真跟着摇杆方向出手</div>
             <div><b style="color:#ffd34d">v2.6.1</b>　设置改了立刻生效（界面边距、摇杆大小这些以前要重开页面才动）；技能方向可在设置里选「跟随摇杆」或「朝对手」；关于我们加了「检查是否最新版本」，有新版本能一键更新；档案号改成点一下就复制</div>
@@ -2141,7 +2143,7 @@ function drawRadar(){
     const p=ps[i];
     if(!p.alive) continue;
     const px=x+p.x*sx, py=y+p.y*sy;
-    if(p.isHuman){
+    if(selfIs(p)){
       ctx2d.strokeStyle='rgba(255,203,87,.75)'; ctx2d.lineWidth=1.6*dpr;
       ctx2d.beginPath(); ctx2d.arc(px,py,5.6*dpr,0,Math.PI*2); ctx2d.stroke();
     }
@@ -2251,6 +2253,38 @@ function drawPlayers(){
     const px=p.x-Math.cos(ang)*p.recoil, py=p.y-Math.sin(ang)*p.recoil;
     // 行走摆动：轻微呼吸缩放
     const breathe=1+Math.sin(p.walkT)*0.035;
+    // 自己：脚下脉冲圈 + 头顶「你」，5V5 人多时一眼找到
+    const isSelf = state.netMode ? (p===netMe() || (p.isHuman && p.team===netMyTeam())) : p.isHuman;
+    if(isSelf){
+      const tnow=performance.now()/1000;
+      const rr=CFG.playerRadius+11+Math.sin(tnow*2.6)*2;
+      ctx2d.save();
+      ctx2d.strokeStyle='rgba(103,232,249,.9)'; ctx2d.lineWidth=2.5;
+      ctx2d.beginPath(); ctx2d.arc(px,py,rr,0,Math.PI*2); ctx2d.stroke();
+      ctx2d.strokeStyle='rgba(103,232,249,.35)'; ctx2d.lineWidth=1.5;
+      ctx2d.beginPath(); ctx2d.arc(px,py,CFG.playerRadius+3,0,Math.PI*2); ctx2d.stroke();
+      // 向外扩散的水波纹：人群里一眼锁定自己
+      const wave=((tnow%1.7)/1.7);
+      ctx2d.strokeStyle='rgba(103,232,249,'+(0.5*(1-wave)).toFixed(3)+')';
+      ctx2d.lineWidth=2.2;
+      ctx2d.beginPath(); ctx2d.arc(px,py,CFG.playerRadius+8+wave*26,0,Math.PI*2); ctx2d.stroke();
+      ctx2d.restore();
+      ctx2d.save();
+      ctx2d.font='bold 11px system-ui,sans-serif';
+      ctx2d.textAlign='center'; ctx2d.textBaseline='middle';
+      let ly=py-CFG.playerRadius-34;
+      if(ly<14) ly=py+CFG.playerRadius+24;   // 贴边时翻到脚下，别被画面裁掉
+      ctx2d.fillStyle='rgba(8,20,32,.85)';
+      const tw=ctx2d.measureText('你').width+8;
+      ctx2d.beginPath();
+      if(ctx2d.roundRect) ctx2d.roundRect(px-tw/2, ly-9, tw, 18, 6); else ctx2d.rect(px-tw/2, ly-9, tw, 18);
+      ctx2d.fill();
+      ctx2d.strokeStyle='rgba(103,232,249,.55)'; ctx2d.lineWidth=1; ctx2d.stroke();
+      ctx2d.fillStyle='#67e8f9';
+      const safeX=Math.max(tw/2+2, Math.min(canvas.width-tw/2-2, px));
+      ctx2d.fillText('你', safeX, ly);
+      ctx2d.restore();
+    }
     if(p.invuln>0){
       ctx2d.strokeStyle='rgba(140,240,255,.7)'; ctx2d.lineWidth=2;
       ctx2d.beginPath(); ctx2d.arc(px,py,CFG.playerRadius+6,0,Math.PI*2); ctx2d.stroke();
@@ -3414,6 +3448,11 @@ function startNetMatch(){
   if(NET.role==='b') netSend({t:'hello', name:currentNick()});
 }
 /* 本地玩家：优先找 isHuman，联机加入方（蓝队）也能正确取到 */
+function selfIs(p){
+  if(!p) return false;
+  if(!state.netMode) return !!p.isHuman;
+  try{ return p===netMe() || (p.isHuman && p.team===netMyTeam()); }catch(e){ return !!p.isHuman; }
+}
 function localP(){ const ps=state.players||[]; return ps.find(p=>p.isHuman) || ps[0] || null; }
 function netMyTeam(){ return (state.netMode && NET.role==='b') ? 'blue' : 'red'; }
 function netMe(){ return state.players && state.players.find(p=>p.team===netMyTeam()); }
@@ -4698,7 +4737,8 @@ document.getElementById('btnAdmMaint').addEventListener('click', async ()=>{
 });
 /* ---- 主页公告交互 ---- */
 document.getElementById('noticeBar').addEventListener('click', ()=>{ sClick(); noticeOpen(); });
-document.getElementById('btnNoticeClose').addEventListener('click', ()=>{ sClick(); noticeClose(); });
+document.getElementById('noticeBarClose').addEventListener('click', (ev)=>{ ev.stopPropagation(); sClick(); noticeClose(); });
+document.getElementById('btnNoticeClose').addEventListener('click', ()=> { sClick(); noticeClose(); });
 /* ---- 启动：读缓存 + 连中转拉公告 ---- */
 setTimeout(()=>{ try{ noticeBoot(); }catch(e){} }, 1600);
 
