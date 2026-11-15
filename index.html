@@ -244,6 +244,8 @@ body.is-touch .pc-only{display:none !important}
 #settingsScreen{justify-content:flex-start !important;overflow-y:auto !important;-webkit-overflow-scrolling:touch;padding:14px 0 40px !important}
 #pcTip{font-size:12px;color:#7f92b0;letter-spacing:.5px}
 body:not(.is-touch) #touchTip{display:none !important}
+/* 零散提示统一收进说明书，界面上不再挂小字 */
+#rotateTip, #touchTip, #pcTip{display:none !important}
 body.is-touch #hintBar{display:none !important}
 /* ===== 移动端精简 UI：像王者那样干净 ===== */
 body.is-touch .title{font-size:26px !important;margin-bottom:6px !important}
@@ -344,9 +346,7 @@ body.skill-left:not(.fire-left) #btnSkill{left:18px !important;right:auto !impor
 body.fire-left:not(.skill-left) #btnSkill{right:18px !important;left:auto !important}
 body.fire-left #btnFire{left:18px !important;right:auto !important}
 /* 竖屏手机：显示横屏提示 */
-@media (orientation:portrait) and (max-width:820px){
-  #rotateTip{display:flex !important}
-}
+/* 竖屏横屏提示已收进说明书，界面上不再显示 */
 #mapName{position:absolute;top:46px;left:50%;transform:translateX(-50%);font-size:11px;color:#7d8aa8;letter-spacing:2px;pointer-events:none;z-index:6;white-space:nowrap}
 #rotateTip{display:none;position:fixed;bottom:10px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.7);color:#9fd0ff;font-size:12px;padding:6px 14px;border-radius:20px;z-index:100;align-items:center;gap:6px}
 /* 手机端选人界面：卡片两列换行 */
@@ -550,11 +550,9 @@ body.fire-left #btnFire{left:18px !important;right:auto !important}
     <div class="overlay" id="loginScreen">
       <div class="title">枪战对决</div>
       <div class="sub">输入你的代号，开始战斗</div>
-      <div style="font-size:11.5px;color:#7f92b0;margin-top:4px">代号全网唯一，一个名字只能用一次</div>
       <input id="nickInput" maxlength="10" placeholder="输入昵称（最多10字）"
         style="width:min(80vw,320px);padding:12px 16px;border-radius:10px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.06);color:#e8eefc;font-size:16px;text-align:center;outline:none">
       <div id="nickTip" style="font-size:13px;color:#ff9f9f;min-height:18px;margin-top:6px"></div>
-      <div style="font-size:11.5px;color:#7f92b0;margin-top:-4px;line-height:1.6">名字可以重复，跟你同名的人会靠档案号区分</div>
       <button class="btn primary" id="btnEnter" style="margin-top:2px">进入战场</button>
     </div>
 
@@ -761,7 +759,7 @@ body.fire-left #btnFire{left:18px !important;right:auto !important}
       </div>
     </div>
     <div class="overlay hidden" id="settingsScreen">
-      <div class="title">自定义设置 <span id="verTag" style="font-size:11px;color:#7d8aa8;font-weight:400;display:block;margin-top:2px">v2.4.0</span></div>
+      <div class="title">自定义设置 <span id="verTag" style="font-size:11px;color:#7d8aa8;font-weight:400;display:block;margin-top:2px">v2.4.1</span></div>
       <div id="settingsWrap" style="text-align:left;max-width:320px;line-height:2.2">
         <div>摇杆大小 <input type="range" id="setJoy" min="60" max="140" value="88" style="width:100%"></div>
         <div>开火键大小 <input type="range" id="setFire" min="50" max="120" value="74" style="width:100%"></div>
@@ -794,13 +792,13 @@ body.fire-left #btnFire{left:18px !important;right:auto !important}
       <div style="max-width:320px;margin:14px auto 0;text-align:left;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:12px 14px;font-size:12px;line-height:1.9;color:#9fb2d0">
         <div style="font-size:13px;font-weight:800;color:#67e8f9;margin-bottom:6px">关于我们</div>
         <div><b style="color:#e8eefc">制作人</b>　刘伟骏</div>
-        <div>16 岁 · 东莞理工学校电子技术应用专业（中职）</div>
-        <div style="margin-top:6px">一个人从零写的网页枪战游戏，纯 HTML 单文件，没用任何游戏引擎。从画第一个圆点开始，一步一步改到现在。</div>
+        <div style="margin-top:6px">独立开发者。一个人从零写的网页枪战游戏，纯 HTML 单文件，没用任何游戏引擎。从画第一个圆点开始，一步一步改到现在。</div>
         <div style="margin-top:6px"><b style="color:#e8eefc">技术</b>　Canvas 2D · 原生 JS · MQTT 公网联机 · PWA 可装到桌面</div>
         <button class="btn ghost" id="btnHistory" style="width:100%;margin-top:10px;padding:7px;font-size:12px">查看修改历史</button>
         <div id="historyBox" style="display:none;margin-top:10px;border-top:1px solid rgba(255,255,255,.1);padding-top:10px">
           <div style="font-size:13px;font-weight:800;color:#67e8f9;margin-bottom:6px">修改历史</div>
           <div style="line-height:1.8">
+            <div><b style="color:#ffd34d">v2.4.1</b>　关于我们去掉了年龄与学校，界面上的零散提示统一收进说明书</div>
             <div><b style="color:#ffd34d">v2.4.0</b>　好友系统：搜人关注、个人明信片、在线状态、一键拉进房间；名字与档案号全网唯一，每月限改 3 次或消耗改名卡</div>
             <div><b style="color:#ffd34d">v2.3.1127</b>　个人主页移到左上角，设置里加「关于我们」与修改历史</div>
             <div><b style="color:#ffd34d">v2.3.1126</b>　代号全网唯一：一个名字只能用一次</div>
@@ -3210,9 +3208,7 @@ function renderProfile(){
   const rnBtn=document.getElementById('btnRename');
   if(rnBtn) rnBtn.textContent = '改名';
   const subEl=document.getElementById('profSub');
-  if(subEl) subEl.textContent = (nickOwner(nick)===ensureUid()
-    ? '昵称已登记 · 他人不可重名'
-    : '昵称未登记') + ' · 本月改名 ' + renameQuota().left + '/' + RENAME_FREE + ' 次 · 改名卡 ' + renameCards() + ' 张';
+  if(subEl) subEl.textContent = '';   // 名字规则、改名额度都收进说明书，主页不再挂说明
   const wr = v.matches ? Math.round(v.wins/v.matches*100) : 0;
   const kd = v.deaths ? (v.kills/v.deaths).toFixed(2) : String(v.kills);
   const dd=dailyInit(), dailyDone=dd.tasks.filter(t=>t.done).length;
@@ -3607,7 +3603,24 @@ function buildHelp(){
     '<h4>四、规则说明</h4>'+
     '<div>· 每人 100 点血量，死亡后 3 秒复活，复活后短暂无敌。<br>'+
     '· 击杀对方得 1 分；技能有冷却时间，冷却结束前不能重复释放。<br>'+
-    '· 结算界面展示双方伤害、命中率与全场最佳 MVP。</div>';
+    '· 结算界面展示双方伤害、命中率与全场最佳 MVP。</div>'
+    +'<h4>五、账号与名字</h4>'
+    +'<div>· <b>昵称全网唯一</b>：先注册先得，一个名字只能用一次，别人再输同一个名字会被直接拒绝。<br>'
+    +'· <b>档案号</b>（形如 #AB12CD34）是你的身份凭证，改名不影响战绩归属；别人搜你时输名字或档案号都可以。<br>'
+    +'· <b>改名次数</b>：每个自然月 3 次免费；用完后花 '+CARD_COST+' 荣誉在「我的明信片」里换一张改名卡，再用卡改名。<br>'
+    +'· <b>名字是永久的</b>：你改用别的名字后，旧名字仍归你，别人拿不走，你也随时能改回来。<br>'
+    +'· 断网时查不了重名，会直接放行；清掉浏览器缓存换设备，档案号会变，原来的名字可能被别人抢注。</div>'
+    +'<h4>六、手机与电脑</h4>'
+    +'<div>· 同一个网址，浏览器自动判断：有触屏按手机模式，没触屏按电脑模式。<br>'
+    +'· <b>两端联机互不相通</b>：电脑只能连电脑，手机只能连手机；房间码格式一样，但交叉输入进不去。<br>'
+    +'· 手机：左半屏拖动移动、自动瞄准最近敌人、右下大红键开火、黄色小键放技能，摇杆位置与大小可在设置里调。<br>'
+    +'· 电脑：W A S D 移动、鼠标瞄准、左键开火、E 放技能。<br>'
+    +'· 竖屏可以玩，横屏视野更广。</div>'
+    +'<h4>七、好友与明信片</h4>'
+    +'<div>· 主菜单「好友」里输名字或档案号就能搜人，搜到直接看到对方的明信片（签名、段位、击杀、胜率）。<br>'
+    +'· 关注后好友列表会显示在线/离线：两分钟没心跳算离线。<br>'
+    +'· 你先创建房间，再点好友那一行的「邀请」，对方会弹出房间码，点接受直接进房，不用手输码。<br>'
+    +'· 「我的明信片」里可以写 40 字签名、换卡面配色，保存后全网可见。</div>';
 }
 
 /* ---- 初始化 ---- */
