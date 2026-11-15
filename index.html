@@ -1062,7 +1062,7 @@ body.is-touch .nhTime{display:none !important}
       </div>
     </div>
     <div class="overlay hidden" id="settingsScreen">
-      <div class="title">自定义设置 <span id="verTag" style="font-size:11px;color:#7d8aa8;font-weight:400;display:block;margin-top:2px">v2.7.14</span></div>
+      <div class="title">自定义设置 <span id="verTag" style="font-size:11px;color:#7d8aa8;font-weight:400;display:block;margin-top:2px">v2.7.15</span></div>
       <div id="settingsWrap" style="text-align:left;max-width:320px;line-height:2.2">
         <div>摇杆大小 <input type="range" id="setJoy" min="60" max="140" value="88" style="width:100%"></div>
         <div>开火键大小 <input type="range" id="setFire" min="50" max="120" value="74" style="width:100%"></div>
@@ -1106,6 +1106,7 @@ body.is-touch .nhTime{display:none !important}
         <div id="historyBox" style="display:none;margin-top:10px;border-top:1px solid rgba(255,255,255,.1);padding-top:10px">
           <div style="font-size:13px;font-weight:800;color:#67e8f9;margin-bottom:6px">修改历史</div>
           <div style="line-height:1.8">
+            <div><b style="color:#ffd34d">v2.7.15</b>　终端公告发不出去的原因找到了：公共中转偶尔连不上，点了只会在那儿等 9 秒超时。现在主中转连不上会自动换另一个（两个公共中转互为备用），发布时两条通道各写一份，不管玩家走哪条通道都能看到公告；同一条公告重复发布的间隔从 10 秒放宽到 5 秒</div>
             <div><b style="color:#ffd34d">v2.7.14</b>　每日任务改成每批 3 个、做完点「刷新任务」换一批（不限次数）；单个任务 +10 荣誉、一批全清 +20，每日任务荣誉上限 200，免得无限刷点</div>
             <div><b style="color:#ffd34d">v2.7.13</b>　修好友邀请失败的根因：改过名的人旧名登记还留在中转，按名字搜会指向错的人（搜 A 出来 B），关注的、邀请的都成了别人；现在按名字搜会核对卡片上的名字，对不上就明说过期，不会再把邀请发给错人。另：名字查重窗口由 1.5 秒加到 2.2 秒（中转推保留消息慢时会漏判重名）；离线好友的按钮点了会说明“不在线、邀请不保存”，不再像是坏了</div>
             <div><b style="color:#ffd34d">v2.7.12</b>　联机去掉屏幕边缘的对手方向箭头：敌人位置只由雷达和视野判断，不再有雷达之外的点位提示</div>
@@ -3275,6 +3276,8 @@ function runSelfCheck(){
     })());
   ok('开火只出实心弹头（无光束）', shoot.toString().indexOf('state.tracers.push')<0);
   ok('保留消息通道用支持 retained 的中转', (typeof NT_BROKER==='string' && NT_BROKER.indexOf('hivemq')>0 && MQTT_BROKER.indexOf('hivemq')>0));
+  ok('公告有备用中转通道', NT_BROKERS.length>=2 && typeof ntPublish==='function');
+  ok('公告双通道发布函数齐全', typeof ntPubAux==='function' && typeof noticePublish==='function');
   ok('每日任务每批 3 个', dailyInit().tasks.length===3);
   ok('每日任务做完可刷新', typeof dailyReroll==='function' && String(renderDaily).indexOf('data-daily-reroll')>=0);
   ok('检查更新按钮同时跑自检', (document.getElementById('btnCheckUpdate')||{textContent:''}).textContent.indexOf('自检')>=0);
@@ -4491,37 +4494,84 @@ function noticeClose(){
   }
   noticeRender();
 }
+const NT_BROKERS=['wss://broker.hivemq.com:8884/mqtt','wss://test.mosquitto.org:8081/mqtt'];
+const NT_USED={url:''};
+function ntClientId(){ return 'gfnt_'+Date.now().toString(36)+Math.random().toString(36).slice(2,8); }
+function ntBind(cli){
+  cli.on('connect',()=>{
+    NOTICE.conn=true;
+    try{ cli.subscribe(NOTICE_TOPIC,{qos:1}); cli.subscribe(NOTICE_STATUS_TOPIC,{qos:1}); cli.subscribe(BAN_TOPIC,{qos:1}); cli.subscribe(PTUNE_TOPIC,{qos:1}); }catch(e){}
+    noticeRender();
+  });
+  cli.on('message',(topic,payload)=>{
+    let o=null; try{ o=JSON.parse(payload.toString()||'null'); }catch(e){ return; }
+    if(topic===NOTICE_TOPIC){
+      if(!o) noticeDelete(); else noticeApply(o);
+    } else if(topic===NOTICE_STATUS_TOPIC){
+      NOTICE.maint = !!(o && o.mt);
+      noticeRender();
+      try{ maintApply(); }catch(e){}
+    } else if(topic===BAN_TOPIC){
+      banApplyRaw(o);
+      try{ if(ADMIN.open) admBanRender(); }catch(e){}
+    } else if(topic===PTUNE_TOPIC){
+      ptuneApplyRaw(o);
+    }
+  });
+  cli.on('error',()=>{});
+  return cli;
+}
+/* 依次尝试中转（公共中转偶尔会连不上，换一个就通），连上第一个可用的 */
 async function noticeConnect(){
   if(NT.cli && NT.cli.connected){ NOTICE.conn=true; return true; }
+  let mqtt=null;
+  try{ mqtt=await loadMqttLib(); }catch(e){ return false; }
+  for(const url of NT_BROKERS){
+    const cli=await new Promise(resolve=>{
+      let c=null; try{ c=mqtt.connect(url,{clientId:ntClientId(), clean:true, reconnectPeriod:0, connectTimeout:6000, keepalive:30}); }catch(e){ resolve(null); return; }
+      let fin=false;
+      const done=(ok)=>{ if(fin) return; fin=true; if(ok) resolve(c); else { try{c.end(true);}catch(e){} resolve(null); } };
+      c.once('connect',()=>done(true));
+      c.once('error',()=>done(false));
+      c.once('close',()=>done(false));
+      setTimeout(()=>done(false), 7500);
+    });
+    if(cli){ NT.cli=ntBind(cli); NT_USED.url=url; NOTICE.conn=true; return true; }
+  }
+  // 全部失败：留一个会自动重连的连接，别让公告一直空白
   try{
-    const mqtt=await loadMqttLib();
-    // 公告 / 处罚 / 单人调参 / 昵称登记都靠「保留消息」，必须用会保存 retained 的中转：
-    // 实测 broker.emqx.io 已不保存（新订阅拿不到历史），broker.hivemq.com 正常
-    const url=NT_BROKER;
-    NT.cli=mqtt.connect(url,{clientId:'gfnt_'+Date.now().toString(36)+Math.random().toString(36).slice(2,8), clean:true, reconnectPeriod:5000, connectTimeout:9000, keepalive:30});
-    NT.cli.on('connect',()=>{
-      NOTICE.conn=true;
-      try{ NT.cli.subscribe(NOTICE_TOPIC,{qos:1}); NT.cli.subscribe(NOTICE_STATUS_TOPIC,{qos:1}); NT.cli.subscribe(BAN_TOPIC,{qos:1}); NT.cli.subscribe(PTUNE_TOPIC,{qos:1}); }catch(e){}
-      noticeRender();
-    });
-    NT.cli.on('message',(topic,payload)=>{
-      let o=null; try{ o=JSON.parse(payload.toString()||'null'); }catch(e){ return; }
-      if(topic===NOTICE_TOPIC){
-        if(!o) noticeDelete(); else noticeApply(o);
-      } else if(topic===NOTICE_STATUS_TOPIC){
-        NOTICE.maint = !!(o && o.mt);
-        noticeRender();
-        try{ maintApply(); }catch(e){}
-      } else if(topic===BAN_TOPIC){
-        banApplyRaw(o);
-        try{ if(ADMIN.open) admBanRender(); }catch(e){}
-      } else if(topic===PTUNE_TOPIC){
-        ptuneApplyRaw(o);
-      }
-    });
-    NT.cli.on('error',()=>{});
-    return true;
-  }catch(e){ return false; }
+    NT.cli=ntBind(mqtt.connect(NT_BROKERS[0],{clientId:ntClientId(), clean:true, reconnectPeriod:5000, connectTimeout:9000, keepalive:30}));
+    NT_USED.url=NT_BROKERS[0];
+  }catch(e){}
+  return false;
+}
+/* 发布：主通道立刻发；另一条通道也写一份（哪个通道的读者都能看到）。
+   主通道成功就马上返回，备用通道后台补；主通道失败则等备用通道结果 */
+function ntPubMain(topic,payload){
+  return new Promise(resolve=>{
+    try{ NT.cli.publish(topic, payload, {qos:1, retain:true}, e=>resolve(!e)); }catch(e){ resolve(false); }
+  });
+}
+function ntPubAux(topic,payload){
+  const url=NT_BROKERS.find(u=>u!==NT_USED.url)||NT_BROKERS[0];
+  return new Promise(async resolve=>{
+    let mqtt=null; try{ mqtt=await loadMqttLib(); }catch(e){ return resolve(false); }
+    let c=null;
+    try{ c=mqtt.connect(url,{clientId:ntClientId(), clean:true, reconnectPeriod:0, connectTimeout:5000, keepalive:20}); }catch(e){ return resolve(false); }
+    let fin=false;
+    const done=(ok)=>{ if(fin) return; fin=true; if(ok){ try{ c.publish(topic, payload, {qos:1, retain:true}, ()=>{ try{c.end(true);}catch(e){} resolve(true); }); return; }catch(e){} } try{c.end(true);}catch(e){} resolve(false); };
+    c.once('connect',()=>done(true));
+    c.once('error',()=>done(false));
+    setTimeout(()=>done(false), 6500);
+  });
+}
+async function ntPublish(topic,payload){
+  const ready=await noticeReady(7000);
+  let mainOk=false;
+  if(ready) mainOk=await ntPubMain(topic,payload);
+  if(mainOk){ ntPubAux(topic,payload); return ''; }
+  const auxOk=await ntPubAux(topic,payload);
+  return auxOk? '' : '两个中转都连不上（网络问题，过一会再试）';
 }
 function noticeBoot(){
   if(NOTICE.tried) return; NOTICE.tried=true;
@@ -4544,33 +4594,9 @@ async function noticeReady(timeoutMs){
   }
   return !!(NT.cli && NT.cli.connected);
 }
-function noticePublish(obj){
-  return new Promise(async (resolve)=>{
-    const ready=await noticeReady(9000);
-    if(!ready){ resolve('中转连接超时（约 9 秒），过几秒再点一次'); return; }
-    try{
-      NT.cli.publish(NOTICE_TOPIC, JSON.stringify(obj), {qos:1, retain:true}, (err)=>{ resolve(err?('发布失败：'+err.message):''); });
-    }catch(e){ resolve('发布失败：'+e.message); }
-  });
-}
-function noticeClearRemote(){
-  return new Promise(async (resolve)=>{
-    const ready=await noticeReady(9000);
-    if(!ready){ resolve('中转连接超时（约 9 秒）'); return; }
-    try{
-      NT.cli.publish(NOTICE_TOPIC, '', {qos:1, retain:true}, (err)=>{ resolve(err?('删除失败：'+err.message):''); });
-    }catch(e){ resolve('删除失败：'+e.message); }
-  });
-}
-function maintPublish(on){
-  return new Promise(async (resolve)=>{
-    const ready=await noticeReady(9000);
-    if(!ready){ resolve('中转连接超时（约 9 秒）'); return; }
-    try{
-      NT.cli.publish(NOTICE_STATUS_TOPIC, JSON.stringify({mt:on?1:0, ts:Date.now()}), {qos:1, retain:true}, (err)=>{ resolve(err?err.message:''); });
-    }catch(e){ resolve(e.message); }
-  });
-}
+function noticePublish(obj){ return ntPublish(NOTICE_TOPIC, JSON.stringify(obj)); }
+function noticeClearRemote(){ return ntPublish(NOTICE_TOPIC, ''); }
+function maintPublish(on){ return ntPublish(NOTICE_STATUS_TOPIC, JSON.stringify({mt:on?1:0, ts:Date.now()})); }
 /* ================= 管理终端（?admin=1） ================= */
 
 const VER_PROBE='https://uv657.github.io/uv/version.json';
@@ -5542,7 +5568,7 @@ document.getElementById('btnAdmNoticePub').addEventListener('click', async ()=>{
   const pin=document.getElementById('admNoticePin').checked;
   const hint=document.getElementById('admNoticeHint');
   if(!title){ hint.style.color='#ff8fa0'; hint.textContent='标题不能为空'; return; }
-  if(Date.now()-lastPubAt<10000){ hint.style.color='#ff8fa0'; hint.textContent='发布太频繁，等 10 秒再发'; return; }
+  if(Date.now()-lastPubAt<5000){ hint.style.color='#ff8fa0'; hint.textContent='发布太频繁，等 5 秒再发'; return; }
   hint.style.color='#9fb2d0'; hint.textContent='已提交，正在同步到服务器…';
   const obj={id:'n'+Date.now(), title, body, ts:Date.now(), until: days>0?Date.now()+days*86400000:0, pin};
   noticeApply(obj);   // 管理页自己也立刻显示，不用等回包
