@@ -1062,7 +1062,7 @@ body.is-touch .nhTime{display:none !important}
       </div>
     </div>
     <div class="overlay hidden" id="settingsScreen">
-      <div class="title">自定义设置 <span id="verTag" style="font-size:11px;color:#7d8aa8;font-weight:400;display:block;margin-top:2px">v2.7.7</span></div>
+      <div class="title">自定义设置 <span id="verTag" style="font-size:11px;color:#7d8aa8;font-weight:400;display:block;margin-top:2px">v2.7.8</span></div>
       <div id="settingsWrap" style="text-align:left;max-width:320px;line-height:2.2">
         <div>摇杆大小 <input type="range" id="setJoy" min="60" max="140" value="88" style="width:100%"></div>
         <div>开火键大小 <input type="range" id="setFire" min="50" max="120" value="74" style="width:100%"></div>
@@ -1107,6 +1107,7 @@ body.is-touch .nhTime{display:none !important}
         <div id="historyBox" style="display:none;margin-top:10px;border-top:1px solid rgba(255,255,255,.1);padding-top:10px">
           <div style="font-size:13px;font-weight:800;color:#67e8f9;margin-bottom:6px">修改历史</div>
           <div style="line-height:1.8">
+            <div><b style="color:#ffd34d">v2.7.8</b>　一键检测提速：自检结果立刻显示，版本比对改成边下边比、读到版本号就停（不再整页等待），15 秒超时兜底</div>
             <div><b style="color:#ffd34d">v2.7.7</b>　「检查更新 + 自检」合并成一键操作：点一下先跑完整自检（多少项通过、哪几项没过），再比对线上版本号，不用再单独进设置点自检；失败项可直接跳详情</div>
             <div><b style="color:#ffd34d">v2.7.6</b>　联机修复：对手子弹不再穿墙（打到障碍物就停）；加入房间不再被放到地图中间，双方各站本方出生点；客机顶栏红蓝两端显示正确的对手代号与自己代号</div>
             <div><b style="color:#ffd34d">v2.7.5</b>　管理终端新增「单人调参」：填玩家代号 + 选属性（移速 / 伤害 / 射速 / 弹速 / 技能冷却 / 血量上限）+ 数值，只对这个代号生效，同角色其他人和 AI 都不受影响，对局中改了立即生效</div>
@@ -5362,25 +5363,50 @@ document.getElementById('btnCheckUpdate').addEventListener('click', async ()=>{
   const selfLine = selfErr ? ('<b style="color:#ff9f9f">自检执行出错：'+selfErr+'</b>')
     : (bad.length ? ('<b style="color:#ffd34d">自检 '+selfList.length+' 项，'+bad.length+' 项没通过：'+bad.slice(0,3).map(x=>x.n).join('、')+(bad.length>3?' 等':'')+'</b>')
       : ('<b style="color:#86efac">自检 '+selfList.length+' 项全部通过</b>'));
-  // 第二步：比对线上版本号
+  // 第二步：比对线上版本号（自检结果先落地，别让用户干等）
   const cur=(document.getElementById('verTag').textContent||'').trim().replace(/^v/,'');
+  const verLine=document.createElement('div');
+  verLine.id='updVerLine'; verLine.style.cssText='margin-top:5px;color:#9fb2d0';
+  verLine.textContent='版本检查中…（线上整页较大，通常需要几秒）';
+  hint.innerHTML=selfLine;
+  hint.appendChild(verLine);
+  const setVer=(html)=>{ if(verLine.isConnected) verLine.innerHTML=html; };
   try{
     const base=location.href.split('?')[0].split('#')[0];
-    const res=await fetch(base+'?chk='+Date.now(), {cache:'no-store'});
-    const txt=await res.text();
+    const ctl=(typeof AbortController!=='undefined') ? new AbortController() : null;
+    const timer=ctl ? setTimeout(()=>{ try{ctl.abort();}catch(e){} }, 15000) : null;
+    const res=await fetch(base+'?chk='+Date.now(), {cache:'no-store', signal: ctl? ctl.signal: undefined});
+    // 只流式读到 verTag 就停下，不用等整页几百 KB 下载完
+    let txt='';
+    if(res.body && res.body.getReader){
+      const rd=res.body.getReader(); const dec=new TextDecoder();
+      try{
+        while(true){
+          const {done,value}=await rd.read();
+          if(done) break;
+          txt+=dec.decode(value,{stream:true});
+          if(/id="verTag"[^>]*>v(\d+\.\d+\.\d+)/.test(txt)) break;
+          if(txt.length>400000) break;
+        }
+      }catch(e){}
+      try{ await rd.cancel(); }catch(e){}
+    } else {
+      txt=await res.text();
+    }
+    if(timer) clearTimeout(timer);
     const m=txt.match(/id="verTag"[^>]*>v(\d+\.\d+\.\d+)/);
-    if(!m){ hint.innerHTML=selfLine+'<br>版本检查：读不到线上版本号，稍后再试'; return; }
+    if(!m){ setVer('版本检查：读不到线上版本号，稍后再试'); return; }
     const remote=m[1];
     const cmp=(a,b)=>{ const x=a.split('.').map(Number), y=b.split('.').map(Number);
       for(let i=0;i<3;i++){ if(x[i]!==y[i]) return x[i]>y[i]?1:-1; } return 0; };
     if(cmp(remote,cur)>0){
-      hint.innerHTML=selfLine+'<br>版本检查：发现新版本 v'+remote+'（当前 v'+cur+'）<br>';
+      setVer('<b style="color:#ffd34d">发现新版本 v'+remote+'</b>（当前 v'+cur+'）');
       const b=document.createElement('button');
       b.className='btn'; b.style.cssText='width:100%;margin-top:6px;padding:7px;font-size:12px';
       b.textContent='更新到最新版'; b.onclick=()=>{ location.href=base+'?v='+Date.now(); };
-      hint.appendChild(b);
+      verLine.parentNode && verLine.appendChild(b);
     } else {
-      hint.innerHTML=selfLine+'<br>版本检查：已是最新版（v'+cur+'）';
+      setVer('<b style="color:#86efac">已是最新版（v'+cur+'）</b>');
     }
     // 自检有失败项时给一个“看详情”入口，直接跳到逐项列表
     if(bad.length && !selfErr){
@@ -5391,7 +5417,7 @@ document.getElementById('btnCheckUpdate').addEventListener('click', async ()=>{
       hint.appendChild(bd);
     }
   }catch(e){
-    hint.innerHTML=selfLine+'<br>版本检查失败：'+e.message+'（可能是网络或文件协议限制）';
+    setVer('版本检查失败：'+(e&&e.name==='AbortError' ? '超时（线上页面较大）' : e.message)+'（网络或文件协议限制）');
   }
 });
 /* ---- 终端：全屏 ---- */
