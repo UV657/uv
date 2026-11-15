@@ -1062,7 +1062,7 @@ body.is-touch .nhTime{display:none !important}
       </div>
     </div>
     <div class="overlay hidden" id="settingsScreen">
-      <div class="title">自定义设置 <span id="verTag" style="font-size:11px;color:#7d8aa8;font-weight:400;display:block;margin-top:2px">v2.7.9</span></div>
+      <div class="title">自定义设置 <span id="verTag" style="font-size:11px;color:#7d8aa8;font-weight:400;display:block;margin-top:2px">v2.7.10</span></div>
       <div id="settingsWrap" style="text-align:left;max-width:320px;line-height:2.2">
         <div>摇杆大小 <input type="range" id="setJoy" min="60" max="140" value="88" style="width:100%"></div>
         <div>开火键大小 <input type="range" id="setFire" min="50" max="120" value="74" style="width:100%"></div>
@@ -1107,6 +1107,7 @@ body.is-touch .nhTime{display:none !important}
         <div id="historyBox" style="display:none;margin-top:10px;border-top:1px solid rgba(255,255,255,.1);padding-top:10px">
           <div style="font-size:13px;font-weight:800;color:#67e8f9;margin-bottom:6px">修改历史</div>
           <div style="line-height:1.8">
+            <div><b style="color:#ffd34d">v2.7.10</b>　版本检查改成两条路并发：轻量版本文件与本页首页同时抓，谁先拿到版本号用谁，13 秒兜底，双端都不再干等</div>
             <div><b style="color:#ffd34d">v2.7.9</b>　版本比对改用轻量版本文件（几百字节），点一下 1 秒内出结果；读不到时自动回退抓首页，15 秒兜底</div>
             <div><b style="color:#ffd34d">v2.7.8</b>　一键检测提速：自检结果立刻显示，版本比对改成边下边比、读到版本号就停（不再整页等待），15 秒超时兜底</div>
             <div><b style="color:#ffd34d">v2.7.7</b>　「检查更新 + 自检」合并成一键操作：点一下先跑完整自检（多少项通过、哪几项没过），再比对线上版本号，不用再单独进设置点自检；失败项可直接跳详情</div>
@@ -5376,37 +5377,25 @@ document.getElementById('btnCheckUpdate').addEventListener('click', async ()=>{
   try{
     const base=location.href.split('?')[0].split('#')[0];
     let remote='';
-    // 先问一个几字节的版本文件：正常 1 秒内就有结果，不必等整页几百 KB
     verLine.textContent='版本检查中…';
-    try{
+    // 两条路子同时跑，谁先拿到版本号就用谁：轻量版本文件（几百字节）／本页首页（缓存命中时也很快）
+    const jobVerFile=(async()=>{
       const vr=await fetch(VER_PROBE+'?t='+Date.now(), {cache:'no-store'});
-      if(vr.ok){ const vj=await vr.json(); if(vj && vj.v) remote=String(vj.v).replace(/^v/,''); }
-    }catch(e){}
-    if(!remote){
-      // 兜底：抓当前站首页，边下边找版本号，15 秒超时
-      const ctl=(typeof AbortController!=='undefined') ? new AbortController() : null;
-      const timer=ctl ? setTimeout(()=>{ try{ctl.abort();}catch(e){} }, 15000) : null;
-      const res=await fetch(base+'?chk='+Date.now(), {cache:'no-store', signal: ctl? ctl.signal: undefined});
-      let txt='';
-      if(res.body && res.body.getReader){
-        const rd=res.body.getReader(); const dec=new TextDecoder();
-        try{
-          while(true){
-            const {done,value}=await rd.read();
-            if(done) break;
-            txt+=dec.decode(value,{stream:true});
-            if(/id="verTag"[^>]*>v(\d+\.\d+\.\d+)/.test(txt)) break;
-            if(txt.length>400000) break;
-          }
-        }catch(e){}
-        try{ await rd.cancel(); }catch(e){}
-      } else {
-        txt=await res.text();
-      }
-      if(timer) clearTimeout(timer);
+      if(!vr.ok) throw new Error('ver.json '+vr.status);
+      const vj=await vr.json();
+      if(!vj || !vj.v) throw new Error('empty ver.json');
+      return String(vj.v).replace(/^v/,'');
+    })();
+    const jobSelf=(async()=>{
+      const res=await fetch(base+'?chk='+Math.floor(Date.now()/15000), {cache:'no-store'});
+      const txt=await res.text();
       const m=txt.match(/id="verTag"[^>]*>v(\d+\.\d+\.\d+)/);
-      if(m) remote=m[1];
-    }
+      if(!m) throw new Error('no verTag');
+      return m[1];
+    })();
+    const timeoutP=new Promise((_,rej)=>setTimeout(()=>rej(new Error('timeout')), 13000));
+    const racers=(typeof Promise.any==='function') ? Promise.any([jobVerFile, jobSelf]) : Promise.race([jobVerFile, jobSelf]);
+    try{ remote=await Promise.race([racers, timeoutP]); }catch(e){ remote=''; }
     if(!remote){ setVer('版本检查：读不到线上版本号，稍后再试'); return; }
     const cmp=(a,b)=>{ const x=a.split('.').map(Number), y=b.split('.').map(Number);
       for(let i=0;i<3;i++){ if(x[i]!==y[i]) return x[i]>y[i]?1:-1; } return 0; };
