@@ -727,11 +727,14 @@ body.fire-left #btnFire{left:18px !important;right:auto !important}
     </div>
 
     <!-- 管理终端（?admin=1 打开） -->
-    <div class="overlay hidden" id="adminScreen" style="background:#05070d;align-items:flex-start;justify-content:center;overflow-y:auto;padding:20px 14px">
+    <div class="overlay hidden" id="adminScreen" style="background:#05070d;align-items:flex-start;justify-content:center;overflow-y:auto;padding:calc(env(safe-area-inset-top,0px) + 16px) 14px calc(env(safe-area-inset-bottom,0px) + 96px)">
       <div style="width:100%;max-width:520px">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
           <div style="font-size:17px;font-weight:800;color:#67e8f9">管理终端</div>
-          <button class="btn ghost" id="btnAdminClose" style="padding:6px 12px;font-size:12px">退出</button>
+          <div style="display:flex;gap:8px">
+            <button class="btn ghost" id="btnAdminFull" style="padding:6px 12px;font-size:12px">全屏</button>
+            <button class="btn ghost" id="btnAdminClose" style="padding:6px 12px;font-size:12px">退出</button>
+          </div>
         </div>
         <div id="adminGate">
           <div style="font-size:12px;color:#9fb2d0;margin-bottom:8px">输入管理口令</div>
@@ -763,6 +766,23 @@ body.fire-left #btnFire{left:18px !important;right:auto !important}
             <button class="btn ghost" id="btnAdmMaint" style="flex:1;padding:8px;font-size:12px">开启维护模式</button>
             <div id="admMaintState" style="flex:1;font-size:11.5px;color:#7d8aa8">当前：正常</div>
           </div>
+          <div style="font-size:13px;font-weight:800;color:#67e8f9;margin:10px 0 6px">玩家处罚（封号 / 禁言）</div>
+          <input id="admBanWho" placeholder="玩家名字 或 10 位档案号" style="width:100%;padding:8px;border-radius:8px;background:#0b1220;color:#e8eefc;border:1px solid rgba(255,255,255,.16);font-size:12.5px">
+          <div style="display:flex;gap:6px;margin-top:6px">
+            <select id="admBanType" style="flex:1;padding:7px;border-radius:8px;background:#0b1220;color:#e8eefc;border:1px solid rgba(255,255,255,.16);font-size:12px">
+              <option value="ban">封号（禁止登录）</option><option value="mute">禁言（禁止改名/邀请/点赞）</option>
+            </select>
+            <select id="admBanDays" style="flex:1;padding:7px;border-radius:8px;background:#0b1220;color:#e8eefc;border:1px solid rgba(255,255,255,.16);font-size:12px">
+              <option value="1">1 天</option><option value="7" selected>7 天</option><option value="30">30 天</option><option value="0">永久</option>
+            </select>
+          </div>
+          <input id="admBanReason" maxlength="30" placeholder="原因（可选，玩家能看到）" style="width:100%;margin-top:6px;padding:8px;border-radius:8px;background:#0b1220;color:#e8eefc;border:1px solid rgba(255,255,255,.16);font-size:12.5px">
+          <div style="display:flex;gap:8px;margin:8px 0 6px">
+            <button class="btn" id="btnAdmBan" style="flex:1;padding:8px;font-size:12px">执行处罚</button>
+            <button class="btn ghost" id="btnAdmBanSync" style="flex:1;padding:8px;font-size:12px">同步名单</button>
+          </div>
+          <div id="admBanHint" style="font-size:11.5px;color:#7d8aa8;margin-bottom:8px;line-height:1.7"></div>
+          <div id="admBanList" style="display:flex;flex-direction:column;gap:5px;margin-bottom:12px"></div>
           <div style="font-size:13px;font-weight:800;color:#67e8f9;margin:4px 0 6px">角色数值（改完立刻对新开局生效）</div>
           <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">
             <select id="admRole" style="flex:1;min-width:120px;padding:7px;border-radius:8px;background:#0b1220;color:#e8eefc;border:1px solid rgba(255,255,255,.16);font-size:12px">
@@ -804,7 +824,7 @@ body.fire-left #btnFire{left:18px !important;right:auto !important}
       <span id="noticeBarClose" style="flex:none;width:20px;height:20px;line-height:20px;text-align:center;border-radius:50%;background:rgba(255,255,255,.1);color:#9fb2d0;font-size:12px">✕</span>
     </div>
     <div id="maintBar" class="hidden" style="position:fixed;top:calc(env(safe-area-inset-top,0px) + 62px);left:52px;right:52px;max-width:430px;margin:0 auto;z-index:40;background:rgba(255,140,90,.16);border:1px solid rgba(255,150,80,.5);border-radius:12px;padding:7px 12px;font-size:12px;color:#ffd0ad;text-align:center">系统维护中，匹配暂停</div>
-    <style>body.in-game #noticeBar,body.in-game #maintBar{display:none !important}</style>
+    <style>body.in-game #noticeBar,body.in-game #maintBar,body.admin-mode #noticeBar,body.admin-mode #maintBar{display:none !important}</style>
     <!-- 全服公告 -->
     <div class="overlay hidden" id="noticeScreen" style="align-items:flex-start;justify-content:center;overflow-y:auto;padding:26px 16px">
       <div style="width:100%;max-width:520px;background:rgba(9,14,26,.96);border:1px solid rgba(103,232,249,.3);border-radius:16px;padding:18px 18px 16px;text-align:left">
@@ -975,7 +995,7 @@ body.fire-left #btnFire{left:18px !important;right:auto !important}
       </div>
     </div>
     <div class="overlay hidden" id="settingsScreen">
-      <div class="title">自定义设置 <span id="verTag" style="font-size:11px;color:#7d8aa8;font-weight:400;display:block;margin-top:2px">v2.6.5</span></div>
+      <div class="title">自定义设置 <span id="verTag" style="font-size:11px;color:#7d8aa8;font-weight:400;display:block;margin-top:2px">v2.6.6</span></div>
       <div id="settingsWrap" style="text-align:left;max-width:320px;line-height:2.2">
         <div>摇杆大小 <input type="range" id="setJoy" min="60" max="140" value="88" style="width:100%"></div>
         <div>开火键大小 <input type="range" id="setFire" min="50" max="120" value="74" style="width:100%"></div>
@@ -1020,6 +1040,7 @@ body.fire-left #btnFire{left:18px !important;right:auto !important}
         <div id="historyBox" style="display:none;margin-top:10px;border-top:1px solid rgba(255,255,255,.1);padding-top:10px">
           <div style="font-size:13px;font-weight:800;color:#67e8f9;margin-bottom:6px">修改历史</div>
           <div style="line-height:1.8">
+            <div><b style="color:#ffd34d">v2.6.6</b>　新增违规账号处罚：被封禁的账号会停在登录页并显示解除时间与原因；被禁言的账号不能改名、不能邀请好友、不能点赞。公告栏在管理页面自动隐藏，不挡操作</div>
             <div><b style="color:#ffd34d">v2.6.5</b>　公告发布更稳：中转没连上会自动重连再发（最多等 9 秒），发布后主页顶部立刻出现</div>
             <div><b style="color:#ffd34d">v2.6.4</b>　主页公告条右侧加了叉，看完直接点掉，不会再挡视野；5V5 给本人加了青色脉冲圈和向外扩散的水波纹，头顶标「你」，人多也能一眼找到自己</div>
             <div><b style="color:#ffd34d">v2.6.3</b>　界面边距上限加到 120，开火键、技能键、左右血量面板、击杀提示都会跟着边距一起往中间收，手机两边明显更宽；红队蓝队比分字号统一；技能选「跟随摇杆」后真的按摇杆方向出手（不再被自动瞄准带偏）</div>
@@ -2958,6 +2979,17 @@ if(savedNick){
   });
 }
 document.getElementById('btnEnter').addEventListener('click', async ()=>{
+  // 封号校验：档案号与输入代号都查（管理端可能按名字处罚）
+  {
+    const nm0=(document.getElementById('nickInput')&&document.getElementById('nickInput').value||'').trim();
+    const __b=banOf(ensureUid(), nm0);
+    if(__b && __b.type==='ban'){
+      const tEl=document.getElementById('nickTip');
+      if(tEl) tEl.textContent='账号已被封禁：'+banDescribe(__b);
+      toastMsg('你的账号已被封禁，暂时无法进入战场');
+      return;
+    }
+  }
   let n=nickInput.value.trim().replace(/[<>&\"']/g,'');
   const tip=document.getElementById('nickTip');
   if(!n){ n='战士'+Math.floor(Math.random()*900+100); }
@@ -3016,6 +3048,19 @@ function runSelfCheck(){
   ok('公告正文按纯文本渲染（防注入）', document.getElementById('noticeBody') && !document.getElementById('noticeBody').innerHTML.includes('<'));
   ok('非法公告会被丢弃', noticeSanitize({id:'hack', title:'x', body:'y'})===null && noticeSanitize({id:'n1234567890', title:'ok', body:''})!==null);
   ok('公告标题长度受限', noticeSanitize({id:'n9999999999', title:'长'.repeat(60), body:''}).title.length<=40);
+  const bfs=['banOf','banLoad','banSave','banClean','banApplyRaw','banDescribe'];
+  const bmiss=bfs.filter(f=>{ try{ return typeof eval(f)!=='function'; }catch(e){ return true; } });
+  ok('处罚模块齐全（'+bfs.length+' 个）', bmiss.length===0, bmiss.join(','));
+  ok('过期处罚会被自动清掉', (function(){
+      BAN.list=[{uid:'',name:'过期测试',type:'ban',until:Date.now()-1000,reason:''}];
+      banClean(); const gone=BAN.list.length===0;
+      return gone;
+    })());
+  ok('处罚能按名字命中', (function(){
+      BAN.list=[{uid:'',name:'某人',type:'mute',until:0,reason:''}];
+      const hit=!!banOf('1234567890','某人'); BAN.list=[]; return hit;
+    })());
+  ok('终端有全屏入口', !!document.getElementById('btnAdminFull'));
 
   // 3. 配置合法性
   ok('血量配置正常', CFG.maxHp>0 && CFG.respawnTime>0, 'HP'+CFG.maxHp+' 复活'+CFG.respawnTime+'s');
@@ -3624,6 +3669,8 @@ function fwMyCard(){
 }
 /* 点赞：retained 计数，一天只能给同一个人点一次 */
 async function fwLike(uid){
+  const __m = banOf();
+  if(__m && __m.type==='mute'){ toastMsg('禁言期间不能点赞'); return; }
   if(!FW.cli || !FW.cli.connected){ toastMsg('好友服务未连上，稍等两秒'); return; }
   const key=fwKey(uid), liked=lsGet('gunLiked', {});
   if(liked[key] && Date.now()-liked[key] < 20*3600*1000){ toastMsg('今天已经给他点过赞了'); return; }
@@ -3772,6 +3819,8 @@ function fwUnfollow(uid){
 
 /* 拉好友进房间 */
 function fwInvite(uid){
+  const __m = banOf();
+  if(__m && __m.type==='mute'){ toastMsg('禁言期间不能邀请好友'); return; }
   if(!FW.cli || !FW.cli.connected){ toastMsg('好友服务还没连上，等两秒再试'); return; }
   if(!NET.code){ toastMsg('先点「联机对战」创建房间，再邀请他'); return; }
   FW.cli.publish(fwTopic('invite',uid), JSON.stringify({from:FW.uid, fromName:currentNick(), code:NET.code}), {qos:1});
@@ -3786,6 +3835,39 @@ function fwShowInvite(m){
 }
 
 
+
+/* ================= 玩家处罚（封号 / 禁言） ================= */
+const BAN_TOPIC='gunfight9/ban';
+const BAN={list:[]};
+function banLoad(){
+  try{ const c=lsGet('gunBanList',[]); if(Array.isArray(c)) BAN.list=c; }catch(e){}
+}
+function banSave(){ try{ lsSet('gunBanList', BAN.list.slice(0,200)); }catch(e){} }
+function banClean(){
+  const now=Date.now();
+  BAN.list = BAN.list.filter(b=> b.until===0 || (b.until||0)>now );
+}
+function banApplyRaw(o){
+  if(!o || !Array.isArray(o.list)) return;
+  BAN.list = o.list.filter(b=> b && (b.uid || b.name)).map(b=>({
+    uid:String(b.uid||''), name:String(b.name||''), type:(b.type==='mute'?'mute':'ban'),
+    until:Number(b.until)||0, reason:String(b.reason||'').slice(0,30), ts:Number(b.ts)||0
+  }));
+  banClean(); banSave();
+}
+function banOf(uid, name){
+  uid = uid || ensureUid();
+  const nm = name || (typeof currentNick==='function'? currentNick(): '');
+  return BAN.list.find(b=> (b.uid && fwKey(b.uid)===fwKey(uid)) || (b.name && nm && b.name===nm)) || null;
+}
+function banDescribe(b){
+  if(!b) return '';
+  const left = b.until? Math.max(0, Math.ceil((b.until-Date.now())/3600000)) : 0;
+  return (b.type==='ban'?'封号':'禁言') + (b.until? ('，剩余约 '+left+' 小时') : '，永久') + (b.reason? ('，原因：'+b.reason) : '');
+}
+function banToast(b){
+  toastMsg('你已被'+(b.type==='ban'?'封号':'禁言')+(b.reason?('：'+b.reason):'')+(b.until?('（剩余约'+Math.max(0,Math.ceil((b.until-Date.now())/3600000))+'小时）'):'（永久）'));
+}
 /* ================= 全服公告（所有玩家主页可见） ================= */
 const NOTICE_TOPIC='gunfight9/notice';
 const NOTICE_STATUS_TOPIC='gunfight9/status';
@@ -3851,7 +3933,7 @@ async function noticeConnect(){
     NT.cli=mqtt.connect(url,{clientId:'gfnt_'+Date.now().toString(36)+Math.random().toString(36).slice(2,8), clean:true, reconnectPeriod:5000, connectTimeout:9000, keepalive:30});
     NT.cli.on('connect',()=>{
       NOTICE.conn=true;
-      try{ NT.cli.subscribe(NOTICE_TOPIC,{qos:1}); NT.cli.subscribe(NOTICE_STATUS_TOPIC,{qos:1}); }catch(e){}
+      try{ NT.cli.subscribe(NOTICE_TOPIC,{qos:1}); NT.cli.subscribe(NOTICE_STATUS_TOPIC,{qos:1}); NT.cli.subscribe(BAN_TOPIC,{qos:1}); }catch(e){}
       noticeRender();
     });
     NT.cli.on('message',(topic,payload)=>{
@@ -3861,6 +3943,9 @@ async function noticeConnect(){
       } else if(topic===NOTICE_STATUS_TOPIC){
         NOTICE.maint = !!(o && o.mt);
         noticeRender();
+      } else if(topic===BAN_TOPIC){
+        banApplyRaw(o);
+        try{ if(ADMIN.open) admBanRender(); }catch(e){}
       }
     });
     NT.cli.on('error',()=>{});
@@ -3870,6 +3955,7 @@ async function noticeConnect(){
 function noticeBoot(){
   if(NOTICE.tried) return; NOTICE.tried=true;
   noticeLoad();
+  banLoad();
   NOTICE.list = NOTICE.list.filter(x=> !x.until || Date.now()<x.until );
   NOTICE.cur = NOTICE.list.find(x=> x.id!==lsGet('gunNoticeSeen','')) || null;
   if(NOTICE.list.some(x=>x.pin)) NOTICE.cur = NOTICE.list.find(x=>x.pin);
@@ -3959,6 +4045,7 @@ function admEnterBody(){
   document.getElementById('adminBody').style.display='block';
   adminTuneFill();
   adminNoticeFill();
+  admBanRender();
   adminLoad();
   admLog('已登录管理终端');
 }
@@ -4067,6 +4154,7 @@ document.getElementById('adminList').addEventListener('click', async (e)=>{
 });
 function adminBoot(){
   if(!/[?&]admin=1/.test(location.search)) return;
+  document.body.classList.add('admin-mode');
   document.querySelectorAll('.overlay,.splash,#splashScreen').forEach(e=>{ e.classList.add('hidden'); if(e.id==='splashScreen') e.style.display='none'; });
   adminShow(true);
   // 同一标签页内已登录过就直接进面板，免去反复输口令
@@ -4555,6 +4643,8 @@ document.getElementById('btnProfileBack').addEventListener('click', ()=>{
 });
 document.getElementById('btnRename').addEventListener('click', ()=>{
   sClick();
+  const __m = banOf();
+  if(__m && __m.type==='mute'){ banToast(__m); toastMsg('禁言期间不能改名'); return; }
 
   document.getElementById('profileScreen').classList.add('hidden');
   const ni=document.getElementById('nickInput'); ni.value=currentNick();
@@ -4706,6 +4796,86 @@ document.getElementById('btnCheckUpdate').addEventListener('click', async ()=>{
   }catch(e){
     hint.textContent='检查失败：'+e.message+'（可能是网络或文件协议限制）';
   }
+});
+/* ---- 终端：全屏 ---- */
+document.getElementById('btnAdminFull').addEventListener('click', async ()=>{
+  const btn=document.getElementById('btnAdminFull');
+  try{
+    if(document.fullscreenElement){ await document.exitFullscreen(); btn.textContent='全屏'; return; }
+    const el=document.documentElement;
+    if(el.requestFullscreen){ await el.requestFullscreen(); btn.textContent='退出全屏'; }
+    else if(el.webkitRequestFullscreen){ el.webkitRequestFullscreen(); btn.textContent='退出全屏'; }
+    else { btn.textContent='浏览器不支持全屏'; toastMsg('这台设备不支持网页全屏，可用浏览器菜单的「全屏 / 隐藏地址栏」'); }
+  }catch(e){ toastMsg('全屏失败：'+e.message+'（部分浏览器要在菜单里手动全屏）'); }
+});
+document.addEventListener('fullscreenchange', ()=>{
+  const btn=document.getElementById('btnAdminFull');
+  if(btn) btn.textContent = document.fullscreenElement? '退出全屏':'全屏';
+});
+/* ---- 终端：处罚 ---- */
+function admBanRender(){
+  const box=document.getElementById('admBanList');
+  if(!box) return;
+  banClean();
+  if(!BAN.list.length){ box.innerHTML='<div style="font-size:11.5px;color:#7d8aa8">当前没有处罚记录</div>'; return; }
+  box.innerHTML = BAN.list.map((b,i)=>{
+    const who = b.name || b.uid || '未知';
+    const tag = b.type==='ban' ? '封号' : '禁言';
+    const left = b.until? (Math.max(0,Math.ceil((b.until-Date.now())/3600000))+' 小时') : '永久';
+    return '<div style="display:flex;align-items:center;gap:8px;background:#0b1220;border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:7px 9px">'
+      + '<div style="flex:1;min-width:0;font-size:11.5px;color:#cdd9f0;line-height:1.6">'
+      + '<b style="color:'+(b.type==='ban'?'#ff8fa0':'#ffd34d')+'">'+esc(tag)+'</b>　'+esc(who)
+      + '<span style="color:#7d8aa8"> · '+esc(left)+'</span>'
+      + (b.reason? '<br><span style="color:#7d8aa8">原因：'+esc(b.reason)+'</span>' : '')
+      + '</div><button class="btn ghost" data-unban="'+i+'" style="padding:4px 9px;font-size:11px;color:#7ee7a0">解封</button></div>';
+  }).join('');
+  box.querySelectorAll('[data-unban]').forEach(btn=>{
+    btn.addEventListener('click', async ()=>{
+      const i=+btn.getAttribute('data-unban');
+      const target=BAN.list[i];
+      if(!target) return;
+      BAN.list = BAN.list.filter(x=>x!==target);
+      banSave(); admBanRender();
+      const err=await banPublish();
+      admLog('解封：'+(target.name||target.uid)+'（'+(err||'已同步')+'）');
+    });
+  });
+}
+async function banPublish(){
+  return new Promise(async (resolve)=>{
+    const ready=await noticeReady(9000);
+    if(!ready) return resolve('中转连接超时');
+    try{ NT.cli.publish(BAN_TOPIC, JSON.stringify({list:BAN.list, ts:Date.now()}), {qos:1, retain:true}, (e)=>resolve(e?e.message:'')); }
+    catch(e){ resolve(e.message); }
+  });
+}
+document.getElementById('btnAdmBan').addEventListener('click', async ()=>{
+  const who=(document.getElementById('admBanWho').value||'').trim();
+  const type=document.getElementById('admBanType').value;
+  const days=+document.getElementById('admBanDays').value;
+  const reason=(document.getElementById('admBanReason').value||'').trim().slice(0,30);
+  const hint=document.getElementById('admBanHint');
+  if(!who){ hint.style.color='#ff8fa0'; hint.textContent='先填玩家名字或档案号'; return; }
+  hint.style.color='#9fb2d0'; hint.textContent='正在同步名单…';
+  const isUid=/^\d{10}$/.test(who);
+  const rec={ uid:isUid?who:'', name:isUid?'':who, type, until: days>0?Date.now()+days*86400000:0, reason, ts:Date.now() };
+  BAN.list = BAN.list.filter(b=> !(rec.uid && b.uid===rec.uid) && !(rec.name && b.name===rec.name) );
+  BAN.list.unshift(rec);
+  banSave(); admBanRender();
+  const err=await banPublish();
+  if(err){ hint.style.color='#ff8fa0'; hint.textContent='同步失败：'+err; admLog('处罚同步失败：'+err); return; }
+  hint.style.color='#7ee7a0';
+  hint.textContent='已生效：'+(rec.name||rec.uid)+' '+(type==='ban'?'封号':'禁言')+'（'+(days>0?days+' 天':'永久')+'）';
+  admLog((type==='ban'?'封号':'禁言')+'：'+(rec.name||rec.uid));
+  document.getElementById('admBanWho').value=''; document.getElementById('admBanReason').value='';
+});
+document.getElementById('btnAdmBanSync').addEventListener('click', async ()=>{
+  const hint=document.getElementById('admBanHint');
+  hint.style.color='#9fb2d0'; hint.textContent='同步中…';
+  const err=await banPublish();
+  hint.style.color= err? '#ff8fa0':'#7ee7a0';
+  hint.textContent= err? ('同步失败：'+err) : ('名单已同步（'+BAN.list.length+' 条）');
+  admBanRender();
 });
 /* ---- 终端：公告发布 / 删除 / 维护 ---- */
 let lastPubAt=0;
