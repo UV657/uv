@@ -105,7 +105,7 @@ body.is-touch.in-game.paused-fight #btnExitFight{display:none !important}
 #scoreRed::before,#scoreBlue::before{content:"";width:11px;height:11px;border-radius:50%;background:currentColor;box-shadow:0 0 10px currentColor}
 #timer{font-family:Consolas,monospace;font-size:18px;letter-spacing:1px;padding:8px 16px;border-radius:999px;background:rgba(10,16,30,.55);border:1px solid rgba(255,255,255,.08);color:#9fe8ff}
 #timer.low{color:#ffb84d}
-#killfeed{position:absolute;top:54px;right:14px;display:flex;flex-direction:column;gap:6px;align-items:flex-end}
+#killfeed{position:absolute;top:54px;right:calc(14px + var(--uiGap,10px) * .5);display:flex;flex-direction:column;gap:6px;align-items:flex-end}
 .kf{font-size:12px;padding:4px 10px;border-radius:8px;background:rgba(8,12,24,.72);border:1px solid rgba(255,255,255,.08);color:#dbe6ff;animation:kfIn .2s ease;transition:opacity .5s}
 @keyframes kfIn{from{opacity:0;transform:translateX(14px)}to{opacity:1;transform:none}}
 
@@ -231,7 +231,7 @@ body.is-touch #touchLayer{display:block}
 .joy .knob{width:38px;height:38px;border-radius:50%;background:rgba(160,210,255,.5);box-shadow:0 0 12px rgba(120,180,255,.4)}
 .joy.show{display:flex}
 .joy .knob{width:50px;height:50px;border-radius:50%;background:rgba(160,210,255,.5);box-shadow:0 0 12px rgba(120,180,255,.4)}
-#btnSkill{position:fixed;right:90px;bottom:90px;width:52px;height:52px;border-radius:50%;background:rgba(255,211,77,.25);border:2px solid rgba(255,211,77,.7);color:#ffe9a8;font-size:16px;font-weight:800;display:none;align-items:center;justify-content:center;z-index:50;pointer-events:auto;touch-action:none;font-family:inherit}
+#btnSkill{position:fixed;right:calc(90px + var(--uiGap,10px) * .4);bottom:calc(90px + var(--uiGap,10px) * .3);width:52px;height:52px;border-radius:50%;background:rgba(255,211,77,.25);border:2px solid rgba(255,211,77,.7);color:#ffe9a8;font-size:16px;font-weight:800;display:none;align-items:center;justify-content:center;z-index:50;pointer-events:auto;touch-action:none;font-family:inherit}
 body.is-touch.in-game #btnSkill{display:flex}
 #btnSkill.on{background:rgba(255,211,77,.55)}
 #btnSkill{transition:background .25s ease, border-color .25s ease}
@@ -242,7 +242,7 @@ body.is-touch.in-game #btnSkill{display:flex}
   mask:radial-gradient(circle, transparent 52%, #000 56%);
   transition:opacity .2s}
 #skillCdNum{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:16px;font-weight:800;color:#fff;text-shadow:0 1px 5px #000,0 0 8px rgba(0,0,0,.9);pointer-events:none;z-index:2}
-#btnFire{position:fixed;right:18px;bottom:80px;width:var(--fire,74px);height:var(--fire,74px);border-radius:50%;background:rgba(255,90,110,.35);border:3px solid rgba(255,120,140,.8);color:#fff;font-size:14px;font-weight:900;display:none;align-items:center;justify-content:center;z-index:50;pointer-events:auto;touch-action:none;font-family:inherit;box-shadow:0 4px 20px rgba(255,80,100,.4)}
+#btnFire{position:fixed;right:calc(18px + var(--uiGap,10px) * .35);bottom:calc(80px + var(--uiGap,10px) * .3);width:var(--fire,74px);height:var(--fire,74px);border-radius:50%;background:rgba(255,90,110,.35);border:3px solid rgba(255,120,140,.8);color:#fff;font-size:14px;font-weight:900;display:none;align-items:center;justify-content:center;z-index:50;pointer-events:auto;touch-action:none;font-family:inherit;box-shadow:0 4px 20px rgba(255,80,100,.4)}
 body.is-touch.in-game #btnFire{display:flex}
 #btnFire.on{background:rgba(255,90,110,.7);transform:scale(.94)}
 #touchTip{position:fixed;left:50%;bottom:170px;transform:translateX(-50%);color:#9fd0ff;font-size:11px;display:none;z-index:45;background:rgba(10,18,36,.55);padding:3px 10px;border-radius:10px;transition:opacity .5s;white-space:nowrap}
@@ -294,7 +294,9 @@ body.is-touch #panelP1, body.is-touch #panelP2{padding:3px 8px !important;font-s
 body.is-touch #hpBar{height:5px !important}
 body.is-touch .ppHead{font-size:9px !important;margin-bottom:2px !important}
 body.is-touch #topbar{font-size:11px !important;top:2px !important;gap:6px !important;padding:2px 8px !important;padding-left:54px !important}
-body.is-touch #topbar > *:nth-child(n+3){display:flex;font-size:11px;padding:3px 7px}
+body.is-touch #topbar > *:nth-child(n+3){display:flex}
+body.is-touch #topbar .scoreChip{font-size:15px !important;padding:6px 12px !important;gap:6px !important}
+body.is-touch #topbar #timer{font-size:16px !important;padding:6px 10px !important}
 #topbar > *{flex:none;white-space:nowrap}
 body.is-touch #topbar{padding-right:8px !important}
 body.is-touch #roomCode{font-size:32px !important;letter-spacing:4px !important}
@@ -335,12 +337,12 @@ body.is-touch .ppSub{display:none}
   .modeGrid{flex-direction:row !important;gap:12px !important}
   .modeCard{padding:12px !important}
   .modeCard .mcName{font-size:16px !important}
-  #btnFire{bottom:20px !important;right:20px !important;width:64px !important;height:64px !important}
-  #btnSkill{bottom:30px !important;right:100px !important;width:48px !important;height:48px !important}
+  #btnFire{bottom:calc(20px + var(--uiGap,10px) * .35) !important;right:calc(20px + var(--uiGap,10px) * .35) !important;width:64px !important;height:64px !important}
+  #btnSkill{bottom:calc(30px + var(--uiGap,10px) * .35) !important;right:calc(100px + var(--uiGap,10px) * .35) !important;width:48px !important;height:48px !important}
 }
 /* 操作键左右布局（必须放在上面横屏 media query 之后，才能覆盖其中的 !important 定位） */
-body.fire-left #btnFire{left:18px !important;right:auto !important}
-body.skill-left #btnSkill{left:18px !important;right:auto !important}
+body.fire-left #btnFire{left:calc(18px + var(--uiGap,10px) * .35) !important;right:auto !important}
+body.skill-left #btnSkill{left:calc(18px + var(--uiGap,10px) * .35) !important;right:auto !important}
 body.skill-joy-l #btnSkill{left:24px !important;right:auto !important;bottom:auto !important;top:calc(50% + 60px) !important}
 body.skill-joy-r #btnSkill{right:24px !important;left:auto !important;bottom:auto !important;top:calc(50% + 60px) !important}
 body.skill-free #btnSkill{left:var(--skx,80%) !important;top:var(--sky,72%) !important;right:auto !important;bottom:auto !important;transform:translate(-50%,-50%)}
@@ -351,9 +353,9 @@ body.skill-free #btnSkill{left:var(--skx,80%) !important;top:var(--sky,72%) !imp
 .layBar{position:fixed;left:0;right:0;bottom:0;padding:12px 14px;display:flex;gap:10px;background:linear-gradient(transparent,rgba(6,10,18,.95) 40%);z-index:60}
 .layBar .btn{flex:1}
 .layTip{position:fixed;left:0;right:0;top:14px;text-align:center;font-size:13px;color:#9fb2d0;z-index:60}
-body.fire-left.skill-left #btnSkill{left:96px !important}
+body.fire-left.skill-left #btnSkill{left:calc(96px + var(--uiGap,10px) * .35) !important}
 body.skill-left:not(.fire-left) #btnSkill{left:18px !important;right:auto !important}
-body.fire-left:not(.skill-left) #btnSkill{right:18px !important;left:auto !important}
+body.fire-left:not(.skill-left) #btnSkill{right:calc(18px + var(--uiGap,10px) * .35) !important;left:auto !important}
 body.fire-left #btnFire{left:18px !important;right:auto !important}
 /* 竖屏手机：显示横屏提示 */
 /* 竖屏横屏提示已收进说明书，界面上不再显示 */
@@ -384,7 +386,7 @@ body.fire-left #btnFire{left:18px !important;right:auto !important}
   #endScreen .rowBtns{margin-top:8px !important;gap:8px !important}
   #endScreen .btn{font-size:13px !important;padding:9px 20px !important}
 }
-#btnExitFight{display:none;position:fixed;left:10px;top:10px;z-index:60;width:40px;height:40px;border-radius:50%;background:rgba(255,90,110,.25);border:1px solid rgba(255,120,140,.6);color:#ffb3c0;font-size:18px;align-items:center;justify-content:center;pointer-events:auto;touch-action:none}
+#btnExitFight{display:none;position:fixed;left:calc(10px + var(--uiGap,10px) * .3);top:calc(10px + var(--uiGap,10px) * .3);z-index:60;width:40px;height:40px;border-radius:50%;background:rgba(255,90,110,.25);border:1px solid rgba(255,120,140,.6);color:#ffb3c0;font-size:18px;align-items:center;justify-content:center;pointer-events:auto;touch-action:none}
 
 .endGrade{font-size:15px;font-weight:800;letter-spacing:2px;padding:4px 16px;border-radius:20px;border:1px solid;margin-bottom:6px}
 .endGrade.gS{color:#ffd34d;border-color:rgba(255,211,77,.5);background:rgba(255,211,77,.12);box-shadow:0 0 18px rgba(255,211,77,.25)}
@@ -972,12 +974,12 @@ body.fire-left #btnFire{left:18px !important;right:auto !important}
       </div>
     </div>
     <div class="overlay hidden" id="settingsScreen">
-      <div class="title">自定义设置 <span id="verTag" style="font-size:11px;color:#7d8aa8;font-weight:400;display:block;margin-top:2px">v2.6.2</span></div>
+      <div class="title">自定义设置 <span id="verTag" style="font-size:11px;color:#7d8aa8;font-weight:400;display:block;margin-top:2px">v2.6.3</span></div>
       <div id="settingsWrap" style="text-align:left;max-width:320px;line-height:2.2">
         <div>摇杆大小 <input type="range" id="setJoy" min="60" max="140" value="88" style="width:100%"></div>
         <div>开火键大小 <input type="range" id="setFire" min="50" max="120" value="74" style="width:100%"></div>
         <div>UI透明度 <input type="range" id="setAlpha" min="20" max="100" value="60" style="width:100%"></div>
-        <div>界面边距 <input type="range" id="setGap" min="0" max="64" value="10" style="width:100%"></div>
+        <div>界面边距 <input type="range" id="setGap" min="0" max="120" value="10" style="width:100%"></div>
         <div>技能方向 <select id="setSkillDir" style="width:100%;padding:6px;border-radius:6px;background:#1a2340;color:#fff;border:1px solid rgba(255,255,255,.2)"><option value="aim">跟随摇杆方向</option><option value="foe">朝对手方向</option></select></div>
         <div>移动灵敏度 <input type="range" id="setSens" min="30" max="150" value="80" style="width:100%"></div>
         <div>摇杆位置 <select id="setJoyPos" style="width:100%;padding:6px;border-radius:6px;background:#1a2340;color:#fff;border:1px solid rgba(255,255,255,.2)"><option value="left">左下角</option><option value="right">右下角</option></select></div>
@@ -1017,7 +1019,8 @@ body.fire-left #btnFire{left:18px !important;right:auto !important}
         <div id="historyBox" style="display:none;margin-top:10px;border-top:1px solid rgba(255,255,255,.1);padding-top:10px">
           <div style="font-size:13px;font-weight:800;color:#67e8f9;margin-bottom:6px">修改历史</div>
           <div style="line-height:1.8">
-            <div><b style="color:#ffd34d">v2.6.2</b>　主页新增全服公告（登录页和主菜单顶部都能看到，点开看正文，可关闭）；管理终端能直接发公告、删除公告、开关维护模式，并加了操作日志；终端口令连错 5 次锁定 60 秒，同一标签页登录一次不用重复输</div>
+            <div><b style="color:#ffd34d">v2.6.3</b>　界面边距上限加到 120，开火键、技能键、左右血量面板、击杀提示都会跟着边距一起往中间收，手机两边明显更宽；红队蓝队比分字号统一；技能选「跟随摇杆」后真的按摇杆方向出手（不再被自动瞄准带偏）</div>
+            <div><b style="color:#ffd34d">v2.6.2</b>　主页新增全服公告，登录页和主菜单顶部都能看到，点一下看正文，可以关掉；红蓝比分字号统一；技能「跟随摇杆」现在真跟着摇杆方向出手</div>
             <div><b style="color:#ffd34d">v2.6.1</b>　设置改了立刻生效（界面边距、摇杆大小这些以前要重开页面才动）；技能方向可在设置里选「跟随摇杆」或「朝对手」；关于我们加了「检查是否最新版本」，有新版本能一键更新；档案号改成点一下就复制</div>
             <div><b style="color:#ffd34d">v2.6.0</b>　修技能键冷却结束时的弹跳（现在位置、大小完全不动，只改光圈）；手机端 5V5 顶部重新显示蓝队击杀数（之前第三块比分被藏掉了）；全站禁止长按选中复制文字，只有档案号和名字可以选；关掉双指缩放和双击放大</div>
             <div><b style="color:#ffd34d">v2.5.9</b>　管理终端可改角色数值（移速/伤害/射速/弹速/技能冷却/血量/半径）并能批量清理测试名；界面边距上限提到 64px，左右面板真的会跟着变宽；突击手技能改成朝自己瞄准方向贴脸突刺，撞到的人吃 34 伤害；5V5 里「你」显示为你的名字；自检扩到 35 项</div>
@@ -1492,6 +1495,10 @@ function castSkill(p){
   const s=p.role.skill;
   if(s.dash){ // 突击手：突刺方向由设置决定（跟随摇杆 / 朝对手），撞上的人直接吃伤害
     let dir=p.aim;
+    // 触屏且摇杆正在推时，跟随摇杆 = 用摇杆朝向（自动瞄准会覆盖 p.aim，不能拿它当摇杆方向）
+    if(state.touchMove && (state.touchMove.dx || state.touchMove.dy) && typeof state.joyAng==='number'){
+      dir = state.joyAng;
+    }
     try{
       const cfg=lsGet('gunSettings',{});
       if(cfg.skillDir==='foe'){
@@ -1628,7 +1635,9 @@ document.addEventListener('touchmove', e=>{
       const d=Math.hypot(dx,dy); if(d>JOY_R){ dx=dx/d*JOY_R; dy=dy/d*JOY_R; }
       let nx=dx/JOY_R, ny=dy/JOY_R;
       if(Math.hypot(nx,ny)<0.15){ nx=0; ny=0; } // 死区
-      state.touchMove.dx=nx; state.touchMove.dy=ny; joyKnob(joyMove,dx,dy);
+      state.touchMove.dx=nx; state.touchMove.dy=ny;
+      if(nx||ny) state.joyAng=Math.atan2(ny,nx);   // 供“跟随摇杆”的技能方向使用
+      joyKnob(joyMove,dx,dy);
     } else if(state.touchAim.active && t.identifier===state.touchAim.id){
       let dx=t.clientX-state.touchAim.ox, dy=t.clientY-state.touchAim.oy;
       const d=Math.hypot(dx,dy); if(d>JOY_R){ dx=dx/d*JOY_R; dy=dy/d*JOY_R; }
