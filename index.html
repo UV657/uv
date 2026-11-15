@@ -858,7 +858,7 @@ body.fire-left #btnFire{left:18px !important;right:auto !important}
       </div>
     </div>
     <div class="overlay hidden" id="settingsScreen">
-      <div class="title">自定义设置 <span id="verTag" style="font-size:11px;color:#7d8aa8;font-weight:400;display:block;margin-top:2px">v2.5.0</span></div>
+      <div class="title">自定义设置 <span id="verTag" style="font-size:11px;color:#7d8aa8;font-weight:400;display:block;margin-top:2px">v2.5.1</span></div>
       <div id="settingsWrap" style="text-align:left;max-width:320px;line-height:2.2">
         <div>摇杆大小 <input type="range" id="setJoy" min="60" max="140" value="88" style="width:100%"></div>
         <div>开火键大小 <input type="range" id="setFire" min="50" max="120" value="74" style="width:100%"></div>
@@ -898,6 +898,7 @@ body.fire-left #btnFire{left:18px !important;right:auto !important}
         <div id="historyBox" style="display:none;margin-top:10px;border-top:1px solid rgba(255,255,255,.1);padding-top:10px">
           <div style="font-size:13px;font-weight:800;color:#67e8f9;margin-bottom:6px">修改历史</div>
           <div style="line-height:1.8">
+            <div><b style="color:#ffd34d">v2.5.1</b>　快速匹配加了回退：公告板上有死房时不会一直干等，4.8 秒后自动改开自己的房；离开页面自动撤公告</div>
             <div><b style="color:#ffd34d">v2.5.0</b>　联机加「快速匹配」：点一下自动找对手，不用换房号；改名修复（旧名字彻底释放、改名失败不扣次数、失败能点返回）；联机组件内嵌，不再依赖外部 CDN</div>
             <div><b style="color:#ffd34d">v2.4.9</b>　联机组件改成内嵌（不再依赖外部 CDN，国内网络也能连上）；中转连不上自动换备用；首页背景重做（全屏网格＋透视地面＋流光带＋漂浮光点）</div>
             <div><b style="color:#ffd34d">v2.4.8</b>　好友支持关键词搜人（输 uv 能找到名字带 uv 的人）；明信片扩到 8 种渐变卡面且点选立即生效；主菜单加科技背景</div>
@@ -2929,6 +2930,7 @@ function netOnMsg(m){
       netSend({t:'start'}, 1);
     }
 }
+window.addEventListener('beforeunload', ()=>{ try{ lobbyClear(); }catch(e){} });
 setInterval(()=>{
   if(!state.netMode || !NET.lastPeer) return;
   const gap=Date.now()-NET.lastPeer;
@@ -2972,12 +2974,34 @@ function readLobbyBoard(myUid, skipCode){
     setTimeout(end, 1200);
   });
 }
+/* 自己开房并挂到公告板上等人；进别人的房失败时也回退到这里 */
+function parkAsHost(){
+  if(!NET.client || !NET.client.connected) return;
+  const myUid=fwKey(FW.uid||ensureUid());
+  NET.role='a'; NET.code=genRoomCode();
+  try{ NET.client.subscribe(netTopic(NET.code,'a'),{qos:1}); }catch(e){}
+  netShowCode(NET.code, '正在等人匹配…也可以把房号发给好友');
+  const beacon=()=>lobbyPublish({code:NET.code, nick:currentNick(), uid:FW.uid||ensureUid(), ts:Date.now()});
+  beacon();
+  if(NET.lobbyTimer) clearInterval(NET.lobbyTimer);
+  NET.lobbyTimer=setInterval(beacon, 8000);
+  // 两边同时点匹配会互相看不见：挂牌后再看一次板，谁后挂谁让位
+  setTimeout(async ()=>{
+    if(state.netMode || NET.role!=='a' || !NET.code) return;
+    const other=await readLobbyBoard(myUid, NET.code);
+    if(other && !state.netMode){ lobbyClear(); netJoinByLobby(other); }
+  }, 1700);
+}
 function netJoinByLobby(hit){
   NET.role='b'; NET.code=hit.code;
   try{ NET.client.subscribe(netTopic(hit.code,'b'),{qos:1}); }catch(e){}
   try{ NET.client.publish(netTopic(hit.code,'a'), JSON.stringify({t:'join', name:currentNick()}), {qos:1}); }catch(e){}
   netShowCode(hit.code, '已匹配到 '+hit.nick+'，正在进房…');
-  setTimeout(()=>{ if(!state.netMode) netStatus('对方没回应，换一个试试','#ff9f9f'); }, 4500);
+  setTimeout(()=>{
+    if(state.netMode) return;
+    toastMsg('没等到回应，改成自己开房等人');
+    parkAsHost();                       // 公告板可能是别人没清掉的死房，不能一直干等
+  }, 4800);
 }
 function netQuickMatch(){
   return new Promise(async (resolve)=>{
@@ -2987,20 +3011,7 @@ function netQuickMatch(){
     const myUid=fwKey(FW.uid||ensureUid());
     const hit=await readLobbyBoard(myUid, null);
     if(hit){ netJoinByLobby(hit); resolve(true); return; }
-    // 没人等：自己开房，挂牌等人
-    NET.role='a'; NET.code=genRoomCode();
-    try{ NET.client.subscribe(netTopic(NET.code,'a'),{qos:1}); }catch(e){}
-    netShowCode(NET.code, '正在等人匹配…也可以把房号发给好友');
-    const beacon=()=>lobbyPublish({code:NET.code, nick:currentNick(), uid:FW.uid||ensureUid(), ts:Date.now()});
-    beacon();
-    if(NET.lobbyTimer) clearInterval(NET.lobbyTimer);
-    NET.lobbyTimer=setInterval(beacon, 8000);
-    // 两边同时点匹配会互相看不见；挂牌后再看一次板，谁后挂谁让位
-    setTimeout(async ()=>{
-      if(state.netMode || NET.role!=='a' || !NET.code) return;
-      const other=await readLobbyBoard(myUid, NET.code);
-      if(other && !state.netMode){ lobbyClear(); netJoinByLobby(other); }
-    }, 1700);
+    parkAsHost();
     resolve(true);
   });
 }
