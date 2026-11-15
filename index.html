@@ -743,6 +743,24 @@ body.fire-left #btnFire{left:18px !important;right:auto !important}
             <button class="btn ghost" id="btnAdminReload" style="padding:7px 12px;font-size:12px">刷新</button>
             <button class="btn ghost" id="btnAdminLobby" style="padding:7px 12px;font-size:12px">清空公告板</button>
           </div>
+          <div style="font-size:13px;font-weight:800;color:#67e8f9;margin:4px 0 6px">全服公告（发布后所有玩家主页可见）</div>
+          <label style="font-size:11.5px;color:#9fb2d0;display:block">标题<input id="admNoticeTitle" maxlength="40" placeholder="例如：v2.6.1 已上线" style="width:100%;margin-top:3px;padding:8px;border-radius:8px;background:#0b1220;color:#e8eefc;border:1px solid rgba(255,255,255,.16);font-size:12.5px"></label>
+          <label style="font-size:11.5px;color:#9fb2d0;display:block;margin-top:6px">正文<textarea id="admNoticeBody" maxlength="400" rows="4" placeholder="最多 400 字" style="width:100%;margin-top:3px;padding:8px;border-radius:8px;background:#0b1220;color:#e8eefc;border:1px solid rgba(255,255,255,.16);font-size:12.5px;resize:vertical"></textarea></label>
+          <div style="display:flex;gap:6px;margin-top:6px">
+            <select id="admNoticeDays" style="flex:1;padding:7px;border-radius:8px;background:#0b1220;color:#e8eefc;border:1px solid rgba(255,255,255,.16);font-size:12px">
+              <option value="1">1 天</option><option value="3" selected>3 天</option><option value="7">7 天</option><option value="0">永久</option>
+            </select>
+            <label style="flex:1;display:flex;align-items:center;gap:6px;font-size:12px;color:#9fb2d0;padding:0 6px"><input id="admNoticePin" type="checkbox">置顶</label>
+          </div>
+          <div style="display:flex;gap:8px;margin:8px 0 6px">
+            <button class="btn" id="btnAdmNoticePub" style="flex:1;padding:8px;font-size:12px">发布公告</button>
+            <button class="btn ghost" id="btnAdmNoticeDel" style="flex:1;padding:8px;font-size:12px;color:#ffb3bd">删除公告</button>
+          </div>
+          <div id="admNoticeHint" style="font-size:11.5px;color:#7d8aa8;margin-bottom:10px;line-height:1.7"></div>
+          <div style="display:flex;gap:8px;transition:opacity .2s;align-items:center;margin-bottom:12px">
+            <button class="btn ghost" id="btnAdmMaint" style="flex:1;padding:8px;font-size:12px">开启维护模式</button>
+            <div id="admMaintState" style="flex:1;font-size:11.5px;color:#7d8aa8">当前：正常</div>
+          </div>
           <div style="font-size:13px;font-weight:800;color:#67e8f9;margin:4px 0 6px">角色数值（改完立刻对新开局生效）</div>
           <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">
             <select id="admRole" style="flex:1;min-width:120px;padding:7px;border-radius:8px;background:#0b1220;color:#e8eefc;border:1px solid rgba(255,255,255,.16);font-size:12px">
@@ -771,7 +789,29 @@ body.fire-left #btnFire{left:18px !important;right:auto !important}
           </div>
           <div style="font-size:12px;color:#9fb2d0;margin-bottom:6px">已注册名字（点右侧删除）</div>
           <div id="adminList" style="display:flex;flex-direction:column;gap:6px"></div>
+          <div style="font-size:13px;font-weight:800;color:#67e8f9;margin:14px 0 6px">操作日志</div>
+          <div id="adminLog" style="font-size:11.5px;color:#8fa1bf;line-height:1.8;background:#0b1220;border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:9px 11px;max-height:160px;overflow-y:auto"></div>
         </div>
+      </div>
+    </div>
+    <!-- 全服公告条（登录页 / 主菜单都显示，对局中自动隐藏） -->
+    <div id="noticeBar" class="hidden" style="position:fixed;top:calc(env(safe-area-inset-top,0px) + 12px);left:52px;right:52px;max-width:430px;margin:0 auto;z-index:40;background:linear-gradient(90deg,rgba(103,232,249,.14),rgba(59,130,246,.10));border:1px solid rgba(103,232,249,.34);border-radius:12px;padding:9px 12px;display:flex;align-items:center;gap:9px;cursor:pointer;backdrop-filter:blur(6px)">
+      <span style="font-size:14px;flex:none">📢</span>
+      <div id="noticeBarTitle" style="flex:1;min-width:0;font-size:12.5px;font-weight:800;color:#a5f3fc;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></div>
+      <span style="flex:none;font-size:11px;color:#67e8f9;border:1px solid rgba(103,232,249,.4);border-radius:999px;padding:1px 7px">查看</span>
+    </div>
+    <div id="maintBar" class="hidden" style="position:fixed;top:calc(env(safe-area-inset-top,0px) + 62px);left:52px;right:52px;max-width:430px;margin:0 auto;z-index:40;background:rgba(255,140,90,.16);border:1px solid rgba(255,150,80,.5);border-radius:12px;padding:7px 12px;font-size:12px;color:#ffd0ad;text-align:center">系统维护中，匹配暂停</div>
+    <style>body.in-game #noticeBar,body.in-game #maintBar{display:none !important}</style>
+    <!-- 全服公告 -->
+    <div class="overlay hidden" id="noticeScreen" style="align-items:flex-start;justify-content:center;overflow-y:auto;padding:26px 16px">
+      <div style="width:100%;max-width:520px;background:rgba(9,14,26,.96);border:1px solid rgba(103,232,249,.3);border-radius:16px;padding:18px 18px 16px;text-align:left">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px">
+          <div style="font-size:12px;color:#67e8f9;letter-spacing:1px">全服公告</div>
+          <button class="btn ghost" id="btnNoticeClose" style="padding:5px 12px;font-size:12px">关闭</button>
+        </div>
+        <div id="noticeTitle" style="font-size:18px;font-weight:900;color:#e8f6ff;line-height:1.4;word-break:break-word"></div>
+        <div id="noticeTime" style="font-size:11px;color:#7d8aa8;margin-top:5px"></div>
+        <div id="noticeBody" style="font-size:13.5px;color:#c7d5ea;line-height:1.85;margin-top:12px;white-space:pre-wrap;word-break:break-word"></div>
       </div>
     </div>
     <!-- 个人主页 -->
@@ -932,7 +972,7 @@ body.fire-left #btnFire{left:18px !important;right:auto !important}
       </div>
     </div>
     <div class="overlay hidden" id="settingsScreen">
-      <div class="title">自定义设置 <span id="verTag" style="font-size:11px;color:#7d8aa8;font-weight:400;display:block;margin-top:2px">v2.6.1</span></div>
+      <div class="title">自定义设置 <span id="verTag" style="font-size:11px;color:#7d8aa8;font-weight:400;display:block;margin-top:2px">v2.6.2</span></div>
       <div id="settingsWrap" style="text-align:left;max-width:320px;line-height:2.2">
         <div>摇杆大小 <input type="range" id="setJoy" min="60" max="140" value="88" style="width:100%"></div>
         <div>开火键大小 <input type="range" id="setFire" min="50" max="120" value="74" style="width:100%"></div>
@@ -977,6 +1017,7 @@ body.fire-left #btnFire{left:18px !important;right:auto !important}
         <div id="historyBox" style="display:none;margin-top:10px;border-top:1px solid rgba(255,255,255,.1);padding-top:10px">
           <div style="font-size:13px;font-weight:800;color:#67e8f9;margin-bottom:6px">修改历史</div>
           <div style="line-height:1.8">
+            <div><b style="color:#ffd34d">v2.6.2</b>　主页新增全服公告（登录页和主菜单顶部都能看到，点开看正文，可关闭）；管理终端能直接发公告、删除公告、开关维护模式，并加了操作日志；终端口令连错 5 次锁定 60 秒，同一标签页登录一次不用重复输</div>
             <div><b style="color:#ffd34d">v2.6.1</b>　设置改了立刻生效（界面边距、摇杆大小这些以前要重开页面才动）；技能方向可在设置里选「跟随摇杆」或「朝对手」；关于我们加了「检查是否最新版本」，有新版本能一键更新；档案号改成点一下就复制</div>
             <div><b style="color:#ffd34d">v2.6.0</b>　修技能键冷却结束时的弹跳（现在位置、大小完全不动，只改光圈）；手机端 5V5 顶部重新显示蓝队击杀数（之前第三块比分被藏掉了）；全站禁止长按选中复制文字，只有档案号和名字可以选；关掉双指缩放和双击放大</div>
             <div><b style="color:#ffd34d">v2.5.9</b>　管理终端可改角色数值（移速/伤害/射速/弹速/技能冷却/血量/半径）并能批量清理测试名；界面边距上限提到 64px，左右面板真的会跟着变宽；突击手技能改成朝自己瞄准方向贴脸突刺，撞到的人吃 34 伤害；5V5 里「你」显示为你的名字；自检扩到 35 项</div>
@@ -2923,6 +2964,15 @@ function runSelfCheck(){
   const missing=fns.filter(f=>{ try { return typeof eval(f)!=='function'; } catch(e){ return true; } });
   ok('核心函数齐全（'+fns.length+' 个）', missing.length===0, missing.length? '缺失: '+missing.join(','):'');
 
+  // 2b. 全服公告与管理终端
+  const nfns=['noticeBoot','noticeApply','noticeRender','noticePublish','maintPublish','adminBoot','admEnterBody','admLog'];
+  const nmiss=nfns.filter(f=>{ try { return typeof eval(f)!=='function'; } catch(e){ return true; } });
+  ok('公告/终端模块齐全（'+nfns.length+' 个）', nmiss.length===0, nmiss.length? '缺失: '+nmiss.join(','):'');
+  ok('公告条与详情页 DOM 存在', !!(document.getElementById('noticeBar') && document.getElementById('noticeScreen') && document.getElementById('noticeTitle')));
+  ok('公告正文按纯文本渲染（防注入）', document.getElementById('noticeBody') && !document.getElementById('noticeBody').innerHTML.includes('<'));
+  ok('非法公告会被丢弃', noticeSanitize({id:'hack', title:'x', body:'y'})===null && noticeSanitize({id:'n1234567890', title:'ok', body:''})!==null);
+  ok('公告标题长度受限', noticeSanitize({id:'n9999999999', title:'长'.repeat(60), body:''}).title.length<=40);
+
   // 3. 配置合法性
   ok('血量配置正常', CFG.maxHp>0 && CFG.respawnTime>0, 'HP'+CFG.maxHp+' 复活'+CFG.respawnTime+'s');
   ok('两种模式都注册', !!(CFG.modes['5v5'] && CFG.modes['1v1']));
@@ -3686,7 +3736,126 @@ function fwShowInvite(m){
   document.getElementById('inviteScreen').classList.remove('hidden');
 }
 
+
+/* ================= 全服公告（所有玩家主页可见） ================= */
+const NOTICE_TOPIC='gunfight9/notice';
+const NOTICE_STATUS_TOPIC='gunfight9/status';
+const NOTICE={cur:null, list:[], conn:false, tried:false, maint:false};
+const NT={cli:null};
+function noticeLoad(){
+  try{ const c=lsGet('gunNoticeList',[]); if(Array.isArray(c)) NOTICE.list=c; }catch(e){}
+}
+function noticeSave(){
+  try{ lsSet('gunNoticeList', NOTICE.list.slice(0,6)); }catch(e){}
+}
+function noticeSanitize(o){
+  if(!o || typeof o!=='object') return null;
+  if(!/^n\d{10,}$/.test(String(o.id||''))) return null;
+  const title=String(o.title||'').slice(0,40).trim();
+  const body=String(o.body||'').slice(0,400).trim();
+  if(!title) return null;
+  const ts=Number(o.ts)||Date.now(), until=Number(o.until)||0;
+  return {id:String(o.id), title, body, ts, until, pin:!!o.pin};
+}
+function noticeApply(o){
+  const n=noticeSanitize(o);
+  if(!n) return;
+  NOTICE.list = NOTICE.list.filter(x=>x.id!==n.id);
+  NOTICE.list.unshift(n);
+  NOTICE.list = NOTICE.list.filter(x=> !x.until || Date.now()<x.until ).slice(0,6);
+  const seen=lsGet('gunNoticeSeen','');
+  NOTICE.cur = (n.id!==seen) ? n : (NOTICE.list.find(x=>x.id!==seen)||null);
+  if(n.pin) NOTICE.cur=n;
+  noticeSave(); noticeRender();
+}
+function noticeDelete(){
+  NOTICE.list=[]; NOTICE.cur=null; noticeSave(); noticeRender();
+}
+function noticeRender(){
+  const bar=document.getElementById('noticeBar'), t=document.getElementById('noticeBarTitle');
+  const mb=document.getElementById('maintBar');
+  if(mb) mb.classList.toggle('hidden', !NOTICE.maint);
+  if(!bar) return;
+  if(!NOTICE.cur){ bar.classList.add('hidden'); return; }
+  t.textContent=(NOTICE.cur.pin?'[置顶] ':'')+NOTICE.cur.title;
+  bar.classList.remove('hidden');
+}
+function noticeOpen(){
+  if(!NOTICE.cur) return;
+  document.getElementById('noticeTitle').textContent=NOTICE.cur.title;
+  const d=new Date(NOTICE.cur.ts||Date.now());
+  const p2=n=>String(n).padStart(2,'0');
+  document.getElementById('noticeTime').textContent=d.getFullYear()+'-'+p2(d.getMonth()+1)+'-'+p2(d.getDate())+' '+p2(d.getHours())+':'+p2(d.getMinutes());
+  document.getElementById('noticeBody').textContent=NOTICE.cur.body||'（无正文）';
+  document.getElementById('noticeScreen').classList.remove('hidden');
+}
+function noticeClose(){
+  if(NOTICE.cur) lsSet('gunNoticeSeen', NOTICE.cur.id);
+  document.getElementById('noticeScreen').classList.add('hidden');
+  NOTICE.cur=null; noticeRender();
+}
+async function noticeConnect(){
+  if(NT.cli && NT.cli.connected){ NOTICE.conn=true; return true; }
+  try{
+    const mqtt=await loadMqttLib();
+    const url=MQTT_BROKERS[0];
+    NT.cli=mqtt.connect(url,{clientId:'gfnt_'+Date.now().toString(36)+Math.random().toString(36).slice(2,8), clean:true, reconnectPeriod:5000, connectTimeout:9000, keepalive:30});
+    NT.cli.on('connect',()=>{
+      NOTICE.conn=true;
+      try{ NT.cli.subscribe(NOTICE_TOPIC,{qos:1}); NT.cli.subscribe(NOTICE_STATUS_TOPIC,{qos:1}); }catch(e){}
+      noticeRender();
+    });
+    NT.cli.on('message',(topic,payload)=>{
+      let o=null; try{ o=JSON.parse(payload.toString()||'null'); }catch(e){ return; }
+      if(topic===NOTICE_TOPIC){
+        if(!o) noticeDelete(); else noticeApply(o);
+      } else if(topic===NOTICE_STATUS_TOPIC){
+        NOTICE.maint = !!(o && o.mt);
+        noticeRender();
+      }
+    });
+    NT.cli.on('error',()=>{});
+    return true;
+  }catch(e){ return false; }
+}
+function noticeBoot(){
+  if(NOTICE.tried) return; NOTICE.tried=true;
+  noticeLoad();
+  NOTICE.list = NOTICE.list.filter(x=> !x.until || Date.now()<x.until );
+  NOTICE.cur = NOTICE.list.find(x=> x.id!==lsGet('gunNoticeSeen','')) || null;
+  if(NOTICE.list.some(x=>x.pin)) NOTICE.cur = NOTICE.list.find(x=>x.pin);
+  noticeRender();
+  noticeConnect();
+}
+function noticePublish(obj){
+  return new Promise(async (resolve)=>{
+    if(!NT.cli || !NT.cli.connected){ await noticeConnect(); }
+    if(!NT.cli || !NT.cli.connected){ resolve('中转未连接，先刷新再试'); return; }
+    try{
+      NT.cli.publish(NOTICE_TOPIC, JSON.stringify(obj), {qos:1, retain:true}, (err)=>{ resolve(err?('发布失败：'+err.message):''); });
+    }catch(e){ resolve('发布失败：'+e.message); }
+  });
+}
+function noticeClearRemote(){
+  return new Promise(async (resolve)=>{
+    if(!NT.cli || !NT.cli.connected){ await noticeConnect(); }
+    if(!NT.cli || !NT.cli.connected){ resolve('中转未连接'); return; }
+    try{
+      NT.cli.publish(NOTICE_TOPIC, '', {qos:1, retain:true}, (err)=>{ resolve(err?('删除失败：'+err.message):''); });
+    }catch(e){ resolve('删除失败：'+e.message); }
+  });
+}
+function maintPublish(on){
+  return new Promise(async (resolve)=>{
+    if(!NT.cli || !NT.cli.connected){ await noticeConnect(); }
+    if(!NT.cli || !NT.cli.connected){ resolve('中转未连接'); return; }
+    try{
+      NT.cli.publish(NOTICE_STATUS_TOPIC, JSON.stringify({mt:on?1:0, ts:Date.now()}), {qos:1, retain:true}, (err)=>{ resolve(err?err.message:''); });
+    }catch(e){ resolve(e.message); }
+  });
+}
 /* ================= 管理终端（?admin=1） ================= */
+
 const ADMIN_PASS='liuweijun2026';     // 想改口令就改这一行
 const ADMIN={open:false, names:{}};
 function adminShow(on){ ADMIN.open=on; document.getElementById('adminScreen').classList.toggle('hidden', !on); }
@@ -3715,15 +3884,57 @@ async function adminLoad(){
     +'<button class="btn ghost admDel" data-t="'+esc(t)+'" data-u="'+esc(d.uid)+'" style="padding:5px 10px;font-size:11px;color:#ffb3bd;flex:none">删除</button></div>').join('')
     : '<div style="font-size:12px;color:#7d8aa8">没有读到名字</div>';
 }
-document.getElementById('btnAdminLogin').addEventListener('click', ()=>{
-  const v=document.getElementById('adminPass').value.trim();
-  if(v!==ADMIN_PASS){ document.getElementById('adminErr').textContent='口令不对'; return; }
-  document.getElementById('adminErr').textContent='';
+const ADM_LOCK={failKey:'admFail', max:5, lockMs:60000};
+function admFailState(){ const f=lsGet(ADM_LOCK.failKey,{n:0,ts:0}); if(Date.now()-f.ts>60000) return {n:0,ts:0}; return f; }
+function admLog(txt){
+  const el=document.getElementById('adminLog'); if(!el) return;
+  const line=document.createElement('div');
+  const d=new Date(), p2=n=>String(n).padStart(2,'0');
+  line.textContent=p2(d.getHours())+':'+p2(d.getMinutes())+':'+p2(d.getSeconds())+'  '+txt;
+  el.insertBefore(line, el.firstChild);
+  while(el.children.length>30) el.removeChild(el.lastChild);
+}
+function admEnterBody(){
   document.getElementById('adminGate').style.display='none';
   document.getElementById('adminBody').style.display='block';
   adminTuneFill();
+  adminNoticeFill();
   adminLoad();
+  admLog('已登录管理终端');
+}
+function adminNoticeFill(){
+  try{
+    const n=NOTICE.list[0];
+    if(n){ document.getElementById('admNoticeTitle').value=n.title||''; document.getElementById('admNoticeBody').value=n.body||''; }
+    const t=document.getElementById('admNoticeHint');
+    if(t) t.textContent = n ? ('线上当前公告：'+(n.title||'')+'（'+(n.until?('到期 '+new Date(n.until).toLocaleString()):'永久')+'）') : '线上当前没有公告';
+    document.getElementById('admMaintState').textContent = '当前：'+(NOTICE.maint?'维护中':'正常');
+    document.getElementById('btnAdmMaint').textContent = NOTICE.maint?'关闭维护模式':'开启维护模式';
+  }catch(e){}
+}
+document.getElementById('btnAdminLogin').addEventListener('click', ()=>{
+  const inp=document.getElementById('adminPass');
+  const err=document.getElementById('adminErr');
+  const st=admFailState();
+  if(st.n>=ADM_LOCK.max && Date.now()-st.ts<ADM_LOCK.lockMs){
+    err.textContent='尝试次数过多，请 '+(Math.ceil((ADM_LOCK.lockMs-(Date.now()-st.ts))/1000))+' 秒后再试';
+    return;
+  }
+  const v=inp.value.trim();
+  if(v!==ADMIN_PASS){
+    const nf={n:(st.n||0)+1, ts:Date.now()};
+    lsSet(ADM_LOCK.failKey, nf);
+    err.textContent='口令不对'+(nf.n>=ADM_LOCK.max?'（已锁定 60 秒）':'（还可试 '+(ADM_LOCK.max-nf.n)+' 次）');
+    inp.value='';
+    return;
+  }
+  lsSet(ADM_LOCK.failKey,{n:0,ts:0});
+  try{ sessionStorage.setItem('gfAdm','1'); }catch(e){}
+  err.textContent='';
+  inp.value='';
+  admEnterBody();
 });
+document.getElementById('adminPass').addEventListener('keydown', e=>{ if(e.key==='Enter'){ document.getElementById('btnAdminLogin').click(); } });
 document.getElementById('btnAdminClose').addEventListener('click', ()=>{ adminShow(false); location.href=location.pathname; });
 /* ---- 终端调参：写进本地存储，开局时套到 ROLES 上 ---- */
 function adminTuneLoad(){ return lsGet('gunAdminTune', {}); }
@@ -3798,6 +4009,10 @@ function adminBoot(){
   if(!/[?&]admin=1/.test(location.search)) return;
   document.querySelectorAll('.overlay,.splash,#splashScreen').forEach(e=>{ e.classList.add('hidden'); if(e.id==='splashScreen') e.style.display='none'; });
   adminShow(true);
+  // 同一标签页内已登录过就直接进面板，免去反复输口令
+  let authed=false;
+  try{ authed = sessionStorage.getItem('gfAdm')==='1'; }catch(e){}
+  if(authed){ document.getElementById('adminGate').style.display='none'; admEnterBody(); }
 }
 /* ---- 改名额度：每月 3 次，用光要靠改名卡 ---- */
 const RENAME_FREE=3, CARD_COST=500;
@@ -4432,6 +4647,52 @@ document.getElementById('btnCheckUpdate').addEventListener('click', async ()=>{
     hint.textContent='检查失败：'+e.message+'（可能是网络或文件协议限制）';
   }
 });
+/* ---- 终端：公告发布 / 删除 / 维护 ---- */
+let lastPubAt=0;
+document.getElementById('btnAdmNoticePub').addEventListener('click', async ()=>{
+  const title=document.getElementById('admNoticeTitle').value.trim().slice(0,40);
+  const body=document.getElementById('admNoticeBody').value.trim().slice(0,400);
+  const days=+document.getElementById('admNoticeDays').value;
+  const pin=document.getElementById('admNoticePin').checked;
+  const hint=document.getElementById('admNoticeHint');
+  if(!title){ hint.style.color='#ff8fa0'; hint.textContent='标题不能为空'; return; }
+  if(Date.now()-lastPubAt<10000){ hint.style.color='#ff8fa0'; hint.textContent='发布太频繁，等 10 秒再发'; return; }
+  hint.style.color='#9fb2d0'; hint.textContent='正在发布…';
+  const obj={id:'n'+Date.now(), title, body, ts:Date.now(), until: days>0?Date.now()+days*86400000:0, pin};
+  const err=await noticePublish(obj);
+  if(err){ hint.style.color='#ff8fa0'; hint.textContent=err; admLog('公告发布失败：'+err); return; }
+  lastPubAt=Date.now();
+  hint.style.color='#7ee7a0'; hint.textContent='已发布：'+title+'（'+(days>0?days+' 天后过期':'永久')+'）';
+  admLog('发布公告：'+title);
+  noticeApply(obj);
+});
+document.getElementById('btnAdmNoticeDel').addEventListener('click', async ()=>{
+  const hint=document.getElementById('admNoticeHint');
+  hint.style.color='#9fb2d0'; hint.textContent='正在删除…';
+  const err=await noticeClearRemote();
+  if(err){ hint.style.color='#ff8fa0'; hint.textContent=err; admLog('删除公告失败：'+err); return; }
+  document.getElementById('admNoticeTitle').value='';
+  document.getElementById('admNoticeBody').value='';
+  noticeDelete();
+  hint.style.color='#7ee7a0'; hint.textContent='线上公告已删除';
+  admLog('删除公告');
+});
+document.getElementById('btnAdmMaint').addEventListener('click', async ()=>{
+  const on=!NOTICE.maint;
+  const st=document.getElementById('admMaintState');
+  st.textContent='正在切换…';
+  const err=await maintPublish(on);
+  if(err){ st.textContent='切换失败：'+err; return; }
+  NOTICE.maint=on;
+  adminNoticeFill();
+  admLog((on?'开启':'关闭')+'维护模式');
+});
+/* ---- 主页公告交互 ---- */
+document.getElementById('noticeBar').addEventListener('click', ()=>{ sClick(); noticeOpen(); });
+document.getElementById('btnNoticeClose').addEventListener('click', ()=>{ sClick(); noticeClose(); });
+/* ---- 启动：读缓存 + 连中转拉公告 ---- */
+setTimeout(()=>{ try{ noticeBoot(); }catch(e){} }, 1600);
+
 document.getElementById('profUidLine').addEventListener('click', async ()=>{
   const uid=ensureUid();
   try{ await navigator.clipboard.writeText(uid); toastMsg('档案号已复制：'+uid); }
