@@ -759,7 +759,7 @@ body.fire-left #btnFire{left:18px !important;right:auto !important}
       </div>
     </div>
     <div class="overlay hidden" id="settingsScreen">
-      <div class="title">自定义设置 <span id="verTag" style="font-size:11px;color:#7d8aa8;font-weight:400;display:block;margin-top:2px">v2.4.2</span></div>
+      <div class="title">自定义设置 <span id="verTag" style="font-size:11px;color:#7d8aa8;font-weight:400;display:block;margin-top:2px">v2.4.3</span></div>
       <div id="settingsWrap" style="text-align:left;max-width:320px;line-height:2.2">
         <div>摇杆大小 <input type="range" id="setJoy" min="60" max="140" value="88" style="width:100%"></div>
         <div>开火键大小 <input type="range" id="setFire" min="50" max="120" value="74" style="width:100%"></div>
@@ -798,6 +798,7 @@ body.fire-left #btnFire{left:18px !important;right:auto !important}
         <div id="historyBox" style="display:none;margin-top:10px;border-top:1px solid rgba(255,255,255,.1);padding-top:10px">
           <div style="font-size:13px;font-weight:800;color:#67e8f9;margin-bottom:6px">修改历史</div>
           <div style="line-height:1.8">
+            <div><b style="color:#ffd34d">v2.4.3</b>　按纯数字档案号也能直接搜到人（之前只认带 # 的旧号）</div>
             <div><b style="color:#ffd34d">v2.4.2</b>　档案号改成 10 位纯数字，号段扩到 90 亿个；老档案号自动迁移，昵称归属跟着走</div>
             <div><b style="color:#ffd34d">v2.4.1</b>　关于我们去掉了年龄与学校，界面上的零散提示统一收进说明书</div>
             <div><b style="color:#ffd34d">v2.4.0</b>　好友系统：搜人关注、个人明信片、在线状态、一键拉进房间；名字与档案号全网唯一，每月限改 3 次或消耗改名卡</div>
@@ -2964,7 +2965,8 @@ function fwLookup(q){
       FW.cli.subscribe(topic,{qos:1});
       setTimeout(()=>{ if(!done){ FW.cli.removeListener('message',h); resolve({err:'nocard'}); } }, 2600);
     };
-    if(q.startsWith('#')) return after(q.toUpperCase());
+    // 档案号：新号是 10 位纯数字，老号带 #，两种都直接按档案查
+    if(q.startsWith('#') || /^\d{8,12}$/.test(q)) return after(q.toUpperCase());
     const nickT='gunfight9/nick/'+q.replace(/[\/+#]/g,'').slice(0,24); let done=false;
     const h=(t,p)=>{ if(t!==nickT||done) return; done=true; FW.cli.removeListener('message',h);
       let uid=null; try{ uid=JSON.parse(p.toString()).uid; }catch(e){}
