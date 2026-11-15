@@ -1062,7 +1062,7 @@ body.is-touch .nhTime{display:none !important}
       </div>
     </div>
     <div class="overlay hidden" id="settingsScreen">
-      <div class="title">自定义设置 <span id="verTag" style="font-size:11px;color:#7d8aa8;font-weight:400;display:block;margin-top:2px">v2.7.13</span></div>
+      <div class="title">自定义设置 <span id="verTag" style="font-size:11px;color:#7d8aa8;font-weight:400;display:block;margin-top:2px">v2.7.14</span></div>
       <div id="settingsWrap" style="text-align:left;max-width:320px;line-height:2.2">
         <div>摇杆大小 <input type="range" id="setJoy" min="60" max="140" value="88" style="width:100%"></div>
         <div>开火键大小 <input type="range" id="setFire" min="50" max="120" value="74" style="width:100%"></div>
@@ -1106,6 +1106,7 @@ body.is-touch .nhTime{display:none !important}
         <div id="historyBox" style="display:none;margin-top:10px;border-top:1px solid rgba(255,255,255,.1);padding-top:10px">
           <div style="font-size:13px;font-weight:800;color:#67e8f9;margin-bottom:6px">修改历史</div>
           <div style="line-height:1.8">
+            <div><b style="color:#ffd34d">v2.7.14</b>　每日任务改成每批 3 个、做完点「刷新任务」换一批（不限次数）；单个任务 +10 荣誉、一批全清 +20，每日任务荣誉上限 200，免得无限刷点</div>
             <div><b style="color:#ffd34d">v2.7.13</b>　修好友邀请失败的根因：改过名的人旧名登记还留在中转，按名字搜会指向错的人（搜 A 出来 B），关注的、邀请的都成了别人；现在按名字搜会核对卡片上的名字，对不上就明说过期，不会再把邀请发给错人。另：名字查重窗口由 1.5 秒加到 2.2 秒（中转推保留消息慢时会漏判重名）；离线好友的按钮点了会说明“不在线、邀请不保存”，不再像是坏了</div>
             <div><b style="color:#ffd34d">v2.7.12</b>　联机去掉屏幕边缘的对手方向箭头：敌人位置只由雷达和视野判断，不再有雷达之外的点位提示</div>
             <div><b style="color:#ffd34d">v2.7.11</b>　自检入口合并：设置里的「运行自检」按钮移除，统一从关于页「检查更新 + 自检（一键）」进入；有失败项时仍可跳进逐项详情</div>
@@ -2794,20 +2795,46 @@ const DAILY_POOL = [
   {type:'dmg',    names:['累计造成 600 伤害','累计造成 800 伤害'],           target:[600,800]},
   {type:'matches',names:['今日打完 2 局','今日打完 3 局','今日打完 4 局'],   target:[2,3,4]}
 ];
+const DAILY_CAP = 200;                 // 每日任务荣誉上限，刷新多少批都按这个封顶，避免无限刷点
+function dailyMakeBatch(d){
+  const pool = DAILY_POOL.slice();
+  for(let i=pool.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); const t=pool[i]; pool[i]=pool[j]; pool[j]=t; }
+  // 一批固定 3 个，类型不重复
+  d.tasks = pool.slice(0,3).map(p=>{
+    const k = Math.floor(Math.random()*p.target.length);
+    return { type:p.type, name:p.names[k], target:p.target[k], cur:0, done:false };
+  });
+  d.batch = (d.batch||0)+1;
+  d.bonusDone = 0;
+  return d;
+}
 function dailyInit(){
   const today = new Date().toDateString();
   let d = lsGet('gunDaily2', null);
-  if(!d || d.date!==today || !d.tasks || d.tasks.length<5){
-    // 每天从池子里随机挑 5 类，互不重复
-    const pool = DAILY_POOL.slice();
-    for(let i=pool.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); const t=pool[i]; pool[i]=pool[j]; pool[j]=t; }
-    d = { date: today, honorGot: 0, tasks: pool.slice(0,5).map(p=>{
-      const k = Math.floor(Math.random()*p.target.length);
-      return { type:p.type, name:p.names[k], target:p.target[k], cur:0, done:false };
-    })};
+  if(!d || d.date!==today || !d.tasks || d.tasks.length!==3){
+    d = { date: today, honorToday: 0, batch: 0, tasks: [] };
+    dailyMakeBatch(d);
     lsSet('gunDaily2', d);
   }
+  if(typeof d.honorToday!=='number') d.honorToday = 0;
   return d;
+}
+/* 加荣誉时统一走这里：超上限就不再加，返回实际加了多少 */
+function dailyHonor(n, dObj){
+  const d = dObj || dailyInit();
+  const room = Math.max(0, DAILY_CAP - d.honorToday);
+  const add = Math.min(n, room);
+  if(add>0){ d.honorToday += add; lsSet('gunHonor', lsGet('gunHonor',0)+add); }
+  lsSet('gunDaily2', d);
+  return { add: add, capped: add<n };
+}
+/* 一批做完才能刷下一批 */
+function dailyReroll(){
+  const d = dailyInit();
+  if(!d.tasks.every(t=>t.done)){ toastMsg('先把这一批 3 个做完，才能刷新'); renderDaily(); return false; }
+  dailyMakeBatch(d); lsSet('gunDaily2', d); renderDaily();
+  toastMsg('换了一批新任务（第 '+d.batch+' 批）');
+  return true;
 }
 function dailyProgress(type, n){
   n = n || 1;
@@ -2818,22 +2845,25 @@ function dailyProgress(type, n){
     t.cur = Math.min(t.target, t.cur+n);
     if(t.cur>=t.target){
       t.done = true; changed=true;
-      lsSet('gunHonor', lsGet('gunHonor',0)+10);
-      toastMsg('任务完成：'+t.name+'  +10 荣誉');
+      const g1 = dailyHonor(10, d);
+      toastMsg('任务完成：'+t.name+(g1.add>0?('  +'+g1.add+' 荣誉'):'（今日任务荣誉已满）'));
     }
   }
-  if(changed){
-    const all = d.tasks.every(t=>t.done);
-    if(all && !d.honorGot){ d.honorGot=1; lsSet('gunHonor', lsGet('gunHonor',0)+20); toastMsg('今日任务全部完成！+20 荣誉'); }
+  if(changed && d.tasks.every(t=>t.done) && !d.bonusDone){
+    d.bonusDone = 1;
+    const g2 = dailyHonor(20, d);
+    toastMsg(g2.add>0 ? ('这一批全部完成！+'+g2.add+' 荣誉，可以刷新下一批了') : '这一批全部完成，可以刷新下一批了（今日任务荣誉已满）');
   }
   lsSet('gunDaily2', d);
   renderDaily();
 }
+
 function renderDaily(){
   const d = dailyInit(), el = document.getElementById('dailyTask');
   if(!el) return;
   const done = d.tasks.filter(t=>t.done).length;
-  el.innerHTML = '<div style="font-size:12px;color:#9fb2d0;margin-bottom:5px">每日任务 '+done+'/'+d.tasks.length+' · 荣誉 '+lsGet('gunHonor',0)+'</div>'
+  const allDone = d.tasks.every(t=>t.done);
+  el.innerHTML = '<div style="font-size:12px;color:#9fb2d0;margin-bottom:5px">每日任务 第'+(d.batch||1)+'批 '+done+'/'+d.tasks.length+' · 荣誉 '+lsGet('gunHonor',0)+'</div>'
     + d.tasks.map(t=>{
       const pct = Math.min(100, Math.round(t.cur/t.target*100));
       const c = t.done ? '#33e08a' : '#67e8f9';
@@ -2844,7 +2874,13 @@ function renderDaily(){
         + '</div>'
         + '<div style="height:4px;background:rgba(255,255,255,.08);border-radius:2px;margin:0 0 5px 21px">'
         + '<div style="height:100%;width:'+pct+'%;background:'+c+';border-radius:2px"></div></div>';
-    }).join('');
+    }).join('')
+    + '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:7px;padding-top:7px;border-top:1px solid rgba(255,255,255,.08)">'
+    + '<span style="font-size:11px;color:#8fa1bf">今天任务荣誉 '+d.honorToday+'/'+DAILY_CAP+'</span>'
+    + (allDone
+        ? '<button class="btn" data-daily-reroll="1" style="padding:5px 13px;font-size:11.5px">刷新任务</button>'
+        : '<button class="btn ghost" data-daily-locked="1" style="padding:5px 13px;font-size:11.5px;opacity:.55">刷新任务</button>')
+    + '</div>';
 }
 function updateDailyTask(){ renderDaily(); }
 function addDailyKill(){ dailyProgress('kill', 1); }
@@ -3239,6 +3275,8 @@ function runSelfCheck(){
     })());
   ok('开火只出实心弹头（无光束）', shoot.toString().indexOf('state.tracers.push')<0);
   ok('保留消息通道用支持 retained 的中转', (typeof NT_BROKER==='string' && NT_BROKER.indexOf('hivemq')>0 && MQTT_BROKER.indexOf('hivemq')>0));
+  ok('每日任务每批 3 个', dailyInit().tasks.length===3);
+  ok('每日任务做完可刷新', typeof dailyReroll==='function' && String(renderDaily).indexOf('data-daily-reroll')>=0);
   ok('检查更新按钮同时跑自检', (document.getElementById('btnCheckUpdate')||{textContent:''}).textContent.indexOf('自检')>=0);
   ok('联机不再把人塞到地图中间', startNetMatch.toString().indexOf('320 : 640')<0);
   ok('对手弹道会被墙挡住', netGhostShot.toString().indexOf('maxDist:maxD')>0 && rayClear(0,0,0,100)>=0);
@@ -5295,6 +5333,12 @@ bindBtn('inviteAccept', ()=>{
 const fwQ=document.getElementById('fwQuery');
 if(fwQ) fwQ.addEventListener('keydown', e=>{ if(e.key==='Enter'){ e.preventDefault(); fwQ.blur(); fwDoSearch(); } });
 document.addEventListener('click', (e)=>{
+  const dR= e.target.closest ? e.target.closest('[data-daily-reroll],[data-daily-locked]') : null;
+  if(dR){
+    if(dR.hasAttribute('data-daily-locked')) toastMsg('先把这一批 3 个做完，才能刷新');
+    else { sClick(); dailyReroll(); }
+    return;
+  }
   const t=e.target.closest ? e.target.closest('[data-follow],[data-inv],[data-carduid],[data-unfollow],[data-copyuid],[data-theme],[data-cardbuy],[data-followback],[data-like],[data-act]') : null;
   if(!t) return;
   if(t.dataset.followback){
