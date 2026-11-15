@@ -592,7 +592,7 @@ body.fire-left #btnFire{left:18px !important;right:auto !important}
           <button id="fwClose" style="width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);color:#cdd9f0;font-size:16px;cursor:pointer">✕</button>
         </div>
         <div style="display:flex;gap:8px">
-          <input id="fwQuery" maxlength="20" placeholder="输名字或 #档案号 搜索" style="flex:1;padding:11px;border-radius:10px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.06);color:#e8eefc;font-size:14px;outline:none">
+          <input id="fwQuery" maxlength="20" placeholder="输名字或档案号 搜索" style="flex:1;padding:11px;border-radius:10px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.06);color:#e8eefc;font-size:14px;outline:none">
           <button class="btn" id="fwSearchBtn" style="padding:0 18px;font-size:14px">搜索</button>
         </div>
         <div id="fwHint" style="font-size:11.5px;color:#7d8aa8;margin-top:8px;line-height:1.6">搜到的人会显示他的明信片，关注后就能看到他是否在线、一键拉进房间。</div>
@@ -759,7 +759,7 @@ body.fire-left #btnFire{left:18px !important;right:auto !important}
       </div>
     </div>
     <div class="overlay hidden" id="settingsScreen">
-      <div class="title">自定义设置 <span id="verTag" style="font-size:11px;color:#7d8aa8;font-weight:400;display:block;margin-top:2px">v2.4.1</span></div>
+      <div class="title">自定义设置 <span id="verTag" style="font-size:11px;color:#7d8aa8;font-weight:400;display:block;margin-top:2px">v2.4.2</span></div>
       <div id="settingsWrap" style="text-align:left;max-width:320px;line-height:2.2">
         <div>摇杆大小 <input type="range" id="setJoy" min="60" max="140" value="88" style="width:100%"></div>
         <div>开火键大小 <input type="range" id="setFire" min="50" max="120" value="74" style="width:100%"></div>
@@ -798,6 +798,7 @@ body.fire-left #btnFire{left:18px !important;right:auto !important}
         <div id="historyBox" style="display:none;margin-top:10px;border-top:1px solid rgba(255,255,255,.1);padding-top:10px">
           <div style="font-size:13px;font-weight:800;color:#67e8f9;margin-bottom:6px">修改历史</div>
           <div style="line-height:1.8">
+            <div><b style="color:#ffd34d">v2.4.2</b>　档案号改成 10 位纯数字，号段扩到 90 亿个；老档案号自动迁移，昵称归属跟着走</div>
             <div><b style="color:#ffd34d">v2.4.1</b>　关于我们去掉了年龄与学校，界面上的零散提示统一收进说明书</div>
             <div><b style="color:#ffd34d">v2.4.0</b>　好友系统：搜人关注、个人明信片、在线状态、一键拉进房间；名字与档案号全网唯一，每月限改 3 次或消耗改名卡</div>
             <div><b style="color:#ffd34d">v2.3.1127</b>　个人主页移到左上角，设置里加「关于我们」与修改历史</div>
@@ -1025,10 +1026,24 @@ function currentNick(){ return (lsGetRaw('cs_nick')||'').trim()||'玩家'; }
 
 /** 档案 ID：身份凭证，和昵称解耦。昵称只是显示名，改多少次都不影响战绩归属；
  *  换设备 / 别人在你手机上输入同名，uid 不同 = 不同档案，拿不到你的数据。 */
+let UID_MIGRATED=false;
+function genUid(){
+  // 10 位纯数字，取密码学随机数：可用号段 90 亿个，10 万用户时重号概率低于万分之一
+  const buf=new Uint32Array(2);
+  try{ crypto.getRandomValues(buf); }catch(e){ buf[0]=Date.now()%4294967296; buf[1]=Math.random()*4294967296; }
+  const v=(BigInt(buf[0])<<32n | BigInt(buf[1])) % 9000000000n;
+  return String(1000000000n+v);
+}
 function ensureUid(){
   let u=lsGetRaw('cs_uid');
-  if(!u){ u='#'+Math.random().toString(36).slice(2,6).toUpperCase()+(Math.floor(Math.random()*9000)+1000); lsSet('cs_uid',u); }
-  return u;
+  if(u && /^\d{10}$/.test(u)) return u;
+  const nu=genUid(); lsSet('cs_uid',nu);
+  if(u){                       // 老档案号（带 # 的字母号）平滑迁移，昵称归属跟着走
+    UID_MIGRATED=true;
+    const n=lsGetRaw('cs_nick');
+    if(n){ const r=nickReg(); if(r[n]){ r[n]=nu; lsSet('gunNickReg',r); } }
+  }
+  return nu;
 }
 /* ---- 昵称注册表：只做记录，不再用于拦截重名（同名玩家靠 uid 区分） ---- */
 function nickReg(){ return lsGet('gunNickReg', {}); }
@@ -2495,7 +2510,7 @@ const savedNick=lsGetRaw('cs_nick');
 if(savedNick){
   nickClaim(savedNick, ensureUid()); nickInput.value=savedNick; loginScreen.classList.add('hidden'); menuScreen.classList.remove('hidden');
   // 后台只读复查：名字若已被别人抢注，提醒改名（不抢别人的名字、不打断进入）
-  nickRemoteClaim(savedNick, ensureUid(), true).then(r=>{
+  nickRemoteClaim(savedNick, ensureUid(), !UID_MIGRATED).then(r=>{
     if(r && r.ok===false) toastMsg('你的代号「'+savedNick+'」已被别人注册，去个人主页改个名');
   });
 }
@@ -2550,7 +2565,7 @@ function runSelfCheck(){
   ok('AI 代号池可取 9 个', n9.length===9, n9.join(','));
   ok('同局代号不重复', new Set(n9).size===n9.length);
   ok('AI 会避开玩家代号', !n9.includes('测试名'));
-  ok('档案 ID 格式正常', /^#[0-9A-Z]{7,}$/.test(ensureUid()), ensureUid());
+  ok('档案 ID 格式正常', /^\d{10}$/.test(ensureUid()) || /^#[0-9A-Z]{7,}$/.test(ensureUid()), ensureUid());
   ok('战绩绑定档案 ID', profLoad().uid===ensureUid());
   ok('昵称登记表可读写', (function(){
     const n='__sc_'+Math.random().toString(36).slice(2,6);
@@ -3103,7 +3118,7 @@ function fwOpen(){
   fwRenderList();
   fwInit().then(()=>{
     const h=document.getElementById('fwHint');
-    if(FW.ready) h.textContent='输名字或 #档案号 搜人；关注后能看到在线状态、一键拉进房间。';
+    if(FW.ready) h.textContent='输名字或档案号 搜人；关注后能看到在线状态、一键拉进房间。';
     else h.textContent='好友服务正在连接（首次约 5~10 秒），连不上就检查网络。';
     fwWatchFriends(); fwRenderList();
   });
@@ -3606,7 +3621,7 @@ function buildHelp(){
     '· 结算界面展示双方伤害、命中率与全场最佳 MVP。</div>'
     +'<h4>五、账号与名字</h4>'
     +'<div>· <b>昵称全网唯一</b>：先注册先得，一个名字只能用一次，别人再输同一个名字会被直接拒绝。<br>'
-    +'· <b>档案号</b>（形如 #AB12CD34）是你的身份凭证，改名不影响战绩归属；别人搜你时输名字或档案号都可以。<br>'
+    +'· <b>档案号</b>（10 位纯数字，形如 4829137560）是你的身份凭证，改名不影响战绩归属；别人搜你时输名字或档案号都可以。<br>'
     +'· <b>改名次数</b>：每个自然月 3 次免费；用完后花 '+CARD_COST+' 荣誉在「我的明信片」里换一张改名卡，再用卡改名。<br>'
     +'· <b>名字是永久的</b>：你改用别的名字后，旧名字仍归你，别人拿不走，你也随时能改回来。<br>'
     +'· 断网时查不了重名，会直接放行；清掉浏览器缓存换设备，档案号会变，原来的名字可能被别人抢注。</div>'
