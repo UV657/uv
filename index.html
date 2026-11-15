@@ -819,6 +819,24 @@ body.is-touch .nhTime{display:none !important}
           </div>
           <div id="admBanHint" style="font-size:11.5px;color:#7d8aa8;margin-bottom:8px;line-height:1.7"></div>
           <div id="admBanList" style="display:flex;flex-direction:column;gap:5px;margin-bottom:12px"></div>
+          <div style="font-size:13px;font-weight:800;color:#67e8f9;margin:4px 0 6px">单人调参（只对填写的代号生效）</div>
+          <div style="display:flex;gap:6px;margin-bottom:6px">
+            <input id="admPtName" placeholder="玩家代号（必填）" style="flex:1;padding:8px;border-radius:8px;background:#0b1220;color:#e8eefc;border:1px solid rgba(255,255,255,.16);font-size:12px">
+          </div>
+          <div style="display:flex;gap:6px;margin-bottom:8px">
+            <select id="admPtField" style="flex:1;padding:7px;border-radius:8px;background:#0b1220;color:#e8eefc;border:1px solid rgba(255,255,255,.16);font-size:12px">
+              <option value="speed">移速</option><option value="dmg">单发伤害</option><option value="fireCD">射速(秒/发)</option>
+              <option value="bulletSpeed">弹速</option><option value="skillCd">技能冷却</option><option value="hp">血量上限</option>
+            </select>
+            <input id="admPtVal" type="number" placeholder="数值" style="flex:1;padding:7px;border-radius:8px;background:#0b1220;color:#e8eefc;border:1px solid rgba(255,255,255,.16);font-size:12px">
+          </div>
+          <div style="display:flex;gap:8px;margin-bottom:8px">
+            <button class="btn" id="btnAdmPtApply" style="flex:1;padding:8px;font-size:12px">应用</button>
+            <button class="btn ghost" id="btnAdmPtClear" style="flex:1;padding:8px;font-size:12px">清除该玩家</button>
+            <button class="btn ghost" id="btnAdmPtSync" style="flex:1;padding:8px;font-size:12px">同步</button>
+          </div>
+          <div id="admPtList" style="display:flex;flex-direction:column;gap:5px;margin-bottom:6px"></div>
+          <div id="admPtHint" style="font-size:11.5px;color:#7d8aa8;margin-bottom:12px;line-height:1.7">按代号单独改数值：只有这个代号进对局时生效，其他玩家和同角色的 AI 都不受影响</div>
           <div style="font-size:13px;font-weight:800;color:#67e8f9;margin:4px 0 6px">角色数值（改完立刻对新开局生效）</div>
           <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">
             <select id="admRole" style="flex:1;min-width:120px;padding:7px;border-radius:8px;background:#0b1220;color:#e8eefc;border:1px solid rgba(255,255,255,.16);font-size:12px">
@@ -1044,7 +1062,7 @@ body.is-touch .nhTime{display:none !important}
       </div>
     </div>
     <div class="overlay hidden" id="settingsScreen">
-      <div class="title">自定义设置 <span id="verTag" style="font-size:11px;color:#7d8aa8;font-weight:400;display:block;margin-top:2px">v2.7.4</span></div>
+      <div class="title">自定义设置 <span id="verTag" style="font-size:11px;color:#7d8aa8;font-weight:400;display:block;margin-top:2px">v2.7.5</span></div>
       <div id="settingsWrap" style="text-align:left;max-width:320px;line-height:2.2">
         <div>摇杆大小 <input type="range" id="setJoy" min="60" max="140" value="88" style="width:100%"></div>
         <div>开火键大小 <input type="range" id="setFire" min="50" max="120" value="74" style="width:100%"></div>
@@ -1089,6 +1107,7 @@ body.is-touch .nhTime{display:none !important}
         <div id="historyBox" style="display:none;margin-top:10px;border-top:1px solid rgba(255,255,255,.1);padding-top:10px">
           <div style="font-size:13px;font-weight:800;color:#67e8f9;margin-bottom:6px">修改历史</div>
           <div style="line-height:1.8">
+            <div><b style="color:#ffd34d">v2.7.5</b>　管理终端新增「单人调参」：填玩家代号 + 选属性（移速 / 伤害 / 射速 / 弹速 / 技能冷却 / 血量上限）+ 数值，只对这个代号生效，同角色其他人和 AI 都不受影响，对局中改了立即生效</div>
             <div><b style="color:#ffd34d">v2.7.4</b>　彻底去掉射击光效：不再画曳光束、枪口火花和子弹拖尾，开火只有一颗实心弹头飞出去，1V1 / 5V5 / 联机全部一视同仁</div>
             <div><b style="color:#ffd34d">v2.7.3</b>　去掉开火时枪口的圆形光晕，只留曳光束、细火花和后坐力</div>
             <div><b style="color:#ffd34d">v2.7.2</b>　开火键加冷却显示：冷却期间按钮按扇形变暗收起（不做弹跳），冷却没好点了也不会发射；射速按角色与武器区分（冲锋枪最快、精确步枪最慢）</div>
@@ -1320,11 +1339,17 @@ function movePlayer(p, dx, dy, dt){
 
 /* ================= 4. 实体创建 ================= */
 const ROT_SPEED = 4.5; // 1V1 独立瞄准旋转速度（弧度/秒），支持 360 度任意角度
-function makePlayer(team, idx, role, name, isHuman){  const spawns = team==='red' ? state.world.redSpawn : state.world.blueSpawn;
+function makePlayer(team, idx, role0, name, isHuman){  const spawns = team==='red' ? state.world.redSpawn : state.world.blueSpawn;
   const s = spawns[idx % spawns.length];
+  // 单人调参：只给这个玩家克隆一份数值，同角色的其他人不受影响
+  let role=role0, hpMax=CFG.maxHp;
+  if(isHuman){
+    role=ptuneRole(role0, name);
+    const th=ptuneHp(name); if(th!=null) hpMax=th;
+  }
   return {
     id:team+idx, idx, team, name, role, isHuman,
-    x:s.x, y:s.y, hp:CFG.maxHp, maxHp:CFG.maxHp, alive:true,
+    x:s.x, y:s.y, hp:hpMax, maxHp:hpMax, alive:true,
     aim: team==='red' ? 0 : Math.PI,
     facing: team==='red' ? 0 : Math.PI,       // 绘制朝向：平滑插值到 aim
     lastDX: team==='red' ? 1 : -1, lastDY:0,  // 1V1 键盘：最后移动方向 = 射击方向
@@ -3212,6 +3237,27 @@ function runSelfCheck(){
       return src.indexOf('shortName')>0 && src.indexOf("'AI '")<0 && src.indexOf("'P1 '")<0;
     })());
   ok('开火只出实心弹头（无光束）', shoot.toString().indexOf('state.tracers.push')<0);
+  ok('保留消息通道用支持 retained 的中转', (typeof NT_BROKER==='string' && NT_BROKER.indexOf('hivemq')>0 && MQTT_BROKER.indexOf('hivemq')>0));
+  ok('单人调参模块齐全', ['ptuneLoad','ptuneSave','ptuneRole','ptuneHp','ptunePublish','ptuneApplyRaw','ptuneApplyLive'].every(n=>typeof window[n]==='function'));
+  ok('单人调参按代号只改该玩家', (function(){
+      try{
+        const base={id:'assault', name:'突击手', speed:280, dmg:12, fireCD:0.28, bulletSpeed:760, skill:{cd:5}};
+        PTUNE.list=[{name:'调参甲', speed:520, dmg:40, hp:180}];
+        const cp=ptuneRole(base, '调参甲');
+        const other=ptuneRole(base, '别的玩家');
+        const hp=ptuneHp('调参甲');
+        const r1=cp.speed===520 && cp.dmg===40 && base.speed===280 && other.speed===280 && hp===180;
+        PTUNE.list=[];
+        return r1;
+      }catch(e){ return false; }
+    })());
+  ok('单人调参数值有上下限', (function(){
+      try{
+        const n=ptuneNorm({name:'x', speed:9999, dmg:1, hp:10});
+        return n && n.speed===600 && n.dmg===2 && n.hp===40;
+      }catch(e){ return false; }
+    })());
+
   ok('四把枪的弹道参数各不相同', (function(){
       try{
         const ids=['rifle','smg','shotgun','dmr'];
@@ -3413,7 +3459,7 @@ function netToast(txt){ toastMsg(txt); }
  * 1. 设置里填了 wss:// 地址 → 连自建服务器（Render 那种，需要服务器能跑）
  * 2. 没填 → 自动走 EMQX 公共中转（免注册、免信用卡、免部署，开箱能玩）
  */
-const MQTT_BROKER = 'wss://broker.emqx.io:8084/mqtt';
+const MQTT_BROKER = 'wss://broker.hivemq.com:8884/mqtt';   // 昵称登记 / 好友卡片靠保留消息：emqx 已不保存 retained，统一放 hivemq
 /* 主中转连不上就换备用：国内手机网络下单一公共中转经常连不通，换一个就能玩 */
 const MQTT_BROKERS = ['wss://broker.emqx.io:8084/mqtt','wss://broker.hivemq.com:8884/mqtt'];
 const MQTT_CDN = ['https://cdn.jsdelivr.net/npm/mqtt@5.10.1/dist/mqtt.min.js',
@@ -4136,7 +4182,106 @@ function banDescribe(b){
 function banToast(b){
   toastMsg('你已被'+(b.type==='ban'?'封号':'禁言')+(b.reason?('：'+b.reason):'')+(b.until?('（剩余约'+Math.max(0,Math.ceil((b.until-Date.now())/3600000))+'小时）'):'（永久）'));
 }
+/* ================= 单人调参：终端按代号单独改某个玩家的数值 ================= */
+const PTUNE_TOPIC='gunfight9/ptune';
+const PTUNE={list:[], conn:false};
+function ptuneLoad(){ try{ const c=lsGet('gunPtune',[]); if(Array.isArray(c)) PTUNE.list=c; }catch(e){} }
+function ptuneSave(){ try{ lsSet('gunPtune', PTUNE.list.slice(0,200)); }catch(e){} }
+const PTUNE_RANGE={ speed:[120,600], dmg:[2,120], fireCD:[0.06,2], bulletSpeed:[300,2400], skillCd:[0.5,40], hp:[40,400] };
+function ptuneNorm(o){
+  if(!o || typeof o!=='object') return null;
+  const name=String(o.name||'').trim().slice(0,24);
+  if(!name) return null;
+  const out={name};
+  for(const k in PTUNE_RANGE){
+    const v=o[k];
+    if(typeof v==='number' && isFinite(v)){
+      const r=PTUNE_RANGE[k];
+      out[k]=Math.min(r[1], Math.max(r[0], v));
+    }
+  }
+  if(Object.keys(out).length<2) return null;
+  out.ts=Number(o.ts)||Date.now();
+  return out;
+}
+function ptunePick(name){
+  const nm=String(name||'').trim().toLowerCase();
+  if(!nm) return null;
+  return PTUNE.list.find(x=>String(x.name||'').trim().toLowerCase()===nm) || null;
+}
+function ptuneRole(role, name){
+  const t=ptunePick(name); if(!t) return role;
+  const cp=Object.assign({}, role);
+  if(role && role.skill) cp.skill=Object.assign({}, role.skill);
+  if(typeof t.speed==='number') cp.speed=t.speed;
+  if(typeof t.dmg==='number') cp.dmg=t.dmg;
+  if(typeof t.fireCD==='number') cp.fireCD=t.fireCD;
+  if(typeof t.bulletSpeed==='number') cp.bulletSpeed=t.bulletSpeed;
+  if(typeof t.skillCd==='number' && cp.skill) cp.skill.cd=t.skillCd;
+  return cp;
+}
+function ptuneHp(name){
+  const t=ptunePick(name);
+  return (t && typeof t.hp==='number') ? Math.round(t.hp) : null;
+}
+/* 对局进行中改了数值，也立刻套到该玩家身上（其他人不受影响） */
+function ptuneApplyLive(){
+  if(!state.players || !state.players.length) return;
+  for(const p of state.players){
+    if(!p || !p.isHuman) continue;
+    const rid=(p.role && p.role.id) || '';
+    const base=rid && ROLES[rid] ? ROLES[rid] : p.role;
+    if(!base) continue;
+    const next=ptuneRole(base, p.name);
+    p.role=next;
+    const th=ptuneHp(p.name);
+    if(th!=null){
+      const d=th-p.maxHp;
+      p.maxHp=th; p.hp=Math.max(1, Math.min(th, p.hp+d));
+    } else if(p.maxHp!==CFG.maxHp){
+      const d=CFG.maxHp-p.maxHp;
+      p.maxHp=CFG.maxHp; p.hp=Math.max(1, Math.min(CFG.maxHp, p.hp+d));
+    }
+  }
+}
+function ptuneApplyRaw(o){
+  if(!o || !Array.isArray(o.list)){ PTUNE.list=[]; ptuneSave(); return; }
+  PTUNE.list=o.list.map(ptuneNorm).filter(Boolean).slice(0,200);
+  ptuneSave();
+  try{ ptuneApplyLive(); }catch(e){}
+  try{ if(window.ADMIN && ADMIN.open) ptuneAdmRender(); }catch(e){}
+}
+function ptunePublish(){
+  ptuneSave();
+  const payload=JSON.stringify({list:PTUNE.list, ts:Date.now()});
+  if(NT.cli && NT.cli.connected){
+    try{ NT.cli.publish(PTUNE_TOPIC, payload, {qos:1, retain:true}); return true; }catch(e){ return false; }
+  }
+  return false;
+}
+/* 终端里的单人调参面板 */
+function ptuneAdmRender(){
+  const box=document.getElementById('admPtList'); if(!box) return;
+  if(!PTUNE.list.length){ box.innerHTML='<div style="font-size:11.5px;color:#7d8aa8">当前没有单人调参记录</div>'; return; }
+  const label={speed:'移速',dmg:'伤害',fireCD:'射速',bulletSpeed:'弹速',skillCd:'技能CD',hp:'血量'};
+  box.innerHTML=PTUNE.list.map((x,i)=>{
+    const parts=Object.keys(label).filter(k=>typeof x[k]==='number').map(k=>label[k]+' '+x[k]);
+    return '<div style="display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:8px;background:rgba(255,255,255,.05)">'+
+      '<div style="flex:1;font-size:12px;color:#e8eefc">'+x.name.replace(/</g,'&lt;')+'<div style="font-size:11px;color:#7d8aa8">'+parts.join(' · ')+'</div></div>'+
+      '<button class="btn ghost" data-ptdel="'+i+'" style="padding:4px 8px;font-size:11px">删除</button></div>';
+  }).join('');
+  box.querySelectorAll('[data-ptdel]').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      const i=+btn.getAttribute('data-ptdel');
+      PTUNE.list.splice(i,1);
+      ptunePublish(); ptuneAdmRender();
+      const h=document.getElementById('admPtHint'); if(h) h.textContent='已删除该玩家的单人调参';
+    });
+  });
+}
+
 /* ================= 全服公告（所有玩家主页可见） ================= */
+const NT_BROKER='wss://broker.hivemq.com:8884/mqtt';
 const NOTICE_TOPIC='gunfight9/notice';
 const NOTICE_STATUS_TOPIC='gunfight9/status';
 const NOTICE={fromList:false, cur:null, list:[], conn:false, tried:false, maint:false};
@@ -4298,11 +4443,13 @@ async function noticeConnect(){
   if(NT.cli && NT.cli.connected){ NOTICE.conn=true; return true; }
   try{
     const mqtt=await loadMqttLib();
-    const url=MQTT_BROKERS[0];
+    // 公告 / 处罚 / 单人调参 / 昵称登记都靠「保留消息」，必须用会保存 retained 的中转：
+    // 实测 broker.emqx.io 已不保存（新订阅拿不到历史），broker.hivemq.com 正常
+    const url=NT_BROKER;
     NT.cli=mqtt.connect(url,{clientId:'gfnt_'+Date.now().toString(36)+Math.random().toString(36).slice(2,8), clean:true, reconnectPeriod:5000, connectTimeout:9000, keepalive:30});
     NT.cli.on('connect',()=>{
       NOTICE.conn=true;
-      try{ NT.cli.subscribe(NOTICE_TOPIC,{qos:1}); NT.cli.subscribe(NOTICE_STATUS_TOPIC,{qos:1}); NT.cli.subscribe(BAN_TOPIC,{qos:1}); }catch(e){}
+      try{ NT.cli.subscribe(NOTICE_TOPIC,{qos:1}); NT.cli.subscribe(NOTICE_STATUS_TOPIC,{qos:1}); NT.cli.subscribe(BAN_TOPIC,{qos:1}); NT.cli.subscribe(PTUNE_TOPIC,{qos:1}); }catch(e){}
       noticeRender();
     });
     NT.cli.on('message',(topic,payload)=>{
@@ -4316,6 +4463,8 @@ async function noticeConnect(){
       } else if(topic===BAN_TOPIC){
         banApplyRaw(o);
         try{ if(ADMIN.open) admBanRender(); }catch(e){}
+      } else if(topic===PTUNE_TOPIC){
+        ptuneApplyRaw(o);
       }
     });
     NT.cli.on('error',()=>{});
@@ -4326,6 +4475,7 @@ function noticeBoot(){
   if(NOTICE.tried) return; NOTICE.tried=true;
   noticeLoad();
   banLoad();
+  ptuneLoad();
   NOTICE.cur = NOTICE.list.find(x=> x.id!==lsGet('gunNoticeSeen','') && (!x.until||Date.now()<x.until)) || null;
   if(NOTICE.list.some(x=>x.pin)) NOTICE.cur = NOTICE.list.find(x=>x.pin);
   noticeRender();
@@ -4415,6 +4565,7 @@ function admEnterBody(){
   adminTuneFill();
   adminNoticeFill();
   admBanRender();
+  ptuneAdmRender();
   adminLoad();
   admLog('已登录管理终端');
 }
@@ -4491,6 +4642,41 @@ function adminTuneSave(){
   if(hint) hint.textContent='已保存：'+ROLES[id].name+' 移速 '+ROLES[id].speed+' · 伤害 '+ROLES[id].dmg+' · 射速 '+ROLES[id].fireCD+'s · 技能CD '+ROLES[id].skill.cd+'s · 全员血量 '+CFG.maxHp;
 }
 document.getElementById('btnAdmApply').addEventListener('click', ()=>{ sClick(); adminTuneSave(); toastMsg('数值已应用，下一局生效'); });
+/* 单人调参：应用 / 清除 / 同步 */
+document.getElementById('btnAdmPtApply').addEventListener('click', ()=>{
+  sClick();
+  const hint=document.getElementById('admPtHint');
+  const name=(document.getElementById('admPtName').value||'').trim();
+  const field=document.getElementById('admPtField').value;
+  const raw=parseFloat(document.getElementById('admPtVal').value);
+  if(!name){ if(hint) hint.textContent='先填玩家代号'; return; }
+  if(!isFinite(raw)){ if(hint) hint.textContent='数值填错了'; return; }
+  const r=PTUNE_RANGE[field]; if(!r){ if(hint) hint.textContent='字段不对'; return; }
+  if(raw<r[0] || raw>r[1]){ if(hint) hint.textContent='数值超出范围（'+r[0]+' ~ '+r[1]+'）'; return; }
+  let rec=PTUNE.list.find(x=>String(x.name).toLowerCase()===name.toLowerCase());
+  if(!rec){ rec={name, ts:Date.now()}; PTUNE.list.push(rec); }
+  rec[field]=raw; rec.ts=Date.now();
+  ptunePublish(); ptuneAdmRender();
+  const okPub=!!(NT.cli && NT.cli.connected);
+  if(hint) hint.textContent='已下发：'+name+' · '+field+' = '+raw+(okPub?'（对局中会立即生效）':'（中转未连上，先连上再同步）');
+});
+document.getElementById('btnAdmPtClear').addEventListener('click', ()=>{
+  sClick();
+  const hint=document.getElementById('admPtHint');
+  const name=(document.getElementById('admPtName').value||'').trim();
+  if(!name){ if(hint) hint.textContent='先填玩家代号'; return; }
+  const n0=PTUNE.list.length;
+  PTUNE.list=PTUNE.list.filter(x=>String(x.name).toLowerCase()!==name.toLowerCase());
+  ptunePublish(); ptuneAdmRender(); ptuneApplyLive();
+  if(hint) hint.textContent = (PTUNE.list.length<n0) ? ('已清除 '+name+' 的单人调参，恢复默认数值') : ('没有找到 '+name+' 的记录');
+});
+document.getElementById('btnAdmPtSync').addEventListener('click', ()=>{
+  sClick();
+  const hint=document.getElementById('admPtHint');
+  if(!(NT.cli && NT.cli.connected)){ if(hint) hint.textContent='中转还没连上，稍等再点'; return; }
+  ptunePublish(); ptuneAdmRender();
+  if(hint) hint.textContent='已同步，当前 '+PTUNE.list.length+' 条单人调参';
+});
 document.getElementById('btnAdmReset').addEventListener('click', ()=>{ sClick(); lsSet('gunAdminTune',{}); location.reload(); });
 document.getElementById('btnAdmCleanTest').addEventListener('click', async ()=>{
   sClick();
