@@ -1044,7 +1044,7 @@ body.is-touch .nhTime{display:none !important}
       </div>
     </div>
     <div class="overlay hidden" id="settingsScreen">
-      <div class="title">自定义设置 <span id="verTag" style="font-size:11px;color:#7d8aa8;font-weight:400;display:block;margin-top:2px">v2.7.3</span></div>
+      <div class="title">自定义设置 <span id="verTag" style="font-size:11px;color:#7d8aa8;font-weight:400;display:block;margin-top:2px">v2.7.4</span></div>
       <div id="settingsWrap" style="text-align:left;max-width:320px;line-height:2.2">
         <div>摇杆大小 <input type="range" id="setJoy" min="60" max="140" value="88" style="width:100%"></div>
         <div>开火键大小 <input type="range" id="setFire" min="50" max="120" value="74" style="width:100%"></div>
@@ -1089,6 +1089,7 @@ body.is-touch .nhTime{display:none !important}
         <div id="historyBox" style="display:none;margin-top:10px;border-top:1px solid rgba(255,255,255,.1);padding-top:10px">
           <div style="font-size:13px;font-weight:800;color:#67e8f9;margin-bottom:6px">修改历史</div>
           <div style="line-height:1.8">
+            <div><b style="color:#ffd34d">v2.7.4</b>　彻底去掉射击光效：不再画曳光束、枪口火花和子弹拖尾，开火只有一颗实心弹头飞出去，1V1 / 5V5 / 联机全部一视同仁</div>
             <div><b style="color:#ffd34d">v2.7.3</b>　去掉开火时枪口的圆形光晕，只留曳光束、细火花和后坐力</div>
             <div><b style="color:#ffd34d">v2.7.2</b>　开火键加冷却显示：冷却期间按钮按扇形变暗收起（不做弹跳），冷却没好点了也不会发射；射速按角色与武器区分（冲锋枪最快、精确步枪最慢）</div>
             <div><b style="color:#ffd34d">v2.7.1</b>　联机弹道收尾：四种武器（步枪 / 冲锋枪 / 霰弹枪 / 精确步枪）各有独立粗细、长度、停留时间，每次开火都会同步给对手（之前只有自己看得到）；子弹改成一道光，去掉光圈与白色圆点；1v1 上方面板红方显示自己代号、蓝方显示对手真实代号；管理终端页面不再显示玩家公告条</div>
@@ -1571,29 +1572,17 @@ function shoot(p){
     state.bullets.push({ x:sx,y:sy,vx:Math.cos(a2)*spd,vy:Math.sin(a2)*spd,
       r:CFG.bulletRadius, team:p.team, dmg, life, owner:p });
   }
-  // 每把枪都留曳光：长度/粗细/停留按枪种区分；霰弹一次撒出几束细光
-  const st=tracerStyle(wp.id);
-  const tracerLen=Math.min(st.len, Math.max(140, spd*life*0.9));
-  state.tracers=state.tracers||[];
-  const beams=st.beams||1;
-  for(let i=0;i<beams;i++){
-    const a3 = beams>1 ? ang + (i-(beams-1)/2)*wp.spread*0.9 : ang;
-    state.tracers.push({ x1:sx, y1:sy, x2:sx+Math.cos(a3)*tracerLen, y2:sy+Math.sin(a3)*tracerLen,
-                         t0:performance.now(), team:p.team, len:tracerLen, wid:st.wid, wid2:wp.id, ms:st.ms,
-                         core:st.core, halo:st.halo });
-  }
+  // 不做曳光：开火只有实心弹头飞出，没有光束
   if(state.netMode && p.isHuman){
     p.pendingShots=p.pendingShots||[];
     p.pendingShots.push({a:+ang.toFixed(2), w:wp.id});
     if(p.pendingShots.length>6) p.pendingShots.splice(0, p.pendingShots.length-6);
   }
-  if(state.tracers.length>60) state.tracers.splice(0, state.tracers.length-60);
   p.shots++; // 统计：开火次数（结算用）
   p.cooldown = (p.isHuman ? p.role.fireCD : p.role.fireCD*CFG.aiFireMul) * wp.cdMul;
   // 枪口不再留圆点光斑（只保留细火花）
 
   p.muzzleT=0.09; p.recoil=4; // 枪口闪光 + 后坐力（动画反馈）
-  spawnParticle(sx,sy,Math.cos(ang)*260,Math.sin(ang)*260,'#fff2c9',0.05,2.5); // 枪口火花
   if(p.isHuman) sShoot(); // 只有人类玩家开枪才响，避免10人同时开火音效叠加
   if(life>=1.8){ // 狙击：拉一条光线
     for(let i=0;i<3;i++) spawnParticle(sx,sy,Math.cos(ang)*900,Math.sin(ang)*900,'#ff8fa0',0.12,4);
@@ -2467,43 +2456,24 @@ function drawPlayers(){
 }
 function drawBullets(){
   ctx2d.lineCap='round';
-  /* ---- 弹道光束（本地 + 对手）：纯线束，无光圈 ---- */
-  if(state.tracers && state.tracers.length){
-    const now=performance.now();
-    state.tracers=state.tracers.filter(t=>now-t.t0 < (t.ms||260));
-    for(const t of state.tracers){
-      const dur=(t.ms||260);
-      const k=Math.max(0, 1-(now-t.t0)/dur);
-      const rgb = t.team==='blue' ? '77,195,255' : '255,91,110';
-      const wid = t.wid||4;
-      // 外沿柔边（低透明度，不加阴影/发光）
-      ctx2d.globalAlpha=(t.halo!=null?t.halo:0.28)*k;
-      ctx2d.strokeStyle='rgba('+rgb+',1)';
-      ctx2d.lineWidth=wid+2;
-      ctx2d.beginPath(); ctx2d.moveTo(t.x1,t.y1); ctx2d.lineTo(t.x2,t.y2); ctx2d.stroke();
-      // 束身：枪口白热 → 队伍色 → 尾部透明
-      const g=ctx2d.createLinearGradient(t.x1,t.y1,t.x2,t.y2);
-      g.addColorStop(0,'rgba(255,255,255,'+((t.core!=null?t.core:0.95)*k)+')');
-      g.addColorStop(0.14,'rgba('+rgb+','+(0.9*k)+')');
-      g.addColorStop(0.62,'rgba('+rgb+','+(0.42*k)+')');
-      g.addColorStop(1,'rgba('+rgb+',0)');
-      ctx2d.globalAlpha=1; ctx2d.strokeStyle=g; ctx2d.lineWidth=wid;
-      ctx2d.beginPath(); ctx2d.moveTo(t.x1,t.y1); ctx2d.lineTo(t.x2,t.y2); ctx2d.stroke();
-    }
-    ctx2d.globalAlpha=1;
-  }
-  /* ---- 飞行中的子弹：一束光，不再是圆点 ---- */
+  /* 只画子弹本体：实心小队色弹头，不带光束、拖尾、白热或任何发光 */
   for(const b of state.bullets){
     const rgb = b.team==='red' ? '255,91,110' : '77,195,255';
-    const sp=Math.hypot(b.vx,b.vy)||1;
-    const len=Math.min(46, Math.max(18, sp*0.055));
-    const tx=b.x-b.vx/sp*len, ty=b.y-b.vy/sp*len;
-    const g2=ctx2d.createLinearGradient(tx,ty,b.x,b.y);
-    g2.addColorStop(0,'rgba('+rgb+',0)');
-    g2.addColorStop(0.7,'rgba('+rgb+',0.85)');
-    g2.addColorStop(1,'rgba(255,255,255,0.95)');
-    ctx2d.globalAlpha=1; ctx2d.strokeStyle=g2; ctx2d.lineWidth=3;
-    ctx2d.beginPath(); ctx2d.moveTo(tx,ty); ctx2d.lineTo(b.x,b.y); ctx2d.stroke();
+    ctx2d.fillStyle='rgb('+rgb+')';
+    ctx2d.beginPath(); ctx2d.arc(b.x,b.y, Math.max(3, b.r||3), 0, Math.PI*2); ctx2d.fill();
+  }
+  /* 对手开火：本地生成同款弹头做视觉，不带光效 */
+  const now=performance.now();
+  if(state.ghostShots && state.ghostShots.length){
+    state.ghostShots=state.ghostShots.filter(g=>now-g.t0 < g.life*1000);
+    for(const g of state.ghostShots){
+      const t=(now-g.t0)/1000;
+      const rgb = g.team==='blue' ? '77,195,255' : '255,91,110';
+      ctx2d.fillStyle='rgb('+rgb+')';
+      ctx2d.beginPath();
+      ctx2d.arc(g.x+Math.cos(g.ang)*g.spd*t, g.y+Math.sin(g.ang)*g.spd*t, 3, 0, Math.PI*2);
+      ctx2d.fill();
+    }
   }
 }
 function drawParticles(){
@@ -3241,7 +3211,7 @@ function runSelfCheck(){
       const src=updateHUD.toString();
       return src.indexOf('shortName')>0 && src.indexOf("'AI '")<0 && src.indexOf("'P1 '")<0;
     })());
-  ok('每把枪开火都留弹道光束', shoot.toString().indexOf('state.tracers.push')>0);
+  ok('开火只出实心弹头（无光束）', shoot.toString().indexOf('state.tracers.push')<0);
   ok('四把枪的弹道参数各不相同', (function(){
       try{
         const ids=['rifle','smg','shotgun','dmr'];
@@ -3250,11 +3220,11 @@ function runSelfCheck(){
         return ws.length===4 && new Set(ws).size>=3 && new Set(ls).size===4;
       }catch(e){ return false; }
     })());
-  ok('弹道去掉了光圈与白点', drawBullets.toString().indexOf('shadowBlur')<0 && drawBullets.toString().indexOf('arc(')<0);
+  ok('子弹不带白光、不带拖尾渐变', drawBullets.toString().indexOf('shadowBlur')<0 && drawBullets.toString().indexOf('createLinearGradient')<0);
   ok('开火同步带武器编号', shoot.toString().indexOf('w:wp.id')>0);
-  ok('对手弹道按枪种渲染', netGhostShot.toString().indexOf('tracerStyle(m.w)')>0);
+  ok('对手开火也生成弹头', netGhostShot.toString().indexOf('ghostShots.push')>0);
   ok('终端页不挂公告条', adminBoot.toString().indexOf("nb.style.display='none'")>0);
-  ok('弹道光束按枪种时长渐隐', drawBullets.toString().indexOf('t.ms||260')>0);
+  ok('不画任何曳光光束', drawBullets.toString().indexOf('state.tracers')<0);
   ok('结算与中断时不挂公告条', [...document.querySelectorAll('style')].some(st=>st.textContent.indexOf('body.ended #noticeBar')>0));
   ok('开火有冷却（按角色+武器）', (function(){
       try{
@@ -3276,8 +3246,8 @@ function runSelfCheck(){
         return a==='360deg' && b2==='0deg';
       }catch(e){ return false; }
     })());
-  ok('四种枪都有曳光样式', ['rifle','smg','shotgun','dmr'].every(k=>!!TRACER_STYLE[k]));
-  ok('霰弹一次撒多束光', (typeof TRACER_STYLE.shotgun.beams==='number' && TRACER_STYLE.shotgun.beams>=2));
+  ok('四种枪都有弹道参数', ['rifle','smg','shotgun','dmr'].every(k=>!!TRACER_STYLE[k]));
+  ok('霰弹一次多束', (typeof TRACER_STYLE.shotgun.beams==='number' && TRACER_STYLE.shotgun.beams>=2));
   ok('枪口不再留大圆点', shoot.toString().indexOf("'#ffe9a8',0.06,6")<0);
   ok('不开火时不再画枪口光晕', (function(){
       try{ return drawPlayers.toString().indexOf('muzzleT>0')<0 && drawPlayers.toString().indexOf('createRadialGradient(mx2,my2,1')<0; }
@@ -3808,15 +3778,16 @@ function netGhostShot(m){
   const team=foe.team||'red';
   const st=tracerStyle(m.w);
   const wp=WEAPONS[m.w]||WEAPONS.rifle;
-  state.tracers=state.tracers||[];
+  const spd=760*(wp.spdMul||1);
+  state.ghostShots=state.ghostShots||[];
   const beams=st.beams||1;
+  const now=performance.now();
   for(let i=0;i<beams;i++){
     const a3=beams>1 ? ang + (i-(beams-1)/2)*(wp.spread||0.1)*0.9 : ang;
-    state.tracers.push({ x1:x+Math.cos(ang)*(CFG.playerRadius+6), y1:y+Math.sin(ang)*(CFG.playerRadius+6),
-                         x2:x+Math.cos(a3)*st.len, y2:y+Math.sin(a3)*st.len,
-                         t0:performance.now(), team, wid:st.wid, wid2:m.w||'rifle', ms:st.ms,
-                         core:st.core, halo:st.halo });
+    state.ghostShots.push({ x:x+Math.cos(ang)*(CFG.playerRadius+6), y:y+Math.sin(ang)*(CFG.playerRadius+6),
+                            ang:a3, spd, t0:now, life:1.0, team, w:m.w||'rifle' });
   }
+  if(state.ghostShots.length>80) state.ghostShots.splice(0, state.ghostShots.length-80);
   foe.muzzleT=0.12;
   sShoot();
 }
