@@ -648,7 +648,7 @@ body.fire-left #btnFire{left:18px !important;right:auto !important}
       <div class="modeGrid">
         <div class="modeCard" id="mode5v5">
           <div class="mcName red">5V5 团队战</div>
-          <div class="mcDesc">红蓝各 5 人 · 每人 100 血<br>你 + 4 名 AI 队友 vs 5 名 AI 敌人<br>先 15 杀获胜（限时 3 分钟）· 角色随机分配<br><span class="pc-only">选难度与地图即可开战 · WASD+鼠标+E</span></div>
+          <div class="mcDesc">红蓝各 5 人 · 每人 100 血<br>你 + 4 名 AI 队友 vs 5 名 AI 敌人<br>先 30 杀获胜（限时 3 分钟）· 角色随机分配<br><span class="pc-only">选难度与地图即可开战 · WASD+鼠标+E</span></div>
         </div>
         <div class="modeCard" id="mode1v1">
           <div class="mcName blue">1V1 单挑</div>
@@ -845,6 +845,10 @@ body.fire-left #btnFire{left:18px !important;right:auto !important}
       <div id="mvpWrap"></div>
       <div id="loserWrap"></div>
       <div class="statGrid" id="endStats"></div>
+      <div id="netLikeWrap" style="display:none;margin:4px 0 10px;text-align:center">
+        <div style="font-size:11.5px;color:#8fa1bf;margin-bottom:7px" id="netLikeTip">这局打得不错，给他点个赞</div>
+        <button id="btnLikeFoe" style="font-size:12.5px;padding:7px 18px;border-radius:10px;border:1px solid rgba(253,164,175,.45);background:rgba(253,164,175,.12);color:#ffc2cb;cursor:pointer">♥ 给对手点赞</button>
+      </div>
       <div class="rowBtns">
         <button class="btn" id="btnAgain">再 来 一 局</button>
         <button class="btn ghost" id="btnMenu">返回主菜单</button>
@@ -882,7 +886,7 @@ body.fire-left #btnFire{left:18px !important;right:auto !important}
       </div>
     </div>
     <div class="overlay hidden" id="settingsScreen">
-      <div class="title">自定义设置 <span id="verTag" style="font-size:11px;color:#7d8aa8;font-weight:400;display:block;margin-top:2px">v2.5.5</span></div>
+      <div class="title">自定义设置 <span id="verTag" style="font-size:11px;color:#7d8aa8;font-weight:400;display:block;margin-top:2px">v2.5.6</span></div>
       <div id="settingsWrap" style="text-align:left;max-width:320px;line-height:2.2">
         <div>摇杆大小 <input type="range" id="setJoy" min="60" max="140" value="88" style="width:100%"></div>
         <div>开火键大小 <input type="range" id="setFire" min="50" max="120" value="74" style="width:100%"></div>
@@ -923,6 +927,7 @@ body.fire-left #btnFire{left:18px !important;right:auto !important}
         <div id="historyBox" style="display:none;margin-top:10px;border-top:1px solid rgba(255,255,255,.1);padding-top:10px">
           <div style="font-size:13px;font-weight:800;color:#67e8f9;margin-bottom:6px">修改历史</div>
           <div style="line-height:1.8">
+            <div><b style="color:#ffd34d">v2.5.6</b>　5V5 击杀上限提到 30；每日任务从 3 条增加到 5 条（新增「完成场次」任务）；联机结算页可以直接给对手点赞，双方都能点</div>
             <div><b style="color:#ffd34d">v2.5.5</b>　好友分「互关 / 我关注 / 粉丝」三档，只有互关才能拉进联机；个人主页可看荣誉明细与获赞，明信片能点赞；主页数据改 3×3 排布</div>
             <div><b style="color:#ffd34d">v2.5.4</b>　客机终于能玩（蓝队摇杆、面板改「你/对手」、联机用队伍色、出生点拉近、屏幕边缘指向对手）；修好段位条空白、改名剩次显示 98；关注会给对方发提示；新增管理终端 <b style="color:#67e8f9">?admin=1</b></div>
             <div><b style="color:#ffd34d">v2.5.3</b>　人机兜底放宽到 12 秒（对方连中转就要几秒，9 秒会把还在路上的人抢掉）</div>
@@ -979,7 +984,7 @@ const CFG = {
   seed: 20261014,
   // 模式规则
   modes: {
-    '5v5': { W:1280, H:800, scoreCap:15, time:180,
+    '5v5': { W:1280, H:800, scoreCap:30, time:180,
       obs:[
         {x:540,y:300,w:160,h:110},{x:820,y:220,w:110,h:130},
         {x:220,y:470,w:120,h:120},{x:560,y:550,w:170,h:80},
@@ -2410,19 +2415,20 @@ function updateBestRecord(){
 }
 /* ===== 每日任务：3 条随机任务 + 完成打勾 + 荣誉点奖励 ===== */
 const DAILY_POOL = [
-  {type:'kill',  names:['今日击杀 12 人','今日击杀 15 人','今日击杀 18 人'], target:[12,15,18]},
-  {type:'win',   names:['今日赢下 2 局','今日赢下 3 局'],                   target:[2,3]},
-  {type:'skill', names:['释放技能 6 次','释放技能 8 次'],                   target:[6,8]},
-  {type:'dmg',   names:['累计造成 600 伤害','累计造成 800 伤害'],           target:[600,800]}
+  {type:'kill',   names:['今日击杀 12 人','今日击杀 15 人','今日击杀 18 人'], target:[12,15,18]},
+  {type:'win',    names:['今日赢下 2 局','今日赢下 3 局'],                   target:[2,3]},
+  {type:'skill',  names:['释放技能 6 次','释放技能 8 次'],                   target:[6,8]},
+  {type:'dmg',    names:['累计造成 600 伤害','累计造成 800 伤害'],           target:[600,800]},
+  {type:'matches',names:['今日打完 2 局','今日打完 3 局','今日打完 4 局'],   target:[2,3,4]}
 ];
 function dailyInit(){
   const today = new Date().toDateString();
   let d = lsGet('gunDaily2', null);
-  if(!d || d.date!==today){
-    // 每天从池子里随机挑 3 类，互不重复
+  if(!d || d.date!==today || !d.tasks || d.tasks.length<5){
+    // 每天从池子里随机挑 5 类，互不重复
     const pool = DAILY_POOL.slice();
     for(let i=pool.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); const t=pool[i]; pool[i]=pool[j]; pool[j]=t; }
-    d = { date: today, honorGot: 0, tasks: pool.slice(0,3).map(p=>{
+    d = { date: today, honorGot: 0, tasks: pool.slice(0,5).map(p=>{
       const k = Math.floor(Math.random()*p.target.length);
       return { type:p.type, name:p.names[k], target:p.target[k], cur:0, done:false };
     })};
@@ -2454,7 +2460,7 @@ function renderDaily(){
   const d = dailyInit(), el = document.getElementById('dailyTask');
   if(!el) return;
   const done = d.tasks.filter(t=>t.done).length;
-  el.innerHTML = '<div style="font-size:12px;color:#9fb2d0;margin-bottom:5px">每日任务 '+done+'/3 · 荣誉 '+lsGet('gunHonor',0)+'</div>'
+  el.innerHTML = '<div style="font-size:12px;color:#9fb2d0;margin-bottom:5px">每日任务 '+done+'/'+d.tasks.length+' · 荣誉 '+lsGet('gunHonor',0)+'</div>'
     + d.tasks.map(t=>{
       const pct = Math.min(100, Math.round(t.cur/t.target*100));
       const c = t.done ? '#33e08a' : '#67e8f9';
@@ -2545,6 +2551,7 @@ function endMatch(winner){
   }
   const min=Math.floor(CFG.modes[state.mode].time/60), sec=CFG.modes[state.mode].time%60;
   const hitRate = q => (q&&q.shots>0) ? Math.round(q.hits/q.shots*100)+'%' : '—';
+  const netLbl = state.netMode ? {a:'你', b:'对手'} : {a:'P1', b:'P2'};
   const p1k=p1?p1.kills:0, p1d=p1?p1.deaths:0, p1dm=p1?Math.round(p1.dmgDealt):0;
   const p2dm=p2?Math.round(p2.dmgDealt):0;
   endStats.innerHTML =
@@ -2559,7 +2566,7 @@ function endMatch(winner){
       '<span>命中率</span><span class="v">'+hitRate(p1)+'</span><span></span>')+
     '<span>用时</span><span class="v">'+min+':'+String(sec).padStart(2,'0')+'</span><span></span>'+
     (state.rankChange ? '<span>段位分</span><span class="v" style="color:'+((state.rankChange.delta>=0)?'#86efac':'#ff8fa0')+'">'+((state.rankChange.delta>=0?'+':'')+state.rankChange.delta)+'</span><span></span>' : '');
-  if(state.winner==='red'){ endResult.textContent=state.mode==='1v1'?'P1 胜 利':'胜 利'; endResult.className='result win'; sWin(); }
+  if(state.winner==='red'){ endResult.textContent=state.mode==='1v1'?(state.netMode?'你 赢 了':'P1 胜 利'):'胜 利'; endResult.className='result win'; sWin(); }
   else if(state.winner==='blue'){
     if(state.mode==='1v1'){ endResult.textContent='P2 胜 利'; endResult.className='result win'; sWin(); }
     else { endResult.textContent='失 败'; endResult.className='result lose'; sLose(); }
@@ -2582,7 +2589,8 @@ function endMatch(winner){
   // MVP 动画：胜方 MVP + 败方 MVP + 彩带
   const mvpTag='最佳射手'+(state.mode==='1v1'?'':' · '+(state.mvp&&state.mvp.team==='red'?'红队':'蓝队'));
   mvpWrap.innerHTML = state.mvp ? mvpCardHTML(state.mvp, state.mode==='1v1'?'MVP':'MVP · 胜方', mvpTag, true) : '';
-  loserWrap.innerHTML = state.loserMvp ? mvpCardHTML(state.loserMvp,'败方 MVP','虽败犹荣', false) : '';
+  const dupMvp = !!(state.mvp && state.loserMvp && state.mvp===state.loserMvp);
+  loserWrap.innerHTML = (state.loserMvp && !dupMvp) ? mvpCardHTML(state.loserMvp,'败方 MVP','虽败犹荣', false) : '';
   confetti();
   document.querySelectorAll('.recordBadge').forEach(e=>e.remove());
   const grade = gradeOf(state.winner==='red', p1k, p1d, p1dm, state.mode);
@@ -2592,6 +2600,18 @@ function endMatch(winner){
   state.rankChange = rankUpdate(state.winner==='red', grade);
   if(state.winner==='red') dailyProgress('win', 1);
   if(p1dm>0) dailyProgress('dmg', p1dm);
+  dailyProgress('matches', 1);   // 场次任务
+  const lw=document.getElementById('netLikeWrap');
+  if(lw){
+    const real=state.netMode && NET.foeUid && fwKey(NET.foeUid)!==fwKey(ensureUid());
+    lw.style.display = real ? 'block' : 'none';
+    if(real){
+      const tip=document.getElementById('netLikeTip');
+      if(tip) tip.textContent='对手 '+(NET.foeName||'')+' 打得不错，给他点个赞';
+      const b=document.getElementById('btnLikeFoe');
+      if(b) b.textContent='♥ 给对手点赞';
+    }
+  }
   endScreen.classList.remove('hidden');
 }
 function restartGame(){ startGame(); }
@@ -2875,7 +2895,7 @@ window.__selfCheck = runSelfCheck;
  * 同步：我方每 50ms 推一次位置/朝向/血量；命中由攻击方判定并下发 dmg，受击方扣血。
  * 这样每颗子弹只结算一次，不会出现两边各扣一遍的双重伤害。
  */
-const NET = { ws:null, role:null, code:null, peer:null, peerOnline:false, lastSend:0, want:false };
+const NET = { foeUid:null, foeName:null,  ws:null, role:null, code:null, peer:null, peerOnline:false, lastSend:0, want:false };
 function netUrl(){ return ''; }   // 统一走公共中转，不再需要用户填服务器
 function netStatus(txt, color){
   const el=document.getElementById('netHint');
@@ -2988,10 +3008,10 @@ function netOnMsg(m){
     else if(m.t==='joined'){ NET.code=m.code; NET.role='b'; netStatus('已进房，等待房主开局…','#5eead4'); }
     else if(m.t==='peer'){
       NET.peerOnline=!!m.joined;
-      if(m.joined){ netStatus('对手已进入，马上开局','#5eead4'); startNetMatch(); netSend({t:'start'}, 1); }
+      if(m.joined){ NET.foeUid=m.uid||NET.foeUid||null; NET.foeName=m.name||'对手'; netStatus('对手已进入，马上开局','#5eead4'); startNetMatch(); netSend({t:'start', uid:ensureUid(), name:currentNick()}, 1); }
       else { netStatus('对手已离开','#ff9f9f'); }
     }
-    else if(m.t==='start'){ netStatus('房主开局','#5eead4'); if(!state.netMode) startNetMatch(); }
+    else if(m.t==='start'){ NET.foeUid=m.uid||NET.foeUid||null; NET.foeName=m.name||'对手'; netStatus('房主开局','#5eead4'); if(!state.netMode) startNetMatch(); }
     else if(m.t==='state'){ netApplyState(m); }
     else if(m.t==='dmg'){ netTakeHit(m.v); }
     else if(m.t==='died'){ netRemoteDied(); }
@@ -3000,11 +3020,12 @@ function netOnMsg(m){
     else if(m.t==='err'){ netStatus(m.msg,'#ff9f9f'); }
     else if(m.t==='join'){
       // 公共中转模式：房主收到入房请求，立刻开局并回通知
+      NET.foeUid=m.uid||null; NET.foeName=m.name||'对手';
       netStatus('对手已进入，马上开局','#5eead4');
       NET.hostRole = m.role || state.roleP1;
       if(NET.soloTimer){ clearTimeout(NET.soloTimer); NET.soloTimer=null; }
       startNetMatch();
-      netSend({t:'start'}, 1);
+      netSend({t:'start', uid:ensureUid(), name:currentNick()}, 1);
     }
 }
 window.addEventListener('beforeunload', ()=>{ try{ lobbyClear(); }catch(e){} });
@@ -3083,7 +3104,7 @@ function parkAsHost(){
 function netJoinByLobby(hit){
   NET.role='b'; NET.code=hit.code;
   try{ NET.client.subscribe(netTopic(hit.code,'b'),{qos:1}); }catch(e){}
-  try{ NET.client.publish(netTopic(hit.code,'a'), JSON.stringify({t:'join', name:currentNick(), role:state.roleP1}), {qos:1}); }catch(e){}
+  try{ NET.client.publish(netTopic(hit.code,'a'), JSON.stringify({t:'join', name:currentNick(), role:state.roleP1, uid:ensureUid()}), {qos:1}); }catch(e){}
   netShowCode(hit.code, '已匹配到 '+hit.nick+'，正在进房…');
   setTimeout(()=>{
     if(state.netMode) return;
@@ -3937,7 +3958,7 @@ document.getElementById('btnNetJoin').addEventListener('click', async ()=>{
     if(!NET.client){ if(!await netOpen()) return; }
     NET.role='b'; NET.code=code;
     NET.client.subscribe(netTopic(code,'b'), {qos:1});
-    NET.client.publish(netTopic(code,'a'), JSON.stringify({t:'join', name:currentNick(), role:state.roleP1}), {qos:1});
+    NET.client.publish(netTopic(code,'a'), JSON.stringify({t:'join', name:currentNick(), role:state.roleP1, uid:ensureUid()}), {qos:1});
     netStatus('正在敲门，等房主回应…','#8fa1bf');
     setTimeout(()=>{ if(!state.netMode) netStatus('没收到回应：检查房间码；电脑和手机不互通','#ff9f9f'); }, 4000);
     return;
@@ -4277,6 +4298,14 @@ bindBtn('btnFight', ()=>{
   },1000);
 });
 bindBtn('btnSelBack', backToMenu);
+document.getElementById('btnLikeFoe').addEventListener('click', async ()=>{
+  sClick();
+  const uid=NET.foeUid;
+  if(!uid){ toastMsg('不知道对手是谁，这局点不了'); return; }
+  await fwLike(uid);
+  const b=document.getElementById('btnLikeFoe');
+  if(b) b.textContent='已点赞 ♥ '+fwLikesOf(uid);
+});
 bindBtn('btnAgain', restartGame);
 bindBtn('btnMenu', backToMenu);
 bindBtn('btnQuit', backToMenu);
@@ -4341,7 +4370,7 @@ function buildHelp(){
   }).join('');
   document.getElementById('helpBody').innerHTML =
     '<h4>一、游戏模式</h4>'+
-    '<div><b>5V5 团队战</b>：红蓝各 5 人，你带 4 名 AI 队友对战 5 名 AI 敌人，先到 15 杀，或 3 分钟结束击杀多者胜；角色随机分配，只需选择难度与地图。</div>'+
+    '<div><b>5V5 团队战</b>：红蓝各 5 人，你带 4 名 AI 队友对战 5 名 AI 敌人，先到 30 杀，或 3 分钟结束击杀多者胜；角色随机分配，只需选择难度与地图。</div>'+
     '<div><b>1V1 真人决斗</b>：同一台电脑本地双人对战，先到 5 杀，或 2 分钟结束击杀多者胜；全键盘操作，直接开战。</div>'+
     '<h4>二、角色与技能</h4>'+
     '<table><tr><th>角色</th><th>移速</th><th>单发伤害</th><th>射速</th><th>技能（冷却）</th><th>说明</th></tr>'+rows+'</table>'+
