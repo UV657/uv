@@ -752,6 +752,21 @@ body.fire-left #btnFire{left:18px !important;right:auto !important}
     </div>
 
     <!-- 玩法说明书 -->
+    <!-- 问题反馈 -->
+    <div class="overlay hidden" id="feedbackScreen">
+      <div class="title">问题反馈</div>
+      <div style="width:min(94vw,430px);text-align:left">
+        <div style="font-size:11.5px;color:#8fa1bf;margin-bottom:8px;line-height:1.6">写清楚你遇到的情况（哪一步、什么设备、报错文字），点发送会打开邮件客户端，内容已自动填好。</div>
+        <textarea id="fbText" maxlength="600" rows="6" placeholder="例如：建房后点邀请，对方没收到弹窗；我用的是手机豆包内浏览器" style="width:100%;box-sizing:border-box;padding:10px;border-radius:10px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.06);color:#e8eefc;font-size:13px;line-height:1.6;outline:none;resize:vertical"></textarea>
+        <div style="display:flex;gap:8px;margin-top:10px">
+          <button class="btn" id="fbSend" style="flex:1;padding:9px;font-size:13px">发送邮件</button>
+          <button class="btn ghost" id="fbCopy" style="flex:1;padding:9px;font-size:13px">复制邮箱</button>
+        </div>
+        <div style="font-size:11px;color:#7d8aa8;margin-top:10px;text-align:center">liuweijun520@qq.com</div>
+      </div>
+      <div class="rowBtns"><button class="btn ghost" id="fbBack">返 回</button></div>
+    </div>
+
     <div class="overlay hidden" id="helpScreen">
       <div class="title">玩法说明书</div>
       <div class="helpBody" id="helpBody"></div>
@@ -767,7 +782,7 @@ body.fire-left #btnFire{left:18px !important;right:auto !important}
       </div>
     </div>
     <div class="overlay hidden" id="settingsScreen">
-      <div class="title">自定义设置 <span id="verTag" style="font-size:11px;color:#7d8aa8;font-weight:400;display:block;margin-top:2px">v2.4.6</span></div>
+      <div class="title">自定义设置 <span id="verTag" style="font-size:11px;color:#7d8aa8;font-weight:400;display:block;margin-top:2px">v2.4.7</span></div>
       <div id="settingsWrap" style="text-align:left;max-width:320px;line-height:2.2">
         <div>摇杆大小 <input type="range" id="setJoy" min="60" max="140" value="88" style="width:100%"></div>
         <div>开火键大小 <input type="range" id="setFire" min="50" max="120" value="74" style="width:100%"></div>
@@ -803,9 +818,11 @@ body.fire-left #btnFire{left:18px !important;right:auto !important}
         <div style="margin-top:6px">独立开发者。一个人从零写的网页枪战游戏，纯 HTML 单文件，没用任何游戏引擎。从画第一个圆点开始，一步一步改到现在。</div>
         <div style="margin-top:6px"><b style="color:#e8eefc">技术</b>　Canvas 2D · 原生 JS · MQTT 公网联机 · PWA 可装到桌面</div>
         <button class="btn ghost" id="btnHistory" style="width:100%;margin-top:10px;padding:7px;font-size:12px">查看修改历史</button>
+        <button class="btn ghost" id="btnFeedback" style="width:100%;margin-top:8px;padding:7px;font-size:12px">问题反馈</button>
         <div id="historyBox" style="display:none;margin-top:10px;border-top:1px solid rgba(255,255,255,.1);padding-top:10px">
           <div style="font-size:13px;font-weight:800;color:#67e8f9;margin-bottom:6px">修改历史</div>
           <div style="line-height:1.8">
+            <div><b style="color:#ffd34d">v2.4.7</b>　建房与加入面板不再叠在一起；退出联机界面后房间还在；联机/好友断线会自动重连（之前一断就废）；新增「问题反馈」</div>
             <div><b style="color:#ffd34d">v2.4.6</b>　修自检按钮在部分内置浏览器里点不开（音频初始化报错打断了点击）；全部按钮都做了容错</div>
             <div><b style="color:#ffd34d">v2.4.5</b>　明信片不再跳回首页；名字查重从 8 秒压到 2 秒；建房后直接列出好友，点一下就邀请</div>
             <div><b style="color:#ffd34d">v2.4.4</b>　自检改成逐项扫描动画（进度条＋实时计数），按钮加了按下反馈</div>
@@ -2722,11 +2739,21 @@ function netOpen(){
       try{
         // 客户端 ID 必须全局唯一：两台设备、两个标签页同时登录时，撞 ID 会把对方踢下线
         const cid = 'gf_' + Date.now().toString(36) + Math.random().toString(36).slice(2,10) + Math.random().toString(36).slice(2,6);
-        const cli = mq.connect(MQTT_BROKER, { clientId:cid, clean:true, connectTimeout:8000, reconnectPeriod:0 });
+        // 断线要能自己回来：之前 reconnectPeriod=0，一断就废，房间直接作废
+        const cli = mq.connect(MQTT_BROKER, { clientId:cid, clean:true, connectTimeout:8000, reconnectPeriod:4000, keepalive:30 });
         const t=setTimeout(()=>{ netStatus('连不上公共中转，等会儿再试','#ff9f9f'); try{cli.end(true);}catch(e){}; resolve(false); }, 9000);
-        cli.on('connect', ()=>{ clearTimeout(t); NET.client=cli; NET.want=true; netStatus('已连接公共中转','#5eead4'); netBind(); resolve(true); });
+        let first=true;
+        cli.on('connect', ()=>{
+          clearTimeout(t); NET.client=cli; NET.want=true;
+          if(!first){   // 重连成功：clean 会话会丢订阅，房间主题要重新订阅
+            netStatus('连接已恢复','#5eead4');
+            try{ if(NET.code && NET.role) cli.subscribe(netTopic(NET.code, NET.role==='a'?'a':'b'), {qos:1}); }catch(e){}
+          } else { netStatus('已连接公共中转','#5eead4'); }
+          netBind();
+          if(first){ first=false; resolve(true); }
+        });
         cli.on('error', ()=>{ clearTimeout(t); netStatus('中转连接出错，稍后重试','#ff9f9f'); resolve(false); });
-        cli.on('close', ()=>{ NET.client=null; NET.peerOnline=false; if(NET.want) netStatus('与中转断开','#ff9f9f'); });
+        cli.on('close', ()=>{ NET.peerOnline=false; if(NET.want) netStatus('连接断开，正在自动重连…','#ff9f9f'); });
       }catch(e){ netStatus('连接异常，稍后重试','#ff9f9f'); resolve(false); }
       return;
     }
@@ -3009,7 +3036,7 @@ function fwInit(){
   const go=(lib)=>{
     if(!lib || typeof lib.connect!=='function'){ FW.lastErr='lib无效:'+(typeof lib); throw new Error('mqtt lib invalid'); }
     const cid='fw_'+Date.now().toString(36)+Math.random().toString(36).slice(2,9);
-    const c=lib.connect(MQTT_BROKER,{clientId:cid,clean:true,connectTimeout:8000,reconnectPeriod:5000});
+    const c=lib.connect(MQTT_BROKER,{clientId:cid,clean:true,connectTimeout:8000,reconnectPeriod:4000,keepalive:30});
     FW.cli=c;
     c.on('connect', ()=>{
       FW.ready=true;
@@ -3340,12 +3367,25 @@ document.getElementById('btnNet').addEventListener('click', ()=>{
   document.querySelectorAll('.overlay').forEach(e=>e.classList.add('hidden'));
   document.getElementById('netScreen').classList.remove('hidden');
   if(useMqtt() && !window.mqtt) loadMqttLib().catch(()=>{});   // 后台预加载，减少点“创建房间”后的等待
-  netStatus(netUrl()? '点创建房间，把房间码发给好友' : '点创建房间，把房间码发给好友（走公共中转，无需服务器）', '#8fa1bf');
+  document.getElementById('netJoinBox').classList.add('hidden');
+  if(NET.code && NET.role==='a'){                              // 房间一直有效，回来就别让人以为没了
+    netShowCode(NET.code, '房间还在，把房间码发给好友');
+  } else if(NET.code && NET.role==='b'){
+    document.getElementById('netStatus').classList.remove('hidden');
+    document.getElementById('netCodeShow').textContent=NET.code;
+    netStatus('已经在房间 '+NET.code+'，等房主开局','#5eead4');
+    setTimeout(netRenderInviteList, 60);
+  } else {
+    document.getElementById('netStatus').classList.add('hidden');
+    document.getElementById('netFriendBox').classList.add('hidden');
+    netStatus('点创建房间，把房间码发给好友（走公共中转，无需服务器）', '#8fa1bf');
+  }
 });
 document.getElementById('btnNetHost').addEventListener('click', async ()=>{
   sClick();
   if(useMqtt()){
-    if(!NET.client){ if(!await netOpen()) return; }
+    if(!NET.client || !NET.client.connected){ if(!await netOpen()) return; }
+    document.getElementById('netJoinBox').classList.add('hidden');
     NET.role='a'; NET.code=genRoomCode();
     NET.client.subscribe(netTopic(NET.code,'a'), {qos:1});
     netShowCode(NET.code, '把房间码发给好友，等他进来');
@@ -3356,6 +3396,8 @@ document.getElementById('btnNetHost').addEventListener('click', async ()=>{
 });
 document.getElementById('btnNetJoinMode').addEventListener('click', ()=>{
   sClick();
+  document.getElementById('netStatus').classList.add('hidden');      // 两块不能同时挂着，否则叠在一起
+  document.getElementById('netFriendBox').classList.add('hidden');
   document.getElementById('netJoinBox').classList.remove('hidden');
   document.getElementById('netCode').focus();
 });
@@ -3684,6 +3726,46 @@ bindBtn('btnAgain', restartGame);
 bindBtn('btnMenu', backToMenu);
 bindBtn('btnQuit', backToMenu);
 bindBtn('btnResume', togglePause);
+const FEEDBACK_MAIL='liuweijun520@qq.com';
+bindBtn('btnFeedback', ()=>{
+  initAudio(); sClick();
+  document.getElementById('settingsScreen').classList.add('hidden');
+  document.getElementById('feedbackScreen').classList.remove('hidden');
+});
+bindBtn('fbBack', ()=>{
+  sClick();
+  document.getElementById('feedbackScreen').classList.add('hidden');
+  document.getElementById('settingsScreen').classList.remove('hidden');
+});
+bindBtn('fbSend', ()=>{
+  sClick();
+  const txt=(document.getElementById('fbText').value||'').trim();
+  if(!txt){ toastMsg('先写两句你遇到的问题'); return; }
+  const ver=(document.getElementById('verTag').textContent||'').trim();
+  const body=txt+'\n\n—— 以下为自动附带的信息，方便定位 ——\n'
+    +'版本：'+ver+'\n端：'+(isTouch?'手机':'电脑')+'\n档案号：'+ensureUid()+'\n'
+    +'浏览器：'+navigator.userAgent+'\n时间：'+new Date().toLocaleString();
+  const url='mailto:'+FEEDBACK_MAIL+'?subject='+encodeURIComponent('枪战对决 · 问题反馈')+'&body='+encodeURIComponent(body);
+  try{ location.href=url; toastMsg('已打开邮件客户端，点发送就行'); }
+  catch(e){ toastMsg('打不开邮件客户端，点「复制邮箱」手动发'); }
+});
+bindBtn('fbCopy', ()=>{
+  sClick();
+  const ok=()=>toastMsg('邮箱已复制：'+FEEDBACK_MAIL);
+  try{
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(FEEDBACK_MAIL).then(ok).catch(()=>fallbackCopy());
+    } else fallbackCopy();
+  }catch(e){ fallbackCopy(); }
+  function fallbackCopy(){
+    try{
+      const ta=document.createElement('textarea');
+      ta.value=FEEDBACK_MAIL; ta.style.cssText='position:fixed;left:-9999px;top:0';
+      document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
+      ok();
+    }catch(e){ toastMsg('复制失败，手动记一下：'+FEEDBACK_MAIL); }
+  }
+});
 bindBtn('btnHelp', ()=>{ buildHelp(); menuScreen.classList.add('hidden'); helpScreen.classList.remove('hidden'); });
 bindBtn('btnHelpBack', ()=>{ helpScreen.classList.add('hidden'); menuScreen.classList.remove('hidden'); });
 
@@ -3765,6 +3847,13 @@ window.onerror=function(msg,src,line,col,err){
   },130);
 })();
 
+/* 手机切后台会把定时器冻住，回来时先确认连接是否还活着 */
+document.addEventListener('visibilitychange', ()=>{
+  if(document.visibilityState!=='visible') return;
+  try{ if(FW.cli && !FW.cli.connected) FW.cli.reconnect(); }catch(e){}
+  try{ if(NET.client && !NET.client.connected) NET.client.reconnect(); }catch(e){}
+  setTimeout(()=>{ try{ fwBeat(); }catch(e){} }, 500);
+});
 /* 预热：登录页就把中转连上，等玩家输名字时通道已就绪，查重只需 1.5 秒 */
 setTimeout(()=>{ try{ fwInit(); }catch(e){} }, 600);
 state.world=CFG.modes['5v5'];
