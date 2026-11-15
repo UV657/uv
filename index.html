@@ -1085,6 +1085,7 @@ body.is-touch .nhTime{display:none !important}
           <div style="line-height:1.8">
             <div><b style="color:#ffd34d">v2.7.1</b>　联机弹道收尾：四种武器（步枪 / 冲锋枪 / 霰弹枪 / 精确步枪）各有独立粗细、长度、停留时间，每次开火都会同步给对手（之前只有自己看得到）；子弹改成一道光，去掉光圈与白色圆点；1v1 上方面板红方显示自己代号、蓝方显示对手真实代号；管理终端页面不再显示玩家公告条</div>
             <div><b style="color:#ffd34d">v2.7.0</b>　联机对决弹道补齐，红蓝两队颜色分开；1v1 顶栏不再写 P1 / AI</div>
+            <div><b style="color:#ffd34d">v2.7.0</b>　联机弹道补齐：步枪 / 冲锋枪 / 霰弹 / 精准步枪各有一条对应曳光，霰弹一次撒出三束扇形光，去掉枪口圆形光斑；1V1 顶部改为红方显示自己代号、蓝方显示对手代号，右下对手面板同步；管理终端不再显示公告条，操作键不再被压住</div>
             <div><b style="color:#ffd34d">v2.6.9</b>　公告栏移到首页（每日任务下方），一眼能看到最新公告；点「全部」可查看历史公告，过期公告灰显保留。修复公告详情被历史列表挡住点不到关闭、以及置顶公告没有排到最前的问题</div>
             <div><b style="color:#ffd34d">v2.6.8</b>　维护模式生效：维护中「进入战场」按钮变灰不可点；正在对局或匹配中的玩家会被立即中断，本局按平局处理并返回登录页。关闭维护后自动恢复</div>
             <div><b style="color:#ffd34d">v2.6.7</b>　公告栏在所有页面都显示（含管理页面），不再隐藏，方便随时看当前公告</div>
@@ -1248,10 +1249,10 @@ const WEAPONS = {
 const WEAPON_IDS = Object.keys(WEAPONS);
 /* 每把枪的弹道光束参数：粗细 / 长度 / 存活时长 / 拖尾形状 */
 const TRACER_STYLE = {
-  rifle:  { wid:4.2, len:230, ms:260, core:0.95, halo:0.30 },
-  smg:    { wid:3.0, len:170, ms:210, core:0.85, halo:0.24 },
-  shotgun:{ wid:2.6, len:140, ms:190, core:0.80, halo:0.20 },
-  dmr:    { wid:5.2, len:320, ms:330, core:1.00, halo:0.34 }
+  rifle:  { wid:4.2, len:250, ms:280, core:0.95, halo:0.30 },
+  smg:    { wid:3.4, len:215, ms:265, core:0.88, halo:0.26 },
+  shotgun:{ wid:3.0, len:195, ms:250, core:0.82, halo:0.22, beams:3 },
+  dmr:    { wid:5.2, len:330, ms:340, core:1.00, halo:0.34 }
 };
 function tracerStyle(id){ return TRACER_STYLE[id] || TRACER_STYLE.rifle; }
 function currentWeapon(){ return WEAPONS[lsGetRaw('gunWeapon')] ? WEAPONS[lsGetRaw('gunWeapon')] : WEAPONS.rifle; }
@@ -1529,6 +1530,18 @@ function buildPlayers(){
 }
 
 /* 顶部名字太长会挤掉比分：超过 5 字截断 */
+function playerName(p){
+  if(!p) return '对手';
+  try{
+    if(state.netMode){
+      const me=(typeof netMe==='function'? netMe():null);
+      const foe=(typeof netFoe==='function'? netFoe():null);
+      if(me && p===me) return ((typeof currentNick==='function'? currentNick():'')||p.name||'我');
+      if(foe && p===foe) return ((NET.foeName||'').trim() || (p.name||'').trim() || '对手');
+    }
+  }catch(e){}
+  return (String(p.name||'').trim()) || '对手';
+}
 function shortName(n){
   const t=String(n||'').trim();
   return t.length>5 ? t.slice(0,4)+'…' : (t||'玩家');
@@ -1552,13 +1565,17 @@ function shoot(p){
     state.bullets.push({ x:sx,y:sy,vx:Math.cos(a2)*spd,vy:Math.sin(a2)*spd,
       r:CFG.bulletRadius, team:p.team, dmg, life, owner:p });
   }
-  // 每把枪都留一条曳光：长度/粗细/停留时间按枪种区分（霰弹短、DMR 远）
+  // 每把枪都留曳光：长度/粗细/停留按枪种区分；霰弹一次撒出几束细光
   const st=tracerStyle(wp.id);
-  const tracerLen=Math.min(st.len, Math.max(130, spd*life*0.9));
+  const tracerLen=Math.min(st.len, Math.max(140, spd*life*0.9));
   state.tracers=state.tracers||[];
-  state.tracers.push({ x1:sx, y1:sy, x2:sx+Math.cos(ang)*tracerLen, y2:sy+Math.sin(ang)*tracerLen,
-                       t0:performance.now(), team:p.team, len:tracerLen, wid:st.wid, wid2:wp.id, ms:st.ms,
-                       core:st.core, halo:st.halo });
+  const beams=st.beams||1;
+  for(let i=0;i<beams;i++){
+    const a3 = beams>1 ? ang + (i-(beams-1)/2)*wp.spread*0.9 : ang;
+    state.tracers.push({ x1:sx, y1:sy, x2:sx+Math.cos(a3)*tracerLen, y2:sy+Math.sin(a3)*tracerLen,
+                         t0:performance.now(), team:p.team, len:tracerLen, wid:st.wid, wid2:wp.id, ms:st.ms,
+                         core:st.core, halo:st.halo });
+  }
   if(state.netMode && p.isHuman){
     p.pendingShots=p.pendingShots||[];
     p.pendingShots.push({a:+ang.toFixed(2), w:wp.id});
@@ -1567,7 +1584,8 @@ function shoot(p){
   if(state.tracers.length>60) state.tracers.splice(0, state.tracers.length-60);
   p.shots++; // 统计：开火次数（结算用）
   p.cooldown = (p.isHuman ? p.role.fireCD : p.role.fireCD*CFG.aiFireMul) * wp.cdMul;
-  spawnParticle(sx,sy,Math.cos(ang)*40,Math.sin(ang)*40,'#ffe9a8',0.06,6);
+  // 枪口不再留圆点光斑（只保留细火花）
+
   p.muzzleT=0.09; p.recoil=4; // 枪口闪光 + 后坐力（动画反馈）
   spawnParticle(sx,sy,Math.cos(ang)*260,Math.sin(ang)*260,'#fff2c9',0.05,2.5); // 枪口火花
   if(p.isHuman) sShoot(); // 只有人类玩家开枪才响，避免10人同时开火音效叠加
@@ -1969,7 +1987,7 @@ function killPlayer(victim,killer){
   state.scores[killer.team]++;
   popChip(killer.team==='red'?scoreRed:scoreBlue); // 比分弹跳动画
   victim.streak=0; victim.level=victim.level||1; // 死亡清空连杀计数
-  pushFeed(killer.name+' 击败 '+victim.name, killer.team);
+  pushFeed(playerName(killer)+' 击败 '+playerName(victim), killer.team);
   for(let i=0;i<30;i++){ const a=rng()*Math.PI*2, sp=60+rng()*200;
     spawnParticle(victim.x,victim.y,Math.cos(a)*sp,Math.sin(a)*sp,killer.team==='red'?'#ff5b6e':'#4dc3ff',0.6+rng()*0.4,4+rng()*4); }
   spawnRing(victim.x,victim.y,'#ffffff',80);
@@ -2592,8 +2610,8 @@ function updateHUD(){
     // 红方=自己（显示自己的代号），蓝方=对手（真人用对手名字，人机用 AI 名字）
     const me=(typeof localP==='function'? localP(): null);
     const foe=state.players.find(p=>p.team==='blue')||null;
-    const meN=shortName(me&&me.name? me.name : (isTouch?'我':'P1'));
-    const foeN=shortName(foe&&foe.name? foe.name : '对手');
+    const meN=shortName(playerName(me) || (isTouch?'我':'P1'));
+    const foeN=shortName(playerName(foe));
     scoreRed.textContent=meN+' '+state.scores.red;
     scoreBlue.textContent=foeN+' '+state.scores.blue;
   }else{
@@ -2615,7 +2633,7 @@ function updateHUD(){
   const p2 = state.netMode ? netFoe() : (state.mode==='1v1' ? state.players[1] : null);
   if(state.mode==='1v1' && p2){
     hpFill2.style.width=clamp(p2.hp/(p2.maxHp||CFG.maxHp),0,1)*100+'%';
-    const foeNick = ((state.netMode ? (NET.foeName||'') : '') || (p2 && p2.name) || '对手').trim();
+    const foeNick = (playerName(p2) || '对手').trim();
     p2Name.textContent=foeNick.slice(0,8)+' · '+p2.role.icon+' '+p2.role.name;
     p2Sub.textContent='击杀 '+p2.kills+' · 死亡 '+p2.deaths+(p2.shield>0?' · 护盾 '+Math.round(p2.shield):'');
     p2Icon.textContent=p2.role.icon;
@@ -3211,9 +3229,22 @@ function runSelfCheck(){
   ok('弹道去掉了光圈与白点', drawBullets.toString().indexOf('shadowBlur')<0 && drawBullets.toString().indexOf('arc(')<0);
   ok('开火同步带武器编号', shoot.toString().indexOf('w:wp.id')>0);
   ok('对手弹道按枪种渲染', netGhostShot.toString().indexOf('tracerStyle(m.w)')>0);
-  ok('终端页会隐藏公告条', adminBoot.toString().indexOf("admin-mode")>0);
+  ok('终端页不挂公告条', adminBoot.toString().indexOf("nb.style.display='none'")>0);
   ok('弹道光束按枪种时长渐隐', drawBullets.toString().indexOf('t.ms||260')>0);
   ok('结算与中断时不挂公告条', [...document.querySelectorAll('style')].some(st=>st.textContent.indexOf('body.ended #noticeBar')>0));
+  ok('四种枪都有曳光样式', ['rifle','smg','shotgun','dmr'].every(k=>!!TRACER_STYLE[k]));
+  ok('霰弹一次撒多束光', (typeof TRACER_STYLE.shotgun.beams==='number' && TRACER_STYLE.shotgun.beams>=2));
+  ok('枪口不再留大圆点', shoot.toString().indexOf("'#ffe9a8',0.06,6")<0);
+  ok('联机名字优先用对面昵称', (function(){
+      try{
+        const oldMode=state.netMode, oldName=NET.foeName;
+        state.netMode=true; NET.foeName='对手甲';
+        const foe=(typeof netFoe==='function'? netFoe():null);
+        const okName = !foe || playerName(foe)==='对手甲';
+        state.netMode=oldMode; NET.foeName=oldName;
+        return okName && typeof playerName==='function';
+      }catch(e){ return false; }
+    })());
   ok('公告详情层级高于历史列表', (function(){
       const d=document.getElementById('noticeScreen'), l=document.getElementById('noticeListScreen');
       if(!d||!l) return false;
@@ -3728,11 +3759,16 @@ function netGhostShot(m){
   const ang=(typeof m.ang==='number')?m.ang:(foe.aim||0);
   const team=foe.team||'red';
   const st=tracerStyle(m.w);
+  const wp=WEAPONS[m.w]||WEAPONS.rifle;
   state.tracers=state.tracers||[];
-  state.tracers.push({ x1:x+Math.cos(ang)*(CFG.playerRadius+6), y1:y+Math.sin(ang)*(CFG.playerRadius+6),
-                       x2:x+Math.cos(ang)*st.len, y2:y+Math.sin(ang)*st.len,
-                       t0:performance.now(), team, wid:st.wid, wid2:m.w||'rifle', ms:st.ms,
-                       core:st.core, halo:st.halo });
+  const beams=st.beams||1;
+  for(let i=0;i<beams;i++){
+    const a3=beams>1 ? ang + (i-(beams-1)/2)*(wp.spread||0.1)*0.9 : ang;
+    state.tracers.push({ x1:x+Math.cos(ang)*(CFG.playerRadius+6), y1:y+Math.sin(ang)*(CFG.playerRadius+6),
+                         x2:x+Math.cos(a3)*st.len, y2:y+Math.sin(a3)*st.len,
+                         t0:performance.now(), team, wid:st.wid, wid2:m.w||'rifle', ms:st.ms,
+                         core:st.core, halo:st.halo });
+  }
   foe.muzzleT=0.12;
   sShoot();
 }
@@ -4469,10 +4505,10 @@ document.getElementById('adminList').addEventListener('click', async (e)=>{
 function adminBoot(){
   if(!/[?&]admin=1/.test(location.search)) return;
   window.__ADMIN_PAGE=true;   // 终端页不受维护跳转影响
-  document.body.classList.add('admin-mode');   // 终端页不挂公告，免挡按钮
+  // 终端是操作面板，公告条会压住按钮：这里直接不挂
   const nb=document.getElementById('noticeBar'), mb=document.getElementById('maintBar');
-  if(nb){ nb.style.top='6px'; }        // 终端页公告条贴顶，不挡面板
-  if(mb){ mb.style.top='52px'; }
+  if(nb){ nb.style.display='none'; }
+  if(mb){ mb.style.display='none'; }
   document.querySelectorAll('.overlay,.splash,#splashScreen').forEach(e=>{ e.classList.add('hidden'); if(e.id==='splashScreen') e.style.display='none'; });
   adminShow(true);
   // 同一标签页内已登录过就直接进面板，免去反复输口令
