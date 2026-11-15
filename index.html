@@ -1084,6 +1084,7 @@ body.is-touch .nhTime{display:none !important}
           <div style="font-size:13px;font-weight:800;color:#67e8f9;margin-bottom:6px">修改历史</div>
           <div style="line-height:1.8">
             <div><b style="color:#ffd34d">v2.7.0</b>　联机对决弹道全部补齐：狙击、步枪、冲锋、霰弹每次开火都有一束带光晕的弹道，红蓝两队颜色分开；1v1 顶栏改成红方显示自己的代号、蓝方显示对手代号（不再写 P1 / AI）；对局中断与结算时不再弹公告，免得挡住按钮</div>
+            <div><b style="color:#ffd34d">v2.6.10</b>　联机弹道重做：步枪 / 冲锋枪 / 霰弹枪 / 精确步枪各有独立的粗细、长度与停留时间，弹道同步给对手（之前只有自己看得到）；子弹改成一道光，去掉光圈和白色圆点。右上角对手栏改为显示真实玩家名，左上显示自己名。终端页面不再挂公告条</div>
             <div><b style="color:#ffd34d">v2.6.9</b>　公告栏移到首页（每日任务下方），一眼能看到最新公告；点「全部」可查看历史公告，过期公告灰显保留。修复公告详情被历史列表挡住点不到关闭、以及置顶公告没有排到最前的问题</div>
             <div><b style="color:#ffd34d">v2.6.8</b>　维护模式生效：维护中「进入战场」按钮变灰不可点；正在对局或匹配中的玩家会被立即中断，本局按平局处理并返回登录页。关闭维护后自动恢复</div>
             <div><b style="color:#ffd34d">v2.6.7</b>　公告栏在所有页面都显示（含管理页面），不再隐藏，方便随时看当前公告</div>
@@ -1245,6 +1246,14 @@ const WEAPONS = {
   dmr:    { id:'dmr',    name:'精确步枪', dmgMul:1.55, cdMul:1.5, spread:0.02, pellets:1, lifeMul:1.3, spdMul:1.15, desc:'远距离两枪一个' },
 };
 const WEAPON_IDS = Object.keys(WEAPONS);
+/* 每把枪的弹道光束参数：粗细 / 长度 / 存活时长 / 拖尾形状 */
+const TRACER_STYLE = {
+  rifle:  { wid:4.2, len:230, ms:260, core:0.95, halo:0.30 },
+  smg:    { wid:3.0, len:170, ms:210, core:0.85, halo:0.24 },
+  shotgun:{ wid:2.6, len:140, ms:190, core:0.80, halo:0.20 },
+  dmr:    { wid:5.2, len:320, ms:330, core:1.00, halo:0.34 }
+};
+function tracerStyle(id){ return TRACER_STYLE[id] || TRACER_STYLE.rifle; }
 function currentWeapon(){ return WEAPONS[lsGetRaw('gunWeapon')] ? WEAPONS[lsGetRaw('gunWeapon')] : WEAPONS.rifle; }
 
 /* ================= 2. 全局状态 ================= */
@@ -1531,8 +1540,7 @@ function shoot(p){
   if(state.netMode && p.isHuman){
     // 开火不单独发消息（公共中转容易丢），先攒起来，跟着 8Hz 状态同步一起送
     p.pendingShots=p.pendingShots||[];
-    p.pendingShots.push(+ang.toFixed(2));
-    if(p.pendingShots.length>4) p.pendingShots.splice(0, p.pendingShots.length-4);
+    p._pendAng=ang;
   }
   const sx=p.x+Math.cos(ang)*(CFG.playerRadius+6), sy=p.y+Math.sin(ang)*(CFG.playerRadius+6);
   const wp = p.weapon || WEAPONS.rifle;
@@ -1544,11 +1552,19 @@ function shoot(p){
     state.bullets.push({ x:sx,y:sy,vx:Math.cos(a2)*spd,vy:Math.sin(a2)*spd,
       r:CFG.bulletRadius, team:p.team, dmg, life, owner:p });
   }
-  // 每把枪开火都留一条光束（狙击/步枪/冲锋/霰弹一致），双方都看得到弹道
+  // 每把枪都留一条曳光：长度/粗细/停留时间按枪种区分（霰弹短、DMR 远）
+  const st=tracerStyle(wp.id);
+  const tracerLen=Math.min(st.len, Math.max(130, spd*life*0.9));
   state.tracers=state.tracers||[];
-  state.tracers.push({ x1:sx, y1:sy, x2:sx+Math.cos(ang)*250, y2:sy+Math.sin(ang)*250,
-                       t0:performance.now(), team:p.team });
-  if(state.tracers.length>40) state.tracers.splice(0, state.tracers.length-40);
+  state.tracers.push({ x1:sx, y1:sy, x2:sx+Math.cos(ang)*tracerLen, y2:sy+Math.sin(ang)*tracerLen,
+                       t0:performance.now(), team:p.team, len:tracerLen, wid:st.wid, wid2:wp.id, ms:st.ms,
+                       core:st.core, halo:st.halo });
+  if(state.netMode && p.isHuman){
+    p.pendingShots=p.pendingShots||[];
+    p.pendingShots.push({a:+ang.toFixed(2), w:wp.id});
+    if(p.pendingShots.length>6) p.pendingShots.splice(0, p.pendingShots.length-6);
+  }
+  if(state.tracers.length>60) state.tracers.splice(0, state.tracers.length-60);
   p.shots++; // 统计：开火次数（结算用）
   p.cooldown = (p.isHuman ? p.role.fireCD : p.role.fireCD*CFG.aiFireMul) * wp.cdMul;
   spawnParticle(sx,sy,Math.cos(ang)*40,Math.sin(ang)*40,'#ffe9a8',0.06,6);
@@ -2433,37 +2449,43 @@ function drawPlayers(){
 }
 function drawBullets(){
   ctx2d.lineCap='round';
-  // 对手弹道的曳光残影
+  /* ---- 弹道光束（本地 + 对手）：纯线束，无光圈 ---- */
   if(state.tracers && state.tracers.length){
     const now=performance.now();
-    state.tracers=state.tracers.filter(t=>now-t.t0<420);
+    state.tracers=state.tracers.filter(t=>now-t.t0 < (t.ms||260));
     for(const t of state.tracers){
-      const k=Math.max(0,1-(now-t.t0)/420);
+      const dur=(t.ms||260);
+      const k=Math.max(0, 1-(now-t.t0)/dur);
       const rgb = t.team==='blue' ? '77,195,255' : '255,91,110';
-      // 外层光晕
-      ctx2d.globalAlpha=0.34*k; ctx2d.strokeStyle='rgba('+rgb+',1)';
-      ctx2d.shadowColor='rgba('+rgb+',0.9)'; ctx2d.shadowBlur=18; ctx2d.lineWidth=9;
+      const wid = t.wid||4;
+      // 外沿柔边（低透明度，不加阴影/发光）
+      ctx2d.globalAlpha=(t.halo!=null?t.halo:0.28)*k;
+      ctx2d.strokeStyle='rgba('+rgb+',1)';
+      ctx2d.lineWidth=wid+2;
       ctx2d.beginPath(); ctx2d.moveTo(t.x1,t.y1); ctx2d.lineTo(t.x2,t.y2); ctx2d.stroke();
-      // 光束本体：枪口亮白，末端淡出
+      // 束身：枪口白热 → 队伍色 → 尾部透明
       const g=ctx2d.createLinearGradient(t.x1,t.y1,t.x2,t.y2);
-      g.addColorStop(0,'rgba(255,255,255,'+(0.96*k)+')');
-      g.addColorStop(0.18,'rgba('+rgb+','+(0.85*k)+')');
+      g.addColorStop(0,'rgba(255,255,255,'+((t.core!=null?t.core:0.95)*k)+')');
+      g.addColorStop(0.14,'rgba('+rgb+','+(0.9*k)+')');
+      g.addColorStop(0.62,'rgba('+rgb+','+(0.42*k)+')');
       g.addColorStop(1,'rgba('+rgb+',0)');
-      ctx2d.globalAlpha=1; ctx2d.strokeStyle=g; ctx2d.shadowBlur=10; ctx2d.lineWidth=4;
+      ctx2d.globalAlpha=1; ctx2d.strokeStyle=g; ctx2d.lineWidth=wid;
       ctx2d.beginPath(); ctx2d.moveTo(t.x1,t.y1); ctx2d.lineTo(t.x2,t.y2); ctx2d.stroke();
-      // 枪口亮斑
-      ctx2d.globalAlpha=0.92*k; ctx2d.fillStyle='#fff'; ctx2d.shadowBlur=16;
-      ctx2d.beginPath(); ctx2d.arc(t.x1,t.y1,3.4,0,Math.PI*2); ctx2d.fill();
-      ctx2d.shadowBlur=0; ctx2d.globalAlpha=1;
     }
+    ctx2d.globalAlpha=1;
   }
+  /* ---- 飞行中的子弹：一束光，不再是圆点 ---- */
   for(const b of state.bullets){
-    ctx2d.strokeStyle=b.team==='red'?'#ff5b6e':'#4dc3ff';
-    ctx2d.shadowColor=b.team==='red'?'#ff5b6e':'#4dc3ff'; ctx2d.shadowBlur=10;
-    ctx2d.lineWidth=5;
-    ctx2d.beginPath(); ctx2d.moveTo(b.x,b.y); ctx2d.lineTo(b.x-b.vx*0.055,b.y-b.vy*0.055); ctx2d.stroke();
-    ctx2d.shadowBlur=0;
-    ctx2d.fillStyle='#fff'; ctx2d.beginPath(); ctx2d.arc(b.x,b.y,2.2,0,Math.PI*2); ctx2d.fill();
+    const rgb = b.team==='red' ? '255,91,110' : '77,195,255';
+    const sp=Math.hypot(b.vx,b.vy)||1;
+    const len=Math.min(46, Math.max(18, sp*0.055));
+    const tx=b.x-b.vx/sp*len, ty=b.y-b.vy/sp*len;
+    const g2=ctx2d.createLinearGradient(tx,ty,b.x,b.y);
+    g2.addColorStop(0,'rgba('+rgb+',0)');
+    g2.addColorStop(0.7,'rgba('+rgb+',0.85)');
+    g2.addColorStop(1,'rgba(255,255,255,0.95)');
+    ctx2d.globalAlpha=1; ctx2d.strokeStyle=g2; ctx2d.lineWidth=3;
+    ctx2d.beginPath(); ctx2d.moveTo(tx,ty); ctx2d.lineTo(b.x,b.y); ctx2d.stroke();
   }
 }
 function drawParticles(){
@@ -2593,7 +2615,8 @@ function updateHUD(){
   const p2 = state.netMode ? netFoe() : (state.mode==='1v1' ? state.players[1] : null);
   if(state.mode==='1v1' && p2){
     hpFill2.style.width=clamp(p2.hp/(p2.maxHp||CFG.maxHp),0,1)*100+'%';
-    p2Name.textContent=(state.netMode?'对手':(isTouch?'AI':'P2'))+' · '+p2.role.icon+' '+p2.role.name;
+    const foeNick = ((state.netMode ? (NET.foeName||'') : '') || (p2 && p2.name) || '对手').trim();
+    p2Name.textContent=foeNick.slice(0,8)+' · '+p2.role.icon+' '+p2.role.name;
     p2Sub.textContent='击杀 '+p2.kills+' · 死亡 '+p2.deaths+(p2.shield>0?' · 护盾 '+Math.round(p2.shield):'');
     p2Icon.textContent=p2.role.icon;
     refreshSkillBox(panelP2.querySelector('.skillBox'), p2);
@@ -3177,7 +3200,19 @@ function runSelfCheck(){
       return src.indexOf('shortName')>0 && src.indexOf("'AI '")<0 && src.indexOf("'P1 '")<0;
     })());
   ok('每把枪开火都留弹道光束', shoot.toString().indexOf('state.tracers.push')>0);
-  ok('弹道光束 420ms 内渐隐', drawBullets.toString().indexOf('<420')>0);
+  ok('四把枪的弹道参数各不相同', (function(){
+      try{
+        const ids=['rifle','smg','shotgun','dmr'];
+        const ws=ids.map(id=>TRACER_STYLE[id]&&TRACER_STYLE[id].wid).filter(Boolean);
+        const ls=ids.map(id=>TRACER_STYLE[id]&&TRACER_STYLE[id].len);
+        return ws.length===4 && new Set(ws).size>=3 && new Set(ls).size===4;
+      }catch(e){ return false; }
+    })());
+  ok('弹道去掉了光圈与白点', drawBullets.toString().indexOf('shadowBlur')<0 && drawBullets.toString().indexOf('arc(')<0);
+  ok('开火同步带武器编号', shoot.toString().indexOf('w:wp.id')>0);
+  ok('对手弹道按枪种渲染', netGhostShot.toString().indexOf('tracerStyle(m.w)')>0);
+  ok('终端页会隐藏公告条', adminBoot.toString().indexOf("admin-mode")>0);
+  ok('弹道光束按枪种时长渐隐', drawBullets.toString().indexOf('t.ms||260')>0);
   ok('结算与中断时不挂公告条', [...document.querySelectorAll('style')].some(st=>st.textContent.indexOf('body.ended #noticeBar')>0));
   ok('公告详情层级高于历史列表', (function(){
       const d=document.getElementById('noticeScreen'), l=document.getElementById('noticeListScreen');
@@ -3661,14 +3696,19 @@ function netTick(dt){
   NET.lastSend+=dt;
   if(NET.lastSend < 0.125) return;     // 公共中转限流约 10 条/秒，8Hz 实测零丢包
   NET.lastSend=0;
-  const shots=(me.pendingShots && me.pendingShots.length) ? me.pendingShots.splice(0,4) : null;
+  const shots=(me.pendingShots && me.pendingShots.length) ? me.pendingShots.splice(0,6) : null;
   netSend({t:'state', x:Math.round(me.x), y:Math.round(me.y), aim:+me.aim.toFixed(2),
            hp:Math.round(me.hp), alive:me.alive, shield:me.shield||0, sh:me.shield>0,
            s:shots}, 1);
 }
 function netApplyState(m){
   const foe=netFoe(); if(!foe) return;
-  if(m.s && m.s.length){ for(const a of m.s){ netGhostShot({x:foe.x, y:foe.y, ang:a}); } }
+  if(m.s && m.s.length){
+    for(const it of m.s){
+      if(typeof it==='number') netGhostShot({x:foe.x, y:foe.y, ang:it});
+      else netGhostShot({x:foe.x, y:foe.y, ang:it.a, w:it.w});
+    }
+  }
   foe.netTX=m.x; foe.netTY=m.y; foe.netAim=m.aim;
   foe.hp=m.hp; foe.alive=m.alive; foe.shield=m.sh||0;
   if(!foe.netInit){ foe.netInit=true; foe.x=m.x; foe.y=m.y; foe.aim=m.aim; }
@@ -3687,13 +3727,12 @@ function netGhostShot(m){
   const x=(typeof m.x==='number')?m.x:foe.x, y=(typeof m.y==='number')?m.y:foe.y;
   const ang=(typeof m.ang==='number')?m.ang:(foe.aim||0);
   const team=foe.team||'red';
-  // 飞行子弹：0.6 秒飞完全程，玩家能看着子弹从对面飞过来
-  state.bullets.push({x,y,vx:Math.cos(ang)*700,vy:Math.sin(ang)*700,life:0.9,dmg:0,team,r:CFG.bulletRadius,
-                      owner:null,noHit:true,ghost:true});
+  const st=tracerStyle(m.w);
   state.tracers=state.tracers||[];
-  state.tracers.push({ x1:x+Math.cos(ang)*20, y1:y+Math.sin(ang)*20,
-                       x2:x+Math.cos(ang)*190, y2:y+Math.sin(ang)*190,
-                       t0:performance.now(), team });
+  state.tracers.push({ x1:x+Math.cos(ang)*(CFG.playerRadius+6), y1:y+Math.sin(ang)*(CFG.playerRadius+6),
+                       x2:x+Math.cos(ang)*st.len, y2:y+Math.sin(ang)*st.len,
+                       t0:performance.now(), team, wid:st.wid, wid2:m.w||'rifle', ms:st.ms,
+                       core:st.core, halo:st.halo });
   foe.muzzleT=0.12;
   sShoot();
 }
@@ -4430,6 +4469,7 @@ document.getElementById('adminList').addEventListener('click', async (e)=>{
 function adminBoot(){
   if(!/[?&]admin=1/.test(location.search)) return;
   window.__ADMIN_PAGE=true;   // 终端页不受维护跳转影响
+  document.body.classList.add('admin-mode');   // 终端页不挂公告，免挡按钮
   const nb=document.getElementById('noticeBar'), mb=document.getElementById('maintBar');
   if(nb){ nb.style.top='6px'; }        // 终端页公告条贴顶，不挡面板
   if(mb){ mb.style.top='52px'; }
