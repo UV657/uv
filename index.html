@@ -557,6 +557,8 @@ body.is-touch .nhTime{display:none !important}
 }
 
 #btnFire.hot{box-shadow:0 0 0 2px rgba(255,138,72,.7), 0 0 22px rgba(255,138,72,.45) inset;border-color:rgba(255,138,72,.8)}
+
+.skillBox.blocked,.skBox.blocked{border-color:rgba(143,184,255,.85);box-shadow:0 0 0 2px rgba(143,184,255,.35) inset}
 </style>
 <script>/* MQTT 客户端（内联，免 CDN 依赖） */
 "use strict";var mqtt=(()=>{var ys=Object.defineProperty;var Kg=Object.getOwnPropertyDescriptor;var Gg=Object.getOwnPropertyNames;var Qg=Object.prototype.hasOwnProperty;var _e=(t,e)=>()=>(t&&(e=t(t=0)),e);var M=(t,e)=>()=>(e||t((e={exports:{}}).exports,e),e.exports),Jt=(t,e)=>{for(var r in e)ys(t,r,{get:e[r],enumerable:!0})},Yg=(t,e,r,i)=>{if(e&&typeof e=="object"||typeof e=="function")for(let n of Gg(e))!Qg.call(t,n)&&n!==r&&ys(t,n,{get:()=>e[n],enumerable:!(i=Kg(e,n))||i.enumerable});return t};var X=t=>Yg(ys({},"__esModule",{value:!0}),t);var _=_e(()=>{});var B={};Jt(B,{_debugEnd:()=>yu,_debugProcess:()=>gu,_events:()=>Ou,_eventsCount:()=>xu,_exiting:()=>Yl,_fatalExceptions:()=>cu,_getActiveHandles:()=>eu,_getActiveRequests:()=>Zl,_kill:()=>ru,_linkedBinding:()=>Gl,_maxListeners:()=>ku,_preload_modules:()=>Cu,_rawDebug:()=>zl,_startProfilerIdleNotifier:()=>bu,_stopProfilerIdleNotifier:()=>wu,_tickCallback:()=>pu,abort:()=>Eu,addListener:()=>Mu,allowedNodeEnvironmentFlags:()=>lu,arch:()=>xl,argv:()=>Ul,argv0:()=>Ru,assert:()=>uu,binding:()=>Fl,chdir:()=>Hl,config:()=>Jl,cpuUsage:()=>$i,cwd:()=>$l,debugPort:()=>Tu,default:()=>$u,dlopen:()=>Xl,domain:()=>Ql,emit:()=>Du,emitWarning:()=>jl,env:()=>Ll,execArgv:()=>Nl,execPath:()=>Iu,exit:()=>ou,features:()=>fu,hasUncaughtExceptionCaptureCallback:()=>du,hrtime:()=>Wi,kill:()=>su,listeners:()=>Wu,memoryUsage:()=>nu,moduleLoadList:()=>Kl,nextTick:()=>Pl,off:()=>Uu,on:()=>wt,once:()=>Lu,openStdin:()=>au,pid:()=>Su,platform:()=>Ml,ppid:()=>Au,prependListener:()=>ju,prependOnceListener:()=>Fu,reallyExit:()=>tu,release:()=>Vl,removeAllListeners:()=>qu,removeListener:()=>Nu,resourceUsage:()=>iu,setSourceMapsEnabled:()=>Bu,setUncaughtExceptionCaptureCallback:()=>hu,stderr:()=>mu,stdin:()=>vu,stdout:()=>_u,title:()=>Ol,umask:()=>Wl,uptime:()=>Pu,version:()=>ql,versions:()=>Dl});function _s(t){throw new Error("Node.js process "+t+" is not supported by JSPM core outside of Node.js")}function Jg(){!Lr||!Xt||(Lr=!1,Xt.length?bt=Xt.concat(bt):Fi=-1,bt.length&&Bl())}function Bl(){if(!Lr){var t=setTimeout(Jg,0);Lr=!0;for(var e=bt.length;e;){for(Xt=bt,bt=[];++Fi<e;)Xt&&Xt[Fi].run();Fi=-1,e=bt.length}Xt=null,Lr=!1,clearTimeout(t)}}function Pl(t){var e=new Array(arguments.length-1);if(arguments.length>1)for(var r=1;r<arguments.length;r++)e[r-1]=arguments[r];bt.push(new kl(t,e)),bt.length===1&&!Lr&&setTimeout(Bl,0)}function kl(t,e){this.fun=t,this.array=e}function Ee(){}function Gl(t){_s("_linkedBinding")}function Xl(t){_s("dlopen")}function Zl(){return[]}function eu(){return[]}function uu(t,e){if(!t)throw new Error(e||"assertion error")}function du(){return!1}function Pu(){return Lt.now()/1e3}function Wi(t){var e=Math.floor((Date.now()-Lt.now())*.001),r=Lt.now()*.001,i=Math.floor(r)+e,n=Math.floor(r%1*1e9);return t&&(i=i-t[0],n=n-t[1],n<0&&(i--,n+=ws)),[i,n]}function wt(){return $u}function Wu(t){return[]}var bt,Lr,Xt,Fi,Ol,xl,Ml,Ll,Ul,Nl,ql,Dl,jl,Fl,Wl,$l,Hl,Vl,zl,Kl,Ql,Yl,Jl,tu,ru,$i,iu,nu,su,ou,au,lu,fu,cu,hu,pu,gu,yu,bu,wu,_u,mu,vu,Eu,Su,Au,Iu,Tu,Ru,Cu,Bu,Lt,bs,ws,ku,Ou,xu,Mu,Lu,Uu,Nu,qu,Du,ju,Fu,$u,Hu=_e(()=>{_();v();m();bt=[],Lr=!1,Fi=-1;kl.prototype.run=function(){this.fun.apply(null,this.array)};Ol="browser",xl="x64",Ml="browser",Ll={PATH:"/usr/bin",LANG:navigator.language+".UTF-8",PWD:"/",HOME:"/home",TMP:"/tmp"},Ul=["/usr/bin/node"],Nl=[],ql="v16.8.0",Dl={},jl=function(t,e){console.warn((e?e+": ":"")+t)},Fl=function(t){_s("binding")},Wl=function(t){return 0},$l=function(){return"/"},Hl=function(t){},Vl={name:"node",sourceUrl:"",headersUrl:"",libUrl:""};zl=Ee,Kl=[];Ql={},Yl=!1,Jl={};tu=Ee,ru=Ee,$i=function(){return{}},iu=$i,nu=$i,su=Ee,ou=Ee,au=Ee,lu={};fu={inspector:!1,debug:!1,uv:!1,ipv6:!1,tls_alpn:!1,tls_sni:!1,tls_ocsp:!1,tls:!1,cached_builtins:!0},cu=Ee,hu=Ee;pu=Ee,gu=Ee,yu=Ee,bu=Ee,wu=Ee,_u=void 0,mu=void 0,vu=void 0,Eu=Ee,Su=2,Au=1,Iu="/bin/usr/node",Tu=9229,Ru="node",Cu=[],Bu=Ee,Lt={now:typeof performance<"u"?performance.now.bind(performance):void 0,timing:typeof performance<"u"?performance.timing:void 0};Lt.now===void 0&&(bs=Date.now(),Lt.timing&&Lt.timing.navigationStart&&(bs=Lt.timing.navigationStart),Lt.now=()=>Date.now()-bs);ws=1e9;Wi.bigint=function(t){var e=Wi(t);return typeof BigInt>"u"?e[0]*ws+e[1]:BigInt(e[0]*ws)+BigInt(e[1])};ku=10,Ou={},xu=0;Mu=wt,Lu=wt,Uu=wt,Nu=wt,qu=wt,Du=Ee,ju=wt,Fu=wt;$u={version:ql,versions:Dl,arch:xl,platform:Ml,release:Vl,_rawDebug:zl,moduleLoadList:Kl,binding:Fl,_linkedBinding:Gl,_events:Ou,_eventsCount:xu,_maxListeners:ku,on:wt,addListener:Mu,once:Lu,off:Uu,removeListener:Nu,removeAllListeners:qu,emit:Du,prependListener:ju,prependOnceListener:Fu,listeners:Wu,domain:Ql,_exiting:Yl,config:Jl,dlopen:Xl,uptime:Pu,_getActiveRequests:Zl,_getActiveHandles:eu,reallyExit:tu,_kill:ru,cpuUsage:$i,resourceUsage:iu,memoryUsage:nu,kill:su,exit:ou,openStdin:au,allowedNodeEnvironmentFlags:lu,assert:uu,features:fu,_fatalExceptions:cu,setUncaughtExceptionCaptureCallback:hu,hasUncaughtExceptionCaptureCallback:du,emitWarning:jl,nextTick:Pl,_tickCallback:pu,_debugProcess:gu,_debugEnd:yu,_startProfilerIdleNotifier:bu,_stopProfilerIdleNotifier:wu,stdout:_u,stdin:vu,stderr:mu,abort:Eu,umask:Wl,chdir:Hl,cwd:$l,env:Ll,title:Ol,argv:Ul,execArgv:Nl,pid:Su,ppid:Au,execPath:Iu,debugPort:Tu,hrtime:Wi,argv0:Ru,_preload_modules:Cu,setSourceMapsEnabled:Bu}});var m=_e(()=>{Hu()});var me={};Jt(me,{Buffer:()=>x,INSPECT_MAX_BYTES:()=>ty,default:()=>Ut,kMaxLength:()=>ry});function Xg(){if(Vu)return ci;Vu=!0,ci.byteLength=a,ci.toByteArray=c,ci.fromByteArray=g;for(var t=[],e=[],r=typeof Uint8Array<"u"?Uint8Array:Array,i="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/",n=0,o=i.length;n<o;++n)t[n]=i[n],e[i.charCodeAt(n)]=n;e["-".charCodeAt(0)]=62,e["_".charCodeAt(0)]=63;function s(y){var w=y.length;if(w%4>0)throw new Error("Invalid string. Length must be a multiple of 4");var S=y.indexOf("=");S===-1&&(S=w);var E=S===w?0:4-S%4;return[S,E]}function a(y){var w=s(y),S=w[0],E=w[1];return(S+E)*3/4-E}function l(y,w,S){return(w+S)*3/4-S}function c(y){var w,S=s(y),E=S[0],I=S[1],C=new r(l(y,E,I)),R=0,U=I>0?E-4:E,N;for(N=0;N<U;N+=4)w=e[y.charCodeAt(N)]<<18|e[y.charCodeAt(N+1)]<<12|e[y.charCodeAt(N+2)]<<6|e[y.charCodeAt(N+3)],C[R++]=w>>16&255,C[R++]=w>>8&255,C[R++]=w&255;return I===2&&(w=e[y.charCodeAt(N)]<<2|e[y.charCodeAt(N+1)]>>4,C[R++]=w&255),I===1&&(w=e[y.charCodeAt(N)]<<10|e[y.charCodeAt(N+1)]<<4|e[y.charCodeAt(N+2)]>>2,C[R++]=w>>8&255,C[R++]=w&255),C}function h(y){return t[y>>18&63]+t[y>>12&63]+t[y>>6&63]+t[y&63]}function d(y,w,S){for(var E,I=[],C=w;C<S;C+=3)E=(y[C]<<16&16711680)+(y[C+1]<<8&65280)+(y[C+2]&255),I.push(h(E));return I.join("")}function g(y){for(var w,S=y.length,E=S%3,I=[],C=16383,R=0,U=S-E;R<U;R+=C)I.push(d(y,R,R+C>U?U:R+C));return E===1?(w=y[S-1],I.push(t[w>>2]+t[w<<4&63]+"==")):E===2&&(w=(y[S-2]<<8)+y[S-1],I.push(t[w>>10]+t[w>>4&63]+t[w<<2&63]+"=")),I.join("")}return ci}function Zg(){if(zu)return Hi;zu=!0;return Hi.read=function(t,e,r,i,n){var o,s,a=n*8-i-1,l=(1<<a)-1,c=l>>1,h=-7,d=r?n-1:0,g=r?-1:1,y=t[e+d];for(d+=g,o=y&(1<<-h)-1,y>>=-h,h+=a;h>0;o=o*256+t[e+d],d+=g,h-=8);for(s=o&(1<<-h)-1,o>>=-h,h+=i;h>0;s=s*256+t[e+d],d+=g,h-=8);if(o===0)o=1-c;else{if(o===l)return s?NaN:(y?-1:1)*(1/0);s=s+Math.pow(2,i),o=o-c}return(y?-1:1)*s*Math.pow(2,o-i)},Hi.write=function(t,e,r,i,n,o){var s,a,l,c=o*8-n-1,h=(1<<c)-1,d=h>>1,g=n===23?Math.pow(2,-24)-Math.pow(2,-77):0,y=i?0:o-1,w=i?1:-1,S=e<0||e===0&&1/e<0?1:0;for(e=Math.abs(e),isNaN(e)||e===1/0?(a=isNaN(e)?1:0,s=h):(s=Math.floor(Math.log(e)/Math.LN2),e*(l=Math.pow(2,-s))<1&&(s--,l*=2),s+d>=1?e+=g/l:e+=g*Math.pow(2,1-d),e*l>=2&&(s++,l/=2),s+d>=h?(a=0,s=h):s+d>=1?(a=(e*l-1)*Math.pow(2,n),s=s+d):(a=e*Math.pow(2,d-1)*Math.pow(2,n),s=0));n>=8;t[r+y]=a&255,y+=w,a/=256,n-=8);for(s=s<<n|a,c+=n;c>0;t[r+y]=s&255,y+=w,s/=256,c-=8);t[r+y-w]|=S*128},Hi}function ey(){if(Ku)return Zt;Ku=!0;let t=Xg(),e=Zg(),r=typeof Symbol=="function"&&typeof Symbol.for=="function"?Symbol.for("nodejs.util.inspect.custom"):null;Zt.Buffer=s,Zt.SlowBuffer=I,Zt.INSPECT_MAX_BYTES=50;let i=2147483647;Zt.kMaxLength=i,s.TYPED_ARRAY_SUPPORT=n(),!s.TYPED_ARRAY_SUPPORT&&typeof console<"u"&&typeof console.error=="function"&&console.error("This browser lacks typed array (Uint8Array) support which is required by `buffer` v5.x. Use `buffer` v4.x if you require old browser support.");function n(){try{let p=new Uint8Array(1),u={foo:function(){return 42}};return Object.setPrototypeOf(u,Uint8Array.prototype),Object.setPrototypeOf(p,u),p.foo()===42}catch{return!1}}Object.defineProperty(s.prototype,"parent",{enumerable:!0,get:function(){if(s.isBuffer(this))return this.buffer}}),Object.defineProperty(s.prototype,"offset",{enumerable:!0,get:function(){if(s.isBuffer(this))return this.byteOffset}});function o(p){if(p>i)throw new RangeError('The value "'+p+'" is invalid for option "size"');let u=new Uint8Array(p);return Object.setPrototypeOf(u,s.prototype),u}function s(p,u,f){if(typeof p=="number"){if(typeof u=="string")throw new TypeError('The "string" argument must be of type string. Received type number');return h(p)}return a(p,u,f)}s.poolSize=8192;function a(p,u,f){if(typeof p=="string")return d(p,u);if(ArrayBuffer.isView(p))return y(p);if(p==null)throw new TypeError("The first argument must be one of type string, Buffer, ArrayBuffer, Array, or Array-like Object. Received type "+typeof p);if(Ye(p,ArrayBuffer)||p&&Ye(p.buffer,ArrayBuffer)||typeof SharedArrayBuffer<"u"&&(Ye(p,SharedArrayBuffer)||p&&Ye(p.buffer,SharedArrayBuffer)))return w(p,u,f);if(typeof p=="number")throw new TypeError('The "value" argument must not be of type number. Received type number');let b=p.valueOf&&p.valueOf();if(b!=null&&b!==p)return s.from(b,u,f);let A=S(p);if(A)return A;if(typeof Symbol<"u"&&Symbol.toPrimitive!=null&&typeof p[Symbol.toPrimitive]=="function")return s.from(p[Symbol.toPrimitive]("string"),u,f);throw new TypeError("The first argument must be one of type string, Buffer, ArrayBuffer, Array, or Array-like Object. Received type "+typeof p)}s.from=function(p,u,f){return a(p,u,f)},Object.setPrototypeOf(s.prototype,Uint8Array.prototype),Object.setPrototypeOf(s,Uint8Array);function l(p){if(typeof p!="number")throw new TypeError('"size" argument must be of type number');if(p<0)throw new RangeError('The value "'+p+'" is invalid for option "size"')}function c(p,u,f){return l(p),p<=0?o(p):u!==void 0?typeof f=="string"?o(p).fill(u,f):o(p).fill(u):o(p)}s.alloc=function(p,u,f){return c(p,u,f)};function h(p){return l(p),o(p<0?0:E(p)|0)}s.allocUnsafe=function(p){return h(p)},s.allocUnsafeSlow=function(p){return h(p)};function d(p,u){if((typeof u!="string"||u==="")&&(u="utf8"),!s.isEncoding(u))throw new TypeError("Unknown encoding: "+u);let f=C(p,u)|0,b=o(f),A=b.write(p,u);return A!==f&&(b=b.slice(0,A)),b}function g(p){let u=p.length<0?0:E(p.length)|0,f=o(u);for(let b=0;b<u;b+=1)f[b]=p[b]&255;return f}function y(p){if(Ye(p,Uint8Array)){let u=new Uint8Array(p);return w(u.buffer,u.byteOffset,u.byteLength)}return g(p)}function w(p,u,f){if(u<0||p.byteLength<u)throw new RangeError('"offset" is outside of buffer bounds');if(p.byteLength<u+(f||0))throw new RangeError('"length" is outside of buffer bounds');let b;return u===void 0&&f===void 0?b=new Uint8Array(p):f===void 0?b=new Uint8Array(p,u):b=new Uint8Array(p,u,f),Object.setPrototypeOf(b,s.prototype),b}function S(p){if(s.isBuffer(p)){let u=E(p.length)|0,f=o(u);return f.length===0||p.copy(f,0,0,u),f}if(p.length!==void 0)return typeof p.length!="number"||gs(p.length)?o(0):g(p);if(p.type==="Buffer"&&Array.isArray(p.data))return g(p.data)}function E(p){if(p>=i)throw new RangeError("Attempt to allocate Buffer larger than maximum size: 0x"+i.toString(16)+" bytes");return p|0}function I(p){return+p!=p&&(p=0),s.alloc(+p)}s.isBuffer=function(u){return u!=null&&u._isBuffer===!0&&u!==s.prototype},s.compare=function(u,f){if(Ye(u,Uint8Array)&&(u=s.from(u,u.offset,u.byteLength)),Ye(f,Uint8Array)&&(f=s.from(f,f.offset,f.byteLength)),!s.isBuffer(u)||!s.isBuffer(f))throw new TypeError('The "buf1", "buf2" arguments must be one of type Buffer or Uint8Array');if(u===f)return 0;let b=u.length,A=f.length;for(let T=0,P=Math.min(b,A);T<P;++T)if(u[T]!==f[T]){b=u[T],A=f[T];break}return b<A?-1:A<b?1:0},s.isEncoding=function(u){switch(String(u).toLowerCase()){case"hex":case"utf8":case"utf-8":case"ascii":case"latin1":case"binary":case"base64":case"ucs2":case"ucs-2":case"utf16le":case"utf-16le":return!0;default:return!1}},s.concat=function(u,f){if(!Array.isArray(u))throw new TypeError('"list" argument must be an Array of Buffers');if(u.length===0)return s.alloc(0);let b;if(f===void 0)for(f=0,b=0;b<u.length;++b)f+=u[b].length;let A=s.allocUnsafe(f),T=0;for(b=0;b<u.length;++b){let P=u[b];if(Ye(P,Uint8Array))T+P.length>A.length?(s.isBuffer(P)||(P=s.from(P)),P.copy(A,T)):Uint8Array.prototype.set.call(A,P,T);else if(s.isBuffer(P))P.copy(A,T);else throw new TypeError('"list" argument must be an Array of Buffers');T+=P.length}return A};function C(p,u){if(s.isBuffer(p))return p.length;if(ArrayBuffer.isView(p)||Ye(p,ArrayBuffer))return p.byteLength;if(typeof p!="string")throw new TypeError('The "string" argument must be one of type string, Buffer, or ArrayBuffer. Received type '+typeof p);let f=p.length,b=arguments.length>2&&arguments[2]===!0;if(!b&&f===0)return 0;let A=!1;for(;;)switch(u){case"ascii":case"latin1":case"binary":return f;case"utf8":case"utf-8":return ps(p).length;case"ucs2":case"ucs-2":case"utf16le":case"utf-16le":return f*2;case"hex":return f>>>1;case"base64":return Cl(p).length;default:if(A)return b?-1:ps(p).length;u=(""+u).toLowerCase(),A=!0}}s.byteLength=C;function R(p,u,f){let b=!1;if((u===void 0||u<0)&&(u=0),u>this.length||((f===void 0||f>this.length)&&(f=this.length),f<=0)||(f>>>=0,u>>>=0,f<=u))return"";for(p||(p="utf8");;)switch(p){case"hex":return qg(this,u,f);case"utf8":case"utf-8":return Pr(this,u,f);case"ascii":return hs(this,u,f);case"latin1":case"binary":return Ng(this,u,f);case"base64":return ge(this,u,f);case"ucs2":case"ucs-2":case"utf16le":case"utf-16le":return Dg(this,u,f);default:if(b)throw new TypeError("Unknown encoding: "+p);p=(p+"").toLowerCase(),b=!0}}s.prototype._isBuffer=!0;function U(p,u,f){let b=p[u];p[u]=p[f],p[f]=b}s.prototype.swap16=function(){let u=this.length;if(u%2!==0)throw new RangeError("Buffer size must be a multiple of 16-bits");for(let f=0;f<u;f+=2)U(this,f,f+1);return this},s.prototype.swap32=function(){let u=this.length;if(u%4!==0)throw new RangeError("Buffer size must be a multiple of 32-bits");for(let f=0;f<u;f+=4)U(this,f,f+3),U(this,f+1,f+2);return this},s.prototype.swap64=function(){let u=this.length;if(u%8!==0)throw new RangeError("Buffer size must be a multiple of 64-bits");for(let f=0;f<u;f+=8)U(this,f,f+7),U(this,f+1,f+6),U(this,f+2,f+5),U(this,f+3,f+4);return this},s.prototype.toString=function(){let u=this.length;return u===0?"":arguments.length===0?Pr(this,0,u):R.apply(this,arguments)},s.prototype.toLocaleString=s.prototype.toString,s.prototype.equals=function(u){if(!s.isBuffer(u))throw new TypeError("Argument must be a Buffer");return this===u?!0:s.compare(this,u)===0},s.prototype.inspect=function(){let u="",f=Zt.INSPECT_MAX_BYTES;return u=this.toString("hex",0,f).replace(/(.{2})/g,"$1 ").trim(),this.length>f&&(u+=" ... "),"<Buffer "+u+">"},r&&(s.prototype[r]=s.prototype.inspect),s.prototype.compare=function(u,f,b,A,T){if(Ye(u,Uint8Array)&&(u=s.from(u,u.offset,u.byteLength)),!s.isBuffer(u))throw new TypeError('The "target" argument must be one of type Buffer or Uint8Array. Received type '+typeof u);if(f===void 0&&(f=0),b===void 0&&(b=u?u.length:0),A===void 0&&(A=0),T===void 0&&(T=this.length),f<0||b>u.length||A<0||T>this.length)throw new RangeError("out of range index");if(A>=T&&f>=b)return 0;if(A>=T)return-1;if(f>=b)return 1;if(f>>>=0,b>>>=0,A>>>=0,T>>>=0,this===u)return 0;let P=T-A,$=b-f,se=Math.min(P,$),te=this.slice(A,T),oe=u.slice(f,b);for(let J=0;J<se;++J)if(te[J]!==oe[J]){P=te[J],$=oe[J];break}return P<$?-1:$<P?1:0};function N(p,u,f,b,A){if(p.length===0)return-1;if(typeof f=="string"?(b=f,f=0):f>2147483647?f=2147483647:f<-2147483648&&(f=-2147483648),f=+f,gs(f)&&(f=A?0:p.length-1),f<0&&(f=p.length+f),f>=p.length){if(A)return-1;f=p.length-1}else if(f<0)if(A)f=0;else return-1;if(typeof u=="string"&&(u=s.from(u,b)),s.isBuffer(u))return u.length===0?-1:W(p,u,f,b,A);if(typeof u=="number")return u=u&255,typeof Uint8Array.prototype.indexOf=="function"?A?Uint8Array.prototype.indexOf.call(p,u,f):Uint8Array.prototype.lastIndexOf.call(p,u,f):W(p,[u],f,b,A);throw new TypeError("val must be string, number or Buffer")}function W(p,u,f,b,A){let T=1,P=p.length,$=u.length;if(b!==void 0&&(b=String(b).toLowerCase(),b==="ucs2"||b==="ucs-2"||b==="utf16le"||b==="utf-16le")){if(p.length<2||u.length<2)return-1;T=2,P/=2,$/=2,f/=2}function se(oe,J){return T===1?oe[J]:oe.readUInt16BE(J*T)}let te;if(A){let oe=-1;for(te=f;te<P;te++)if(se(p,te)===se(u,oe===-1?0:te-oe)){if(oe===-1&&(oe=te),te-oe+1===$)return oe*T}else oe!==-1&&(te-=te-oe),oe=-1}else for(f+$>P&&(f=P-$),te=f;te>=0;te--){let oe=!0;for(let J=0;J<$;J++)if(se(p,te+J)!==se(u,J)){oe=!1;break}if(oe)return te}return-1}s.prototype.includes=function(u,f,b){return this.indexOf(u,f,b)!==-1},s.prototype.indexOf=function(u,f,b){return N(this,u,f,b,!0)},s.prototype.lastIndexOf=function(u,f,b){return N(this,u,f,b,!1)};function K(p,u,f,b){f=Number(f)||0;let A=p.length-f;b?(b=Number(b),b>A&&(b=A)):b=A;let T=u.length;b>T/2&&(b=T/2);let P;for(P=0;P<b;++P){let $=parseInt(u.substr(P*2,2),16);if(gs($))return P;p[f+P]=$}return P}function z(p,u,f,b){return ji(ps(u,p.length-f),p,f,b)}function Q(p,u,f,b){return ji($g(u),p,f,b)}function pe(p,u,f,b){return ji(Cl(u),p,f,b)}function Yt(p,u,f,b){return ji(Hg(u,p.length-f),p,f,b)}s.prototype.write=function(u,f,b,A){if(f===void 0)A="utf8",b=this.length,f=0;else if(b===void 0&&typeof f=="string")A=f,b=this.length,f=0;else if(isFinite(f))f=f>>>0,isFinite(b)?(b=b>>>0,A===void 0&&(A="utf8")):(A=b,b=void 0);else throw new Error("Buffer.write(string, encoding, offset[, length]) is no longer supported");let T=this.length-f;if((b===void 0||b>T)&&(b=T),u.length>0&&(b<0||f<0)||f>this.length)throw new RangeError("Attempt to write outside buffer bounds");A||(A="utf8");let P=!1;for(;;)switch(A){case"hex":return K(this,u,f,b);case"utf8":case"utf-8":return z(this,u,f,b);case"ascii":case"latin1":case"binary":return Q(this,u,f,b);case"base64":return pe(this,u,f,b);case"ucs2":case"ucs-2":case"utf16le":case"utf-16le":return Yt(this,u,f,b);default:if(P)throw new TypeError("Unknown encoding: "+A);A=(""+A).toLowerCase(),P=!0}},s.prototype.toJSON=function(){return{type:"Buffer",data:Array.prototype.slice.call(this._arr||this,0)}};function ge(p,u,f){return u===0&&f===p.length?t.fromByteArray(p):t.fromByteArray(p.slice(u,f))}function Pr(p,u,f){f=Math.min(p.length,f);let b=[],A=u;for(;A<f;){let T=p[A],P=null,$=T>239?4:T>223?3:T>191?2:1;if(A+$<=f){let se,te,oe,J;switch($){case 1:T<128&&(P=T);break;case 2:se=p[A+1],(se&192)===128&&(J=(T&31)<<6|se&63,J>127&&(P=J));break;case 3:se=p[A+1],te=p[A+2],(se&192)===128&&(te&192)===128&&(J=(T&15)<<12|(se&63)<<6|te&63,J>2047&&(J<55296||J>57343)&&(P=J));break;case 4:se=p[A+1],te=p[A+2],oe=p[A+3],(se&192)===128&&(te&192)===128&&(oe&192)===128&&(J=(T&15)<<18|(se&63)<<12|(te&63)<<6|oe&63,J>65535&&J<1114112&&(P=J))}}P===null?(P=65533,$=1):P>65535&&(P-=65536,b.push(P>>>10&1023|55296),P=56320|P&1023),b.push(P),A+=$}return Or(b)}let kr=4096;function Or(p){let u=p.length;if(u<=kr)return String.fromCharCode.apply(String,p);let f="",b=0;for(;b<u;)f+=String.fromCharCode.apply(String,p.slice(b,b+=kr));return f}function hs(p,u,f){let b="";f=Math.min(p.length,f);for(let A=u;A<f;++A)b+=String.fromCharCode(p[A]&127);return b}function Ng(p,u,f){let b="";f=Math.min(p.length,f);for(let A=u;A<f;++A)b+=String.fromCharCode(p[A]);return b}function qg(p,u,f){let b=p.length;(!u||u<0)&&(u=0),(!f||f<0||f>b)&&(f=b);let A="";for(let T=u;T<f;++T)A+=Vg[p[T]];return A}function Dg(p,u,f){let b=p.slice(u,f),A="";for(let T=0;T<b.length-1;T+=2)A+=String.fromCharCode(b[T]+b[T+1]*256);return A}s.prototype.slice=function(u,f){let b=this.length;u=~~u,f=f===void 0?b:~~f,u<0?(u+=b,u<0&&(u=0)):u>b&&(u=b),f<0?(f+=b,f<0&&(f=0)):f>b&&(f=b),f<u&&(f=u);let A=this.subarray(u,f);return Object.setPrototypeOf(A,s.prototype),A};function ye(p,u,f){if(p%1!==0||p<0)throw new RangeError("offset is not uint");if(p+u>f)throw new RangeError("Trying to access beyond buffer length")}s.prototype.readUintLE=s.prototype.readUIntLE=function(u,f,b){u=u>>>0,f=f>>>0,b||ye(u,f,this.length);let A=this[u],T=1,P=0;for(;++P<f&&(T*=256);)A+=this[u+P]*T;return A},s.prototype.readUintBE=s.prototype.readUIntBE=function(u,f,b){u=u>>>0,f=f>>>0,b||ye(u,f,this.length);let A=this[u+--f],T=1;for(;f>0&&(T*=256);)A+=this[u+--f]*T;return A},s.prototype.readUint8=s.prototype.readUInt8=function(u,f){return u=u>>>0,f||ye(u,1,this.length),this[u]},s.prototype.readUint16LE=s.prototype.readUInt16LE=function(u,f){return u=u>>>0,f||ye(u,2,this.length),this[u]|this[u+1]<<8},s.prototype.readUint16BE=s.prototype.readUInt16BE=function(u,f){return u=u>>>0,f||ye(u,2,this.length),this[u]<<8|this[u+1]},s.prototype.readUint32LE=s.prototype.readUInt32LE=function(u,f){return u=u>>>0,f||ye(u,4,this.length),(this[u]|this[u+1]<<8|this[u+2]<<16)+this[u+3]*16777216},s.prototype.readUint32BE=s.prototype.readUInt32BE=function(u,f){return u=u>>>0,f||ye(u,4,this.length),this[u]*16777216+(this[u+1]<<16|this[u+2]<<8|this[u+3])},s.prototype.readBigUInt64LE=Mt(function(u){u=u>>>0,Mr(u,"offset");let f=this[u],b=this[u+7];(f===void 0||b===void 0)&&fi(u,this.length-8);let A=f+this[++u]*2**8+this[++u]*2**16+this[++u]*2**24,T=this[++u]+this[++u]*2**8+this[++u]*2**16+b*2**24;return BigInt(A)+(BigInt(T)<<BigInt(32))}),s.prototype.readBigUInt64BE=Mt(function(u){u=u>>>0,Mr(u,"offset");let f=this[u],b=this[u+7];(f===void 0||b===void 0)&&fi(u,this.length-8);let A=f*2**24+this[++u]*2**16+this[++u]*2**8+this[++u],T=this[++u]*2**24+this[++u]*2**16+this[++u]*2**8+b;return(BigInt(A)<<BigInt(32))+BigInt(T)}),s.prototype.readIntLE=function(u,f,b){u=u>>>0,f=f>>>0,b||ye(u,f,this.length);let A=this[u],T=1,P=0;for(;++P<f&&(T*=256);)A+=this[u+P]*T;return T*=128,A>=T&&(A-=Math.pow(2,8*f)),A},s.prototype.readIntBE=function(u,f,b){u=u>>>0,f=f>>>0,b||ye(u,f,this.length);let A=f,T=1,P=this[u+--A];for(;A>0&&(T*=256);)P+=this[u+--A]*T;return T*=128,P>=T&&(P-=Math.pow(2,8*f)),P},s.prototype.readInt8=function(u,f){return u=u>>>0,f||ye(u,1,this.length),this[u]&128?(255-this[u]+1)*-1:this[u]},s.prototype.readInt16LE=function(u,f){u=u>>>0,f||ye(u,2,this.length);let b=this[u]|this[u+1]<<8;return b&32768?b|4294901760:b},s.prototype.readInt16BE=function(u,f){u=u>>>0,f||ye(u,2,this.length);let b=this[u+1]|this[u]<<8;return b&32768?b|4294901760:b},s.prototype.readInt32LE=function(u,f){return u=u>>>0,f||ye(u,4,this.length),this[u]|this[u+1]<<8|this[u+2]<<16|this[u+3]<<24},s.prototype.readInt32BE=function(u,f){return u=u>>>0,f||ye(u,4,this.length),this[u]<<24|this[u+1]<<16|this[u+2]<<8|this[u+3]},s.prototype.readBigInt64LE=Mt(function(u){u=u>>>0,Mr(u,"offset");let f=this[u],b=this[u+7];(f===void 0||b===void 0)&&fi(u,this.length-8);let A=this[u+4]+this[u+5]*2**8+this[u+6]*2**16+(b<<24);return(BigInt(A)<<BigInt(32))+BigInt(f+this[++u]*2**8+this[++u]*2**16+this[++u]*2**24)}),s.prototype.readBigInt64BE=Mt(function(u){u=u>>>0,Mr(u,"offset");let f=this[u],b=this[u+7];(f===void 0||b===void 0)&&fi(u,this.length-8);let A=(f<<24)+this[++u]*2**16+this[++u]*2**8+this[++u];return(BigInt(A)<<BigInt(32))+BigInt(this[++u]*2**24+this[++u]*2**16+this[++u]*2**8+b)}),s.prototype.readFloatLE=function(u,f){return u=u>>>0,f||ye(u,4,this.length),e.read(this,u,!0,23,4)},s.prototype.readFloatBE=function(u,f){return u=u>>>0,f||ye(u,4,this.length),e.read(this,u,!1,23,4)},s.prototype.readDoubleLE=function(u,f){return u=u>>>0,f||ye(u,8,this.length),e.read(this,u,!0,52,8)},s.prototype.readDoubleBE=function(u,f){return u=u>>>0,f||ye(u,8,this.length),e.read(this,u,!1,52,8)};function Ce(p,u,f,b,A,T){if(!s.isBuffer(p))throw new TypeError('"buffer" argument must be a Buffer instance');if(u>A||u<T)throw new RangeError('"value" argument is out of bounds');if(f+b>p.length)throw new RangeError("Index out of range")}s.prototype.writeUintLE=s.prototype.writeUIntLE=function(u,f,b,A){if(u=+u,f=f>>>0,b=b>>>0,!A){let $=Math.pow(2,8*b)-1;Ce(this,u,f,b,$,0)}let T=1,P=0;for(this[f]=u&255;++P<b&&(T*=256);)this[f+P]=u/T&255;return f+b},s.prototype.writeUintBE=s.prototype.writeUIntBE=function(u,f,b,A){if(u=+u,f=f>>>0,b=b>>>0,!A){let $=Math.pow(2,8*b)-1;Ce(this,u,f,b,$,0)}let T=b-1,P=1;for(this[f+T]=u&255;--T>=0&&(P*=256);)this[f+T]=u/P&255;return f+b},s.prototype.writeUint8=s.prototype.writeUInt8=function(u,f,b){return u=+u,f=f>>>0,b||Ce(this,u,f,1,255,0),this[f]=u&255,f+1},s.prototype.writeUint16LE=s.prototype.writeUInt16LE=function(u,f,b){return u=+u,f=f>>>0,b||Ce(this,u,f,2,65535,0),this[f]=u&255,this[f+1]=u>>>8,f+2},s.prototype.writeUint16BE=s.prototype.writeUInt16BE=function(u,f,b){return u=+u,f=f>>>0,b||Ce(this,u,f,2,65535,0),this[f]=u>>>8,this[f+1]=u&255,f+2},s.prototype.writeUint32LE=s.prototype.writeUInt32LE=function(u,f,b){return u=+u,f=f>>>0,b||Ce(this,u,f,4,4294967295,0),this[f+3]=u>>>24,this[f+2]=u>>>16,this[f+1]=u>>>8,this[f]=u&255,f+4},s.prototype.writeUint32BE=s.prototype.writeUInt32BE=function(u,f,b){return u=+u,f=f>>>0,b||Ce(this,u,f,4,4294967295,0),this[f]=u>>>24,this[f+1]=u>>>16,this[f+2]=u>>>8,this[f+3]=u&255,f+4};function vl(p,u,f,b,A){Rl(u,b,A,p,f,7);let T=Number(u&BigInt(4294967295));p[f++]=T,T=T>>8,p[f++]=T,T=T>>8,p[f++]=T,T=T>>8,p[f++]=T;let P=Number(u>>BigInt(32)&BigInt(4294967295));return p[f++]=P,P=P>>8,p[f++]=P,P=P>>8,p[f++]=P,P=P>>8,p[f++]=P,f}function El(p,u,f,b,A){Rl(u,b,A,p,f,7);let T=Number(u&BigInt(4294967295));p[f+7]=T,T=T>>8,p[f+6]=T,T=T>>8,p[f+5]=T,T=T>>8,p[f+4]=T;let P=Number(u>>BigInt(32)&BigInt(4294967295));return p[f+3]=P,P=P>>8,p[f+2]=P,P=P>>8,p[f+1]=P,P=P>>8,p[f]=P,f+8}s.prototype.writeBigUInt64LE=Mt(function(u,f=0){return vl(this,u,f,BigInt(0),BigInt("0xffffffffffffffff"))}),s.prototype.writeBigUInt64BE=Mt(function(u,f=0){return El(this,u,f,BigInt(0),BigInt("0xffffffffffffffff"))}),s.prototype.writeIntLE=function(u,f,b,A){if(u=+u,f=f>>>0,!A){let se=Math.pow(2,8*b-1);Ce(this,u,f,b,se-1,-se)}let T=0,P=1,$=0;for(this[f]=u&255;++T<b&&(P*=256);)u<0&&$===0&&this[f+T-1]!==0&&($=1),this[f+T]=(u/P>>0)-$&255;return f+b},s.prototype.writeIntBE=function(u,f,b,A){if(u=+u,f=f>>>0,!A){let se=Math.pow(2,8*b-1);Ce(this,u,f,b,se-1,-se)}let T=b-1,P=1,$=0;for(this[f+T]=u&255;--T>=0&&(P*=256);)u<0&&$===0&&this[f+T+1]!==0&&($=1),this[f+T]=(u/P>>0)-$&255;return f+b},s.prototype.writeInt8=function(u,f,b){return u=+u,f=f>>>0,b||Ce(this,u,f,1,127,-128),u<0&&(u=255+u+1),this[f]=u&255,f+1},s.prototype.writeInt16LE=function(u,f,b){return u=+u,f=f>>>0,b||Ce(this,u,f,2,32767,-32768),this[f]=u&255,this[f+1]=u>>>8,f+2},s.prototype.writeInt16BE=function(u,f,b){return u=+u,f=f>>>0,b||Ce(this,u,f,2,32767,-32768),this[f]=u>>>8,this[f+1]=u&255,f+2},s.prototype.writeInt32LE=function(u,f,b){return u=+u,f=f>>>0,b||Ce(this,u,f,4,2147483647,-2147483648),this[f]=u&255,this[f+1]=u>>>8,this[f+2]=u>>>16,this[f+3]=u>>>24,f+4},s.prototype.writeInt32BE=function(u,f,b){return u=+u,f=f>>>0,b||Ce(this,u,f,4,2147483647,-2147483648),u<0&&(u=4294967295+u+1),this[f]=u>>>24,this[f+1]=u>>>16,this[f+2]=u>>>8,this[f+3]=u&255,f+4},s.prototype.writeBigInt64LE=Mt(function(u,f=0){return vl(this,u,f,-BigInt("0x8000000000000000"),BigInt("0x7fffffffffffffff"))}),s.prototype.writeBigInt64BE=Mt(function(u,f=0){return El(this,u,f,-BigInt("0x8000000000000000"),BigInt("0x7fffffffffffffff"))});function Sl(p,u,f,b,A,T){if(f+b>p.length)throw new RangeError("Index out of range");if(f<0)throw new RangeError("Index out of range")}function Al(p,u,f,b,A){return u=+u,f=f>>>0,A||Sl(p,u,f,4),e.write(p,u,f,b,23,4),f+4}s.prototype.writeFloatLE=function(u,f,b){return Al(this,u,f,!0,b)},s.prototype.writeFloatBE=function(u,f,b){return Al(this,u,f,!1,b)};function Il(p,u,f,b,A){return u=+u,f=f>>>0,A||Sl(p,u,f,8),e.write(p,u,f,b,52,8),f+8}s.prototype.writeDoubleLE=function(u,f,b){return Il(this,u,f,!0,b)},s.prototype.writeDoubleBE=function(u,f,b){return Il(this,u,f,!1,b)},s.prototype.copy=function(u,f,b,A){if(!s.isBuffer(u))throw new TypeError("argument should be a Buffer");if(b||(b=0),!A&&A!==0&&(A=this.length),f>=u.length&&(f=u.length),f||(f=0),A>0&&A<b&&(A=b),A===b||u.length===0||this.length===0)return 0;if(f<0)throw new RangeError("targetStart out of bounds");if(b<0||b>=this.length)throw new RangeError("Index out of range");if(A<0)throw new RangeError("sourceEnd out of bounds");A>this.length&&(A=this.length),u.length-f<A-b&&(A=u.length-f+b);let T=A-b;return this===u&&typeof Uint8Array.prototype.copyWithin=="function"?this.copyWithin(f,b,A):Uint8Array.prototype.set.call(u,this.subarray(b,A),f),T},s.prototype.fill=function(u,f,b,A){if(typeof u=="string"){if(typeof f=="string"?(A=f,f=0,b=this.length):typeof b=="string"&&(A=b,b=this.length),A!==void 0&&typeof A!="string")throw new TypeError("encoding must be a string");if(typeof A=="string"&&!s.isEncoding(A))throw new TypeError("Unknown encoding: "+A);if(u.length===1){let P=u.charCodeAt(0);(A==="utf8"&&P<128||A==="latin1")&&(u=P)}}else typeof u=="number"?u=u&255:typeof u=="boolean"&&(u=Number(u));if(f<0||this.length<f||this.length<b)throw new RangeError("Out of range index");if(b<=f)return this;f=f>>>0,b=b===void 0?this.length:b>>>0,u||(u=0);let T;if(typeof u=="number")for(T=f;T<b;++T)this[T]=u;else{let P=s.isBuffer(u)?u:s.from(u,A),$=P.length;if($===0)throw new TypeError('The value "'+u+'" is invalid for argument "value"');for(T=0;T<b-f;++T)this[T+f]=P[T%$]}return this};let xr={};function ds(p,u,f){xr[p]=class extends f{constructor(){super(),Object.defineProperty(this,"message",{value:u.apply(this,arguments),writable:!0,configurable:!0}),this.name=`${this.name} [${p}]`,this.stack,delete this.name}get code(){return p}set code(A){Object.defineProperty(this,"code",{configurable:!0,enumerable:!0,value:A,writable:!0})}toString(){return`${this.name} [${p}]: ${this.message}`}}}ds("ERR_BUFFER_OUT_OF_BOUNDS",function(p){return p?`${p} is outside of buffer bounds`:"Attempt to access memory outside buffer bounds"},RangeError),ds("ERR_INVALID_ARG_TYPE",function(p,u){return`The "${p}" argument must be of type number. Received type ${typeof u}`},TypeError),ds("ERR_OUT_OF_RANGE",function(p,u,f){let b=`The value of "${p}" is out of range.`,A=f;return Number.isInteger(f)&&Math.abs(f)>2**32?A=Tl(String(f)):typeof f=="bigint"&&(A=String(f),(f>BigInt(2)**BigInt(32)||f<-(BigInt(2)**BigInt(32)))&&(A=Tl(A)),A+="n"),b+=` It must be ${u}. Received ${A}`,b},RangeError);function Tl(p){let u="",f=p.length,b=p[0]==="-"?1:0;for(;f>=b+4;f-=3)u=`_${p.slice(f-3,f)}${u}`;return`${p.slice(0,f)}${u}`}function jg(p,u,f){Mr(u,"offset"),(p[u]===void 0||p[u+f]===void 0)&&fi(u,p.length-(f+1))}function Rl(p,u,f,b,A,T){if(p>f||p<u){let P=typeof u=="bigint"?"n":"",$;throw T>3?u===0||u===BigInt(0)?$=`>= 0${P} and < 2${P} ** ${(T+1)*8}${P}`:$=`>= -(2${P} ** ${(T+1)*8-1}${P}) and < 2 ** ${(T+1)*8-1}${P}`:$=`>= ${u}${P} and <= ${f}${P}`,new xr.ERR_OUT_OF_RANGE("value",$,p)}jg(b,A,T)}function Mr(p,u){if(typeof p!="number")throw new xr.ERR_INVALID_ARG_TYPE(u,"number",p)}function fi(p,u,f){throw Math.floor(p)!==p?(Mr(p,f),new xr.ERR_OUT_OF_RANGE(f||"offset","an integer",p)):u<0?new xr.ERR_BUFFER_OUT_OF_BOUNDS:new xr.ERR_OUT_OF_RANGE(f||"offset",`>= ${f?1:0} and <= ${u}`,p)}let Fg=/[^+/0-9A-Za-z-_]/g;function Wg(p){if(p=p.split("=")[0],p=p.trim().replace(Fg,""),p.length<2)return"";for(;p.length%4!==0;)p=p+"=";return p}function ps(p,u){u=u||1/0;let f,b=p.length,A=null,T=[];for(let P=0;P<b;++P){if(f=p.charCodeAt(P),f>55295&&f<57344){if(!A){if(f>56319){(u-=3)>-1&&T.push(239,191,189);continue}else if(P+1===b){(u-=3)>-1&&T.push(239,191,189);continue}A=f;continue}if(f<56320){(u-=3)>-1&&T.push(239,191,189),A=f;continue}f=(A-55296<<10|f-56320)+65536}else A&&(u-=3)>-1&&T.push(239,191,189);if(A=null,f<128){if((u-=1)<0)break;T.push(f)}else if(f<2048){if((u-=2)<0)break;T.push(f>>6|192,f&63|128)}else if(f<65536){if((u-=3)<0)break;T.push(f>>12|224,f>>6&63|128,f&63|128)}else if(f<1114112){if((u-=4)<0)break;T.push(f>>18|240,f>>12&63|128,f>>6&63|128,f&63|128)}else throw new Error("Invalid code point")}return T}function $g(p){let u=[];for(let f=0;f<p.length;++f)u.push(p.charCodeAt(f)&255);return u}function Hg(p,u){let f,b,A,T=[];for(let P=0;P<p.length&&!((u-=2)<0);++P)f=p.charCodeAt(P),b=f>>8,A=f%256,T.push(A),T.push(b);return T}function Cl(p){return t.toByteArray(Wg(p))}function ji(p,u,f,b){let A;for(A=0;A<b&&!(A+f>=u.length||A>=p.length);++A)u[A+f]=p[A];return A}function Ye(p,u){return p instanceof u||p!=null&&p.constructor!=null&&p.constructor.name!=null&&p.constructor.name===u.name}function gs(p){return p!==p}let Vg=function(){let p="0123456789abcdef",u=new Array(256);for(let f=0;f<16;++f){let b=f*16;for(let A=0;A<16;++A)u[b+A]=p[f]+p[A]}return u}();function Mt(p){return typeof BigInt>"u"?zg:p}function zg(){throw new Error("BigInt not supported")}return Zt}var ci,Vu,Hi,zu,Zt,Ku,Ut,x,ty,ry,be=_e(()=>{_();v();m();ci={},Vu=!1;Hi={},zu=!1;Zt={},Ku=!1;Ut=ey();Ut.Buffer;Ut.SlowBuffer;Ut.INSPECT_MAX_BYTES;Ut.kMaxLength;x=Ut.Buffer,ty=Ut.INSPECT_MAX_BYTES,ry=Ut.kMaxLength});var v=_e(()=>{be()});var Gu=M(vs=>{"use strict";_();v();m();Object.defineProperty(vs,"__esModule",{value:!0});var ms=class{constructor(e){this.aliasToTopic={},this.max=e}put(e,r){return r===0||r>this.max?!1:(this.aliasToTopic[r]=e,this.length=Object.keys(this.aliasToTopic).length,!0)}getTopicByAlias(e){return this.aliasToTopic[e]}clear(){this.aliasToTopic={}}};vs.default=ms});var ce=M((AA,Qu)=>{"use strict";_();v();m();Qu.exports={ArrayIsArray(t){return Array.isArray(t)},ArrayPrototypeIncludes(t,e){return t.includes(e)},ArrayPrototypeIndexOf(t,e){return t.indexOf(e)},ArrayPrototypeJoin(t,e){return t.join(e)},ArrayPrototypeMap(t,e){return t.map(e)},ArrayPrototypePop(t,e){return t.pop(e)},ArrayPrototypePush(t,e){return t.push(e)},ArrayPrototypeSlice(t,e,r){return t.slice(e,r)},Error,FunctionPrototypeCall(t,e,...r){return t.call(e,...r)},FunctionPrototypeSymbolHasInstance(t,e){return Function.prototype[Symbol.hasInstance].call(t,e)},MathFloor:Math.floor,Number,NumberIsInteger:Number.isInteger,NumberIsNaN:Number.isNaN,NumberMAX_SAFE_INTEGER:Number.MAX_SAFE_INTEGER,NumberMIN_SAFE_INTEGER:Number.MIN_SAFE_INTEGER,NumberParseInt:Number.parseInt,ObjectDefineProperties(t,e){return Object.defineProperties(t,e)},ObjectDefineProperty(t,e,r){return Object.defineProperty(t,e,r)},ObjectGetOwnPropertyDescriptor(t,e){return Object.getOwnPropertyDescriptor(t,e)},ObjectKeys(t){return Object.keys(t)},ObjectSetPrototypeOf(t,e){return Object.setPrototypeOf(t,e)},Promise,PromisePrototypeCatch(t,e){return t.catch(e)},PromisePrototypeThen(t,e,r){return t.then(e,r)},PromiseReject(t){return Promise.reject(t)},ReflectApply:Reflect.apply,RegExpPrototypeTest(t,e){return t.test(e)},SafeSet:Set,String,StringPrototypeSlice(t,e,r){return t.slice(e,r)},StringPrototypeToLowerCase(t){return t.toLowerCase()},StringPrototypeToUpperCase(t){return t.toUpperCase()},StringPrototypeTrim(t){return t.trim()},Symbol,SymbolFor:Symbol.for,SymbolAsyncIterator:Symbol.asyncIterator,SymbolHasInstance:Symbol.hasInstance,SymbolIterator:Symbol.iterator,TypedArrayPrototypeSet(t,e,r){return t.set(e,r)},Uint8Array}});var Je=M((kA,Ss)=>{"use strict";_();v();m();var iy=(be(),X(me)),ny=Object.getPrototypeOf(async function(){}).constructor,Yu=globalThis.Blob||iy.Blob,sy=typeof Yu<"u"?function(e){return e instanceof Yu}:function(e){return!1},Es=class extends Error{constructor(e){if(!Array.isArray(e))throw new TypeError(`Expected input to be an Array, got ${typeof e}`);let r="";for(let i=0;i<e.length;i++)r+=`    ${e[i].stack}
@@ -811,6 +813,10 @@ body.is-touch .nhTime{display:none !important}
             <label style="font-size:11px;color:#9fb2d0">双管冷却倍率<input id="admTuneDb" type="number" min="1" max="3" step="0.05" style="width:100%;margin-top:3px;padding:7px;border-radius:8px;background:#0b1220;color:#e8eefc;border:1px solid rgba(255,255,255,.16);font-size:12px"></label>
             <label style="font-size:11px;color:#9fb2d0">手枪冷却倍率<input id="admTunePistol" type="number" min="0.3" max="1.5" step="0.05" style="width:100%;margin-top:3px;padding:7px;border-radius:8px;background:#0b1220;color:#e8eefc;border:1px solid rgba(255,255,255,.16);font-size:12px"></label>
             <label style="font-size:11px;color:#9fb2d0">准备室倒计时（秒）<input id="admTunePrep" type="number" min="2" max="10" step="1" style="width:100%;margin-top:3px;padding:7px;border-radius:8px;background:#0b1220;color:#e8eefc;border:1px solid rgba(255,255,255,.16);font-size:12px"></label>
+            <label style="font-size:11px;color:#9fb2d0">堡垒正面减伤（0-1）<input id="admTuneFront" type="number" min="0.3" max="0.85" step="0.05" style="width:100%;margin-top:3px;padding:7px;border-radius:8px;background:#0b1220;color:#e8eefc;border:1px solid rgba(255,255,255,.16);font-size:12px"></label>
+            <label style="font-size:11px;color:#9fb2d0">地雷伤害<input id="admTuneMine" type="number" min="20" max="120" step="5" style="width:100%;margin-top:3px;padding:7px;border-radius:8px;background:#0b1220;color:#e8eefc;border:1px solid rgba(255,255,255,.16);font-size:12px"></label>
+            <label style="font-size:11px;color:#9fb2d0">地雷同时上限<input id="admTuneMineMax" type="number" min="1" max="6" step="1" style="width:100%;margin-top:3px;padding:7px;border-radius:8px;background:#0b1220;color:#e8eefc;border:1px solid rgba(255,255,255,.16);font-size:12px"></label>
+            <label style="font-size:11px;color:#9fb2d0">静默封锁时长（秒）<input id="admTuneJam" type="number" min="1" max="8" step="0.5" style="width:100%;margin-top:3px;padding:7px;border-radius:8px;background:#0b1220;color:#e8eefc;border:1px solid rgba(255,255,255,.16);font-size:12px"></label>
           </div>
           <div style="display:flex;gap:8px;margin:8px 0 6px">
             <button class="btn" id="btnAdmTuneApply" style="flex:1;padding:8px;font-size:12px">应用</button>
@@ -1096,7 +1102,7 @@ body.is-touch .nhTime{display:none !important}
       </div>
     </div>
     <div class="overlay hidden" id="settingsScreen">
-      <div class="title">自定义设置 <span id="verTag" style="font-size:11px;color:#7d8aa8;font-weight:400;display:block;margin-top:2px">v2.7.16</span></div>
+      <div class="title">自定义设置 <span id="verTag" style="font-size:11px;color:#7d8aa8;font-weight:400;display:block;margin-top:2px">v2.7.17</span></div>
       <div id="settingsWrap" style="text-align:left;max-width:320px;line-height:2.2">
         <div>摇杆大小 <input type="range" id="setJoy" min="60" max="140" value="88" style="width:100%"></div>
         <div>开火键大小 <input type="range" id="setFire" min="50" max="120" value="74" style="width:100%"></div>
@@ -1140,6 +1146,7 @@ body.is-touch .nhTime{display:none !important}
         <div id="historyBox" style="display:none;margin-top:10px;border-top:1px solid rgba(255,255,255,.1);padding-top:10px">
           <div style="font-size:13px;font-weight:800;color:#67e8f9;margin-bottom:6px">修改历史</div>
           <div style="line-height:1.8">
+            <div><b style="color:#ffd34d">v2.7.17</b>　新增 3 个角色：堡垒（举盾 5 秒，正面减伤 60%、移速降 35%，背后照常吃伤害）、铁匠（脚下布雷，敌人踩到吃 55 伤害并减速，最多同时 3 颗）、静默（压制附近对手，3 秒不能放技能、冷却还额外 +2 秒）；三个角色都进准备室、5V5 配队与 AI；管理终端「对局参数」也能调这几项数值</div>
             <div><b style="color:#ffd34d">v2.7.16</b>　联机对决加准备室：房主选地图（3 张实时同步给对手），双方各自选角色和武器，两边都点「准备」才开始，3 秒倒计时开局；新增 3 把武器——轻机枪（连打 14 发过热、要等它散热）、双管霰弹（贴脸两发、打完等 1.8 秒）、手枪（出枪快、单发最准）；管理终端新增「对局参数」，可改过热弹数、散热时间、双管/手枪射速、准备室倒计时，改完能一键同步全服</div>
             <div><b style="color:#ffd34d">v2.7.15</b>　终端公告发不出去的原因找到了：公共中转偶尔连不上，点了只会在那儿等 9 秒超时。现在主中转连不上会自动换另一个（两个公共中转互为备用），发布时两条通道各写一份，不管玩家走哪条通道都能看到公告；同一条公告重复发布的间隔从 10 秒放宽到 5 秒</div>
             <div><b style="color:#ffd34d">v2.7.14</b>　每日任务改成每批 3 个、做完点「刷新任务」换一批（不限次数）；单个任务 +10 荣誉、一批全清 +20，每日任务荣誉上限 200，免得无限刷点</div>
@@ -1306,6 +1313,21 @@ const ROLES = {
     skill:{name:'治疗脉冲', key:'E', cd:10, heal:40, aoeHeal:25,
       desc:'恢复自己 40 血（5V5 额外治疗附近队友 25 血）', tag:'支援'},
     ai:{ heal:{hp:50} } },
+  bulwark: { id:'bulwark', name:'堡垒', icon:'🛡', color:'#f2a65a',
+    speed:225, dmg:12, fireCD:0.34, bulletSpeed:760, bulletLife:1.2,
+    skill:{name:'正面装甲', key:'E', cd:11, front:0.6, frontDur:5, slow:0.35,
+      desc:'5 秒内正面减伤 60%、移速降 35%，背后照常吃伤害', tag:'防御'},
+    ai:{ front:{dur:5} } },
+  engineer: { id:'engineer', name:'铁匠', icon:'⚙', color:'#c9a7ff',
+    speed:248, dmg:11, fireCD:0.32, bulletSpeed:760, bulletLife:1.2,
+    skill:{name:'布设地雷', key:'E', cd:9, mineDmg:55, mineR:42, mineLife:8, maxMines:3,
+      desc:'脚下放一颗地雷（8 秒），敌人踩到吃 55 伤害并减速；最多同时 3 颗', tag:'控制'},
+    ai:{ mine:true } },
+  jammer: { id:'jammer', name:'静默', icon:'📡', color:'#8fb8ff',
+    speed:265, dmg:10, fireCD:0.30, bulletSpeed:780, bulletLife:1.2,
+    skill:{name:'信号压制', key:'E', cd:10, jamRange:230, jamDur:3, jamExtra:2,
+      desc:'压制附近对手：3 秒内不能放技能，技能冷却额外 +2 秒', tag:'干扰'},
+    ai:{ jam:true } },
 };
 const ROLE_IDS = Object.keys(ROLES);
 
@@ -1337,7 +1359,7 @@ function currentWeapon(){ return WEAPONS[lsGetRaw('gunWeapon')] ? WEAPONS[lsGetR
 const state = {
   mode:'5v5', world:null, difficulty:'normal', mapIdx:0,
   roleP1:'assault', roleP2:'tank',
-  players:[], bullets:[], particles:[], floaters:[],
+  players:[], bullets:[], particles:[], floaters:[], mines:[],
   scores:{red:0,blue:0}, timeLeft:180,
   running:false, paused:false, ended:false, winner:null,
   mvp:null, loserMvp:null,
@@ -1367,8 +1389,11 @@ function resolveCircleRect(p, o){
 function movePlayer(p, dx, dy, dt){
   const len=Math.hypot(dx,dy);
   if(len>0){ dx/=len; dy/=len; }
-  p.vx=dx*p.role.speed; p.vy=dy*p.role.speed; // 记录速度，自动瞄准据此算提前量
-  p.x+=dx*p.role.speed*dt; p.y+=dy*p.role.speed*dt;
+  let spd=p.role.speed;
+  if(p.frontT>0) spd*= (1-((p.role.skill&&p.role.skill.slow)||0.35));   // 举盾时移动变慢
+  if(p.slowT>0) spd*=0.6;                                               // 踩雷后短时间减速
+  p.vx=dx*spd; p.vy=dy*spd; // 记录速度，自动瞄准据此算提前量
+  p.x+=dx*spd*dt; p.y+=dy*spd*dt;
   p.x=clamp(p.x,CFG.playerRadius,state.world.W-CFG.playerRadius);
   p.y=clamp(p.y,CFG.playerRadius,state.world.H-CFG.playerRadius);
   for(const o of state.world.obs) resolveCircleRect(p,o);
@@ -1676,7 +1701,15 @@ function shoot(p){
 
 /* ================= 5. 技能 ================= */
 function skillKind(s){
-  return s && s.dash ? 'dash' : (s && s.shield) ? 'shield' : (s && s.dmg) ? 'snipe' : (s && s.heal) ? 'heal' : 'none';
+  if(!s) return 'none';
+  if(s.dash) return 'dash';
+  if(s.shield) return 'shield';
+  if(s.front) return 'front';
+  if(s.mineDmg) return 'mine';
+  if(s.jamRange) return 'jam';
+  if(s.dmg) return 'snipe';
+  if(s.heal) return 'heal';
+  return 'none';
 }
 /* 对方的技能只放视觉，不重复结算伤害/护盾 */
 function netGhostSkill(m){
@@ -1684,10 +1717,14 @@ function netGhostSkill(m){
   if(m.k==='shield'){ f.shield=f.shield||1; f.shieldTimer=3.2; spawnParticle(f.x,f.y,0,0,'#7dd3fc',0.55,22); }
   else if(m.k==='dash'){ for(let i=0;i<9;i++){ const a=Math.random()*Math.PI*2; spawnParticle(f.x,f.y,Math.cos(a)*160,Math.sin(a)*160,'#ffd34d',0.3,4); } }
   else if(m.k==='snipe'){ spawnParticle(f.x,f.y,0,0,'#ff8fa0',0.45,16); }
+  else if(m.k==='front'){ for(let i=0;i<10;i++){ const a=Math.random()*Math.PI*2, sp=80+Math.random()*110; spawnParticle(f.x,f.y,Math.cos(a)*sp,Math.sin(a)*sp,'#f2a65a',0.5,3); } }
+  else if(m.k==='mine'){ spawnRing(f.x,f.y,'#c9a7ff',30); }
+  else if(m.k==='jam'){ spawnRing(f.x,f.y,'#8fb8ff',60); }
   else if(m.k==='heal'){ for(let i=0;i<12;i++){ const a=Math.random()*Math.PI*2; spawnParticle(f.x,f.y,Math.cos(a)*(60+Math.random()*120),Math.sin(a)*(60+Math.random()*120),'#86efac',0.45,3); } }
 }
 function castSkill(p){
   if(!p.alive || p.skillCD>0) return;
+  if(p.skillBlockT>0){ if(p.isHuman) toastMsg('被信号压制，技能暂时用不了'); return; }
   const s=p.role.skill;
   if(s.dash){ // 突击手：突刺方向由设置决定（跟随摇杆 / 朝对手），撞上的人直接吃伤害
     let dir=p.aim;
@@ -1719,6 +1756,42 @@ function castSkill(p){
     p.snipeReady=true;
     spawnParticle(p.x,p.y,0,0,'#ff8fa0',0.4,16);
     sSnipe();
+  } else if(s.front){ // 堡垒：正面装甲（只挡正面，背后照常受伤）
+    p.frontT=(s.frontDur||5);
+    spawnRing(p.x,p.y,'#f2a65a',48);
+    for(let i=0;i<10;i++){ const a=p.aim-Math.PI/3+rng()*Math.PI*2/3, sp=90+rng()*90;
+      spawnParticle(p.x+Math.cos(a)*18,p.y+Math.sin(a)*18,Math.cos(a)*sp,Math.sin(a)*sp,'#f2a65a',0.35,3); }
+    sShield();
+  } else if(s.mineDmg){ // 铁匠：布设地雷
+    state.mines=state.mines||[];
+    state.mines=state.mines.filter(m=>!m.dead);
+    const own=state.mines.filter(m=>m.owner===p).length;
+    if(own>=(TUNE.mineMax||s.maxMines||3)){
+      const oldest=state.mines.find(m=>m.owner===p && !m.dead); if(oldest) oldest.dead=true;
+      state.mines=state.mines.filter(m=>!m.dead);
+    }
+    const mine={x:p.x, y:p.y, team:p.team, dmg:(TUNE.mineDmg||s.mineDmg), r:(s.mineR||42),
+      life:(s.mineLife||8), arm:0.6, owner:p};
+    state.mines.push(mine);
+    if(state.mines.length>10) state.mines.shift();   // 全场雷数兜底（5V5 全 AI 时也不会铺满地图）
+    if(state.netMode && p.isHuman) netSend({t:'mine', x:mine.x, y:mine.y, team:mine.team}, 1);
+    spawnRing(p.x,p.y,'#c9a7ff',30);
+    addFloater(p.x,p.y-26,'地雷','#c9a7ff');
+    sClick();
+  } else if(s.jamRange){ // 静默：压制范围内对手的技能
+    const dur=(TUNE.jamDur||s.jamDur||3), extra=(s.jamExtra||2);
+    let hit=0;
+    for(const q of state.players){
+      if(!q.alive || q.team===p.team || q===p) continue;
+      if(Math.hypot(q.x-p.x,q.y-p.y) > (s.jamRange||230)) continue;
+      q.skillBlockT=dur; q.skillCD=Math.max(0,q.skillCD)+extra; hit++;
+      addFloater(q.x,q.y-26,'技能封锁','#8fb8ff');
+      spawnRing(q.x,q.y,'#8fb8ff',40);
+    }
+    if(state.netMode && p.isHuman && hit) netSend({t:'jam', dur:dur, extra:extra}, 1);
+    spawnRing(p.x,p.y,'#8fb8ff',64);
+    if(p.isHuman && !hit) toastMsg('附近没有对手，压制落空');
+    sClick();
   } else if(s.heal){ // 医疗兵：治疗
     p.hp=Math.min(p.maxHp||CFG.maxHp, p.hp+s.heal);
     addFloater(p.x,p.y-24,'+'+s.heal,'#86efac');
@@ -2003,6 +2076,9 @@ function updateAI(p,dt){
     else if(s.heal && ai.heal && p.hp<ai.heal.hp) castSkill(p);
     else if(s.dmg && ai.snipe && bdPx>ai.snipe.dist) castSkill(p);
     else if(s.dash && ai.dash && bdPx>ai.dash.min && bdPx<ai.dash.max && p.hp>55 && rng()>0.55) castSkill(p);
+    else if(s.front && ai.front && p.hp<72 && p.frontT<=0) castSkill(p);
+    else if(s.mineDmg && ai.mine && bdPx<320 && rng()>0.55) castSkill(p);
+    else if(s.jamRange && ai.jam && bdPx<s.jamRange && rng()>0.45) castSkill(p);
   }
 
   // 射击：AI 按「点射」节奏——连打 3~5 发后停顿，不做无限机枪
@@ -2034,6 +2110,17 @@ function damagePlayer(victim, bullet){
     return;
   }
   let dmg=bullet.dmg;
+  // 堡垒的正面装甲：只减正面来的伤害（入射方向与朝间的夹角 < 90°）
+  if(victim.frontT>0){
+    const inc=Math.atan2(bullet.vy||0, bullet.vx||0);
+    const fromAng=inc+Math.PI;
+    const diff=Math.abs(Math.atan2(Math.sin(fromAng-victim.aim), Math.cos(fromAng-victim.aim)));
+    if(diff < Math.PI/2){
+      const cut=(TUNE.frontReduce!=null?TUNE.frontReduce:0.6);
+      dmg=dmg*(1-cut);
+      addFloater(victim.x,victim.y-30,'挡住','#f2a65a');
+    }
+  }
   if(victim.shield>0){ // 护盾优先吸收
     const absorb=Math.min(victim.shield,dmg);
     victim.shield-=absorb; dmg-=absorb;
@@ -2145,11 +2232,15 @@ function update(dt, rawDt){
   if(state.fireBurst>0) state.fireBurst-=dt; // 开火点射窗口倒计时
 
   const p1=localP();
+  updateMines(dt);
   for(const p of state.players){
     p.cooldown-=dt; p.invuln-=dt; p.skillCD-=dt;
     p.heatIdle=(p.heatIdle||0)+dt;
     if(p.heatIdle>0.55 && p.heat>0) p.heat=Math.max(0, p.heat - dt*0.5);
     if(p.shieldTimer>0){ p.shieldTimer-=dt; if(p.shieldTimer<=0) p.shield=0; }
+    if(p.frontT>0) p.frontT-=dt;
+    if(p.skillBlockT>0) p.skillBlockT-=dt;
+    if(p.slowT>0) p.slowT-=dt;
     if(!p.alive){
       p.respawn-=realDt; // 复活等待按真实秒数算，手机端不再被拖成 3 秒多
       if(p.respawn<=0){ const s=(p.team==='red'?state.world.redSpawn:state.world.blueSpawn)[p.idx];
@@ -2362,7 +2453,7 @@ function render(){
     ctx2d.scale(VIEW.scale, VIEW.scale);
   }
   if(state.shake>0) ctx2d.translate((rng()-0.5)*state.shake,(rng()-0.5)*state.shake);
-  drawFloor(); drawObstacles(); drawPlayers(); drawBullets(); drawParticles(); drawFloaters();
+  drawFloor(); drawObstacles(); drawMines(); drawPlayers(); drawFrontArcs(); drawBullets(); drawParticles(); drawFloaters();
   drawDanger();
   drawRadar();
 }
@@ -2417,6 +2508,67 @@ function roundRect(x,y,w,h,r){
   ctx2d.beginPath();
   ctx2d.moveTo(x+r,y); ctx2d.arcTo(x+w,y,x+w,y+h,r); ctx2d.arcTo(x+w,y+h,x,y+h,r);
   ctx2d.arcTo(x,y+h,x,y,r); ctx2d.arcTo(x,y,x+w,y,r); ctx2d.closePath();
+}
+/* 地雷：埋雷方本地判定，远端只画不判（避免两边各扣一次） */
+function updateMines(dt){
+  if(!state.mines || !state.mines.length) return;
+  for(const m of state.mines){
+    m.life-=dt; if(m.arm>0) m.arm-=dt;
+    if(m.life<=0){ m.dead=true; continue; }
+    if(m.remote || m.arm>0) continue;
+    for(const q of state.players){
+      if(!q.alive || q.team===m.team) continue;
+      if(Math.hypot(q.x-m.x, q.y-m.y) > (m.r||42)) continue;
+      // 炸了
+      const dmg=Math.round(m.dmg||55);
+      if(q.isRemote){ netSend({t:'dmg', v:dmg, s:1.2}, 1); q.slowT=1.2; addFloater(q.x,q.y-18,'-'+dmg,'#ffb020'); }
+      else {
+        q.hp-=dmg; q.slowT=1.2; q.flash=1;
+        addFloater(q.x,q.y-18,'-'+dmg,'#ffb020');
+        if(q.hp<=0) killPlayer(q, m.owner||null);
+      }
+      spawnRing(m.x,m.y,'#ffb020',72);
+      for(let i=0;i<18;i++){ const a=rng()*Math.PI*2, sp=90+rng()*220;
+        spawnParticle(m.x,m.y,Math.cos(a)*sp,Math.sin(a)*sp,'#ffcf6a',0.35+rng()*0.25,3); }
+      state.shake=Math.max(state.shake||0,6);
+      sHit();
+      m.dead=true; break;
+    }
+  }
+  state.mines=state.mines.filter(m=>!m.dead);
+}
+function drawMines(){
+  if(!state.mines || !state.mines.length) return;
+  for(const m of state.mines){
+    const pulse=0.5+0.5*Math.sin(performance.now()/220 + (m.x||0)*0.01);
+    const col=m.team==='red'?'#ff7a86':'#7fc4ff';
+    ctx2d.save();
+    ctx2d.globalAlpha=0.9;
+    ctx2d.fillStyle='rgba(10,16,28,.85)';
+    ctx2d.beginPath(); ctx2d.arc(m.x,m.y,9,0,Math.PI*2); ctx2d.fill();
+    ctx2d.strokeStyle=col; ctx2d.lineWidth=2;
+    ctx2d.beginPath(); ctx2d.arc(m.x,m.y,9,0,Math.PI*2); ctx2d.stroke();
+    ctx2d.globalAlpha=0.35+0.6*pulse;
+    ctx2d.strokeStyle=col;
+    ctx2d.beginPath(); ctx2d.arc(m.x,m.y,(m.r||42)*0.55,0,Math.PI*2); ctx2d.stroke();
+    ctx2d.globalAlpha=1;
+    ctx2d.fillStyle=col; ctx2d.beginPath(); ctx2d.arc(m.x,m.y,3,0,Math.PI*2); ctx2d.fill();
+    ctx2d.restore();
+  }
+}
+function drawFrontArcs(){
+  for(const p of state.players){
+    if(!p.alive || !(p.frontT>0)) continue;
+    const pulse=0.5+0.5*Math.sin(performance.now()/170);
+    ctx2d.save();
+    ctx2d.globalAlpha=0.45+0.35*pulse;
+    ctx2d.strokeStyle=p.team==='red'?'#ffb08a':'#8ad4ff';
+    ctx2d.lineWidth=6;
+    ctx2d.beginPath(); ctx2d.arc(p.x, p.y, 27, p.aim-0.95, p.aim+0.95); ctx2d.stroke();
+    ctx2d.globalAlpha=0.18+0.12*pulse;
+    ctx2d.lineWidth=2; ctx2d.beginPath(); ctx2d.arc(p.x, p.y, 33, p.aim-0.95, p.aim+0.95); ctx2d.stroke();
+    ctx2d.restore();
+  }
 }
 function drawPlayers(){
   for(const p of state.players){
@@ -2629,10 +2781,12 @@ function refreshSkillBox(box, p){
   icon.textContent=p.role.icon;
   key.textContent=(p.isHuman && !state.netMode && p.team==='blue' && state.mode==='1v1') ? '1' : s.key; // P2（1V1）技能键=数字1
   nm.textContent=s.name;
-  const ready=p.skillCD<=0;
-  cd.style.height=(ready?0:clamp(p.skillCD/s.cd,0,1)*100)+'%';
-  num.textContent=ready?'':Math.ceil(p.skillCD); // 冷却数字（秒）
+  const blocked=(p.skillBlockT||0)>0;
+  const ready=p.skillCD<=0 && !blocked;
+  cd.style.height=(ready?0:clamp(Math.max(p.skillCD,blocked?p.skillBlockT:0)/s.cd,0,1)*100)+'%';
+  num.textContent=blocked?('封'+Math.ceil(p.skillBlockT)):(ready?'':Math.ceil(p.skillCD)); // 冷却/封锁秒数
   box.classList.toggle('ready',ready);           // 就绪发光提示
+  box.classList.toggle('blocked',blocked);       // 被信号压制
 }
 /* 技能冷却环：绕着技能键一圈走满 = 可以放技能 */
 let __skillReadyPrev=true;
@@ -3431,7 +3585,7 @@ function runSelfCheck(){
   ok('血量配置正常', CFG.maxHp>0 && CFG.respawnTime>0, 'HP'+CFG.maxHp+' 复活'+CFG.respawnTime+'s');
   ok('两种模式都注册', !!(CFG.modes['5v5'] && CFG.modes['1v1']));
   ok('地图数据完整', !!(MAPS['5v5'] && MAPS['1v1'] && MAPS['5v5'].length===3 && MAPS['1v1'].length===3 && MAPS['5v5'].every(m=>Array.isArray(m.obs))));
-  ok('角色表 4 个且数值合法', ROLE_IDS.length===4 && ROLE_IDS.every(id=>ROLES[id].dmg>0 && ROLES[id].speed>0 && ROLES[id].fireCD>0), ROLE_IDS.join('/'));
+  ok('角色表 7 个且数值合法（含堡垒/铁匠/静默）', ROLE_IDS.length===7 && ROLE_IDS.every(id=>ROLES[id].dmg>0 && ROLES[id].speed>0 && ROLES[id].fireCD>0), ROLE_IDS.join('/'));
 
   // 4. 命名与身份
   const n9=pickAINames(9,'测试名');
@@ -3452,6 +3606,8 @@ function runSelfCheck(){
   ok('武器表 7 把齐全（含轻机枪/双管/手枪）', WEAPON_IDS.length===7 && !!WEAPONS.lmg && !!WEAPONS.db && !!WEAPONS.pistol, WEAPON_IDS.map(k=>WEAPONS[k].name).join('/'));
   ok('轻机枪有热量机制', !!WEAPONS.lmg.overheat && (TUNE.lmgHeatShots>0));
   ok('准备室模块齐全', typeof prepOpen==='function' && typeof prepRender==='function' && typeof prepGo==='function' && !!document.getElementById('prepScreen'));
+  ok('新角色技能齐全（举盾/地雷/禁技）', !!(ROLES.bulwark.skill.front&&ROLES.engineer.skill.mineDmg&&ROLES.jammer.skill.jamRange&&typeof updateMines==='function'&&typeof drawMines==='function'));
+  ok('对局参数含角色项', TUNE.frontReduce>0&&TUNE.mineDmg>0&&TUNE.jamDur>0&&TUNE.mineMax>0);
   ok('准备室可锁定地图与角色武器', typeof prepSend==='function' && String(prepRender).indexOf('data-prep-map')>=0 && String(prepRender).indexOf('data-prep-role')>=0);
   ok('霰弹枪 5 弹丸', WEAPONS.shotgun.pellets===5);
   ok('武器伤害倍率合法', WEAPON_IDS.every(k=>WEAPONS[k].dmgMul>0&&WEAPONS[k].cdMul>0));
@@ -3660,8 +3816,10 @@ function netBind(){
 }
 /* ================= 联机准备室 ================= */
 /* ================= 对局参数（管理终端可改，retained 同步） ================= */
-const TUNE_DEF={ lmgHeatShots:14, lmgOverheatCd:1.0, dbCdMul:1.75, pistolCdMul:0.70, prepSec:3 };
-const TUNE_LIM={ lmgHeatShots:[6,40], lmgOverheatCd:[0.4,3.0], dbCdMul:[1.0,3.0], pistolCdMul:[0.3,1.5], prepSec:[2,10] };
+const TUNE_DEF={ lmgHeatShots:14, lmgOverheatCd:1.0, dbCdMul:1.75, pistolCdMul:0.70, prepSec:3,
+  frontReduce:0.6, mineDmg:55, mineMax:3, jamDur:3 };
+const TUNE_LIM={ lmgHeatShots:[6,40], lmgOverheatCd:[0.4,3.0], dbCdMul:[1.0,3.0], pistolCdMul:[0.3,1.5], prepSec:[2,10],
+  frontReduce:[0.3,0.85], mineDmg:[20,120], mineMax:[1,6], jamDur:[1,8] };
 const TUNE={...TUNE_DEF};
 const TUNE_TOPIC='gunfight9/tune';
 function tuneNorm(o){
@@ -3680,6 +3838,9 @@ function tuneApply(t){
   if(WEAPONS.db) WEAPONS.db.cdMul = TUNE.dbCdMul;
   if(WEAPONS.pistol) WEAPONS.pistol.cdMul = TUNE.pistolCdMul;
   if(WEAPONS.lmg){ WEAPONS.lmg.overheat = TUNE.lmgHeatShots; WEAPONS.lmg.overheatCd = TUNE.lmgOverheatCd; }
+  if(ROLES.bulwark && ROLES.bulwark.skill){ ROLES.bulwark.skill.front = TUNE.frontReduce; }
+  if(ROLES.engineer && ROLES.engineer.skill){ ROLES.engineer.skill.mineDmg = TUNE.mineDmg; ROLES.engineer.skill.maxMines = Math.round(TUNE.mineMax); }
+  if(ROLES.jammer && ROLES.jammer.skill){ ROLES.jammer.skill.jamDur = TUNE.jamDur; }
   try{ lsSet('gunTune2', {...TUNE}); }catch(e){}
 }
 function tuneLoad(){ try{ const c=lsGet('gunTune2',null); const n=tuneNorm(c); if(n) tuneApply(n); }catch(e){} }
@@ -3806,10 +3967,20 @@ function netOnMsg(m){
     }
     else if(m.t==='start'){ NET.foeUid=m.uid||NET.foeUid||null; NET.foeName=m.name||'对手'; netStatus('房主开局','#5eead4'); if(!state.netMode) startNetMatch(); }
     else if(m.t==='state'){ netApplyState(m); }
-    else if(m.t==='dmg'){ netTakeHit(m.v); }
+    else if(m.t==='dmg'){ netTakeHit(m.v, m.s); }
     else if(m.t==='died'){ netRemoteDied(); }
     else if(m.t==='shot'){ netGhostShot(m); }
     else if(m.t==='skill'){ netGhostSkill(m); }
+    else if(m.t==='mine'){
+      state.mines=state.mines||[];
+      state.mines.push({x:m.x|0, y:m.y|0, team:m.team||'red', dmg:0, r:42, life:8, arm:0, remote:true});
+      addFloater(m.x|0,(m.y|0)-20,'对方布雷','#c9a7ff');
+    }
+    else if(m.t==='jam'){
+      const me=netMe();
+      if(me){ me.skillBlockT=(m.dur||3); me.skillCD=Math.max(0,me.skillCD||0)+(m.extra||2);
+        addFloater(me.x,me.y-26,'技能封锁','#8fb8ff'); toastMsg('被信号压制，技能被封锁 '+(m.dur||3)+' 秒'); }
+    }
     else if(m.t==='pauseAsk'){
       if(state.paused){ netSend({t:'pauseOk'}, 1); return; }
       window.__pauseFrom=m.from||'对手';
@@ -4070,8 +4241,9 @@ function netApplyState(m){
   if(m.alive && !foe.alive) foe.alive=true;      // 对手复活
   NET.peerOnline=true; NET.lastPeer=Date.now();
 }
-function netTakeHit(v){
+function netTakeHit(v, slow){
   const me=netMe(); if(!me || !me.alive) return;
+  if(slow) me.slowT=Math.max(me.slowT||0, slow);
   me.hp -= v;
   addFloater(me.x,me.y-16,'-'+Math.round(v),'#ff5b6e');
   if(me.hp<=0){ me.hp=0; killPlayer(me, netFoe()); netSend({t:'died'}, 1); }
@@ -4864,13 +5036,17 @@ function admGameFill(){
     set('admTuneDb', TUNE.dbCdMul);
     set('admTunePistol', TUNE.pistolCdMul);
     set('admTunePrep', TUNE.prepSec);
+    set('admTuneFront', TUNE.frontReduce); set('admTuneMine', TUNE.mineDmg);
+    set('admTuneMineMax', TUNE.mineMax); set('admTuneJam', TUNE.jamDur);
   }catch(e){}
 }
 function admGameRead(){
   const num=(id,d)=>{ const el=document.getElementById(id); const v=Number(el&&el.value); return isFinite(v)? v : d; };
   const raw={ lmgHeatShots:num('admTuneHeat',TUNE.lmgHeatShots), lmgOverheatCd:num('admTuneHeatCd',TUNE.lmgOverheatCd),
               dbCdMul:num('admTuneDb',TUNE.dbCdMul), pistolCdMul:num('admTunePistol',TUNE.pistolCdMul),
-              prepSec:num('admTunePrep',TUNE.prepSec) };
+              prepSec:num('admTunePrep',TUNE.prepSec),
+              frontReduce:num('admTuneFront',TUNE.frontReduce), mineDmg:num('admTuneMine',TUNE.mineDmg),
+              mineMax:num('admTuneMineMax',TUNE.mineMax), jamDur:num('admTuneJam',TUNE.jamDur) };
   return tuneNorm(raw)||{};
 }
 function admEnterBody(){
@@ -5801,7 +5977,7 @@ document.getElementById('btnAdmTuneApply').addEventListener('click', ()=>{
   const t=admGameRead();
   if(!t || !Object.keys(t).length){ if(hint){ hint.style.color='#ff8fa0'; hint.textContent='数值不合规，检查范围'; } return; }
   tuneApply(t); admGameFill();
-  if(hint){ hint.style.color='#7ee7a0'; hint.textContent='已应用：轻机枪 '+TUNE.lmgHeatShots+' 发过热 / 冷却 '+TUNE.lmgOverheatCd+'s，双管 x'+TUNE.dbCdMul+'，手枪 x'+TUNE.pistolCdMul+'，准备 '+TUNE.prepSec+'s'; }
+  if(hint){ hint.style.color='#7ee7a0'; hint.textContent='已应用：轻机枪 '+TUNE.lmgHeatShots+' 发过热 / 冷却 '+TUNE.lmgOverheatCd+'s，双管 x'+TUNE.dbCdMul+'，手枪 x'+TUNE.pistolCdMul+'，准备 '+TUNE.prepSec+'s · 堡垒减伤 '+Math.round(TUNE.frontReduce*100)+'% · 地雷 '+TUNE.mineDmg+'/上限'+TUNE.mineMax+' · 静默 '+TUNE.jamDur+'s'; }
   admLog('对局参数应用：'+JSON.stringify(t));
 });
 document.getElementById('btnAdmTuneSync').addEventListener('click', async ()=>{
