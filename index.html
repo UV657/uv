@@ -767,7 +767,7 @@ body.fire-left #btnFire{left:18px !important;right:auto !important}
       </div>
     </div>
     <div class="overlay hidden" id="settingsScreen">
-      <div class="title">自定义设置 <span id="verTag" style="font-size:11px;color:#7d8aa8;font-weight:400;display:block;margin-top:2px">v2.4.5</span></div>
+      <div class="title">自定义设置 <span id="verTag" style="font-size:11px;color:#7d8aa8;font-weight:400;display:block;margin-top:2px">v2.4.6</span></div>
       <div id="settingsWrap" style="text-align:left;max-width:320px;line-height:2.2">
         <div>摇杆大小 <input type="range" id="setJoy" min="60" max="140" value="88" style="width:100%"></div>
         <div>开火键大小 <input type="range" id="setFire" min="50" max="120" value="74" style="width:100%"></div>
@@ -806,6 +806,7 @@ body.fire-left #btnFire{left:18px !important;right:auto !important}
         <div id="historyBox" style="display:none;margin-top:10px;border-top:1px solid rgba(255,255,255,.1);padding-top:10px">
           <div style="font-size:13px;font-weight:800;color:#67e8f9;margin-bottom:6px">修改历史</div>
           <div style="line-height:1.8">
+            <div><b style="color:#ffd34d">v2.4.6</b>　修自检按钮在部分内置浏览器里点不开（音频初始化报错打断了点击）；全部按钮都做了容错</div>
             <div><b style="color:#ffd34d">v2.4.5</b>　明信片不再跳回首页；名字查重从 8 秒压到 2 秒；建房后直接列出好友，点一下就邀请</div>
             <div><b style="color:#ffd34d">v2.4.4</b>　自检改成逐项扫描动画（进度条＋实时计数），按钮加了按下反馈</div>
             <div><b style="color:#ffd34d">v2.4.3</b>　按纯数字档案号也能直接搜到人（之前只认带 # 的旧号）</div>
@@ -2124,9 +2125,12 @@ function popChip(el){
 /* ================= 13. 音效（WebAudio 合成） ================= */
 let AC=null, master=null;
 function initAudio(){
-  if(!AC){ AC=new (window.AudioContext||window.webkitAudioContext)();
-    master=AC.createGain(); master.gain.value=0.5; master.connect(AC.destination); }
-  if(AC.state==='suspended') AC.resume();
+  try{
+    if(!window.AudioContext && !window.webkitAudioContext) return;   // 不支持就别硬来
+    if(!AC){ AC=new (window.AudioContext||window.webkitAudioContext)();
+      master=AC.createGain(); master.gain.value=0.5; master.connect(AC.destination); }
+    if(AC.state==='suspended' && AC.resume) AC.resume().catch(()=>{});
+  }catch(e){ AC=null; }
 }
 function blip(freq,dur,type,vol,slide){
   if(!AC||state.muted) return;
@@ -2633,7 +2637,8 @@ function runSelfCheck(){
   return r;
 }
 function showSelfCheck(){
-  const list=runSelfCheck();
+  let list=[]; try{ list=runSelfCheck(); }
+  catch(err){ list=[{n:'自检执行出错：'+(err&&err.message||err), ok:false}]; }
   const pass=list.filter(x=>x.ok).length;
   const body=document.getElementById('scBody');
   document.querySelectorAll('.overlay').forEach(e=>e.classList.add('hidden'));
@@ -3424,7 +3429,10 @@ document.getElementById('btnNetBack').addEventListener('click', ()=>{
 })();
 
 const btnSelf=document.getElementById('btnSelfCheck');
-if(btnSelf) btnSelf.addEventListener('click', ()=>{ initAudio(); sClick(); showSelfCheck(); });
+if(btnSelf) btnSelf.addEventListener('click', ()=>{
+  showSelfCheck();                    // 先出面板，音频/音效挂了也不影响打开
+  try{ initAudio(); sClick(); }catch(e){}
+});
 const btnScBack=document.getElementById('btnSelfCheckBack');
 if(btnScBack) btnScBack.addEventListener('click', ()=>{
   sClick(); document.getElementById('selfCheckScreen').classList.add('hidden');
