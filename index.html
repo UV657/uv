@@ -780,9 +780,9 @@ body.fire-left #btnFire{left:18px !important;right:auto !important}
         <div class="profHead">
           <div class="profAva" id="profAva">战</div>
           <div class="profInfo">
-            <div class="profNick copyable" id="profNick">玩家</div>
+            <div class="profNick" id="profNick">玩家</div>
             <div class="profSub" id="profSub"></div>
-            <div class="profSub copyable" id="profUidLine" style="font-size:11px;color:#67e8f9;letter-spacing:.5px;margin-top:2px"></div>
+            <div class="profSub" id="profUidLine" style="font-size:11px;color:#67e8f9;letter-spacing:.5px;margin-top:2px;cursor:pointer"></div>
           </div>
           <button class="profRename" id="btnRename">改名</button>
         </div>
@@ -932,12 +932,13 @@ body.fire-left #btnFire{left:18px !important;right:auto !important}
       </div>
     </div>
     <div class="overlay hidden" id="settingsScreen">
-      <div class="title">自定义设置 <span id="verTag" style="font-size:11px;color:#7d8aa8;font-weight:400;display:block;margin-top:2px">v2.6.0</span></div>
+      <div class="title">自定义设置 <span id="verTag" style="font-size:11px;color:#7d8aa8;font-weight:400;display:block;margin-top:2px">v2.6.1</span></div>
       <div id="settingsWrap" style="text-align:left;max-width:320px;line-height:2.2">
         <div>摇杆大小 <input type="range" id="setJoy" min="60" max="140" value="88" style="width:100%"></div>
         <div>开火键大小 <input type="range" id="setFire" min="50" max="120" value="74" style="width:100%"></div>
         <div>UI透明度 <input type="range" id="setAlpha" min="20" max="100" value="60" style="width:100%"></div>
         <div>界面边距 <input type="range" id="setGap" min="0" max="64" value="10" style="width:100%"></div>
+        <div>技能方向 <select id="setSkillDir" style="width:100%;padding:6px;border-radius:6px;background:#1a2340;color:#fff;border:1px solid rgba(255,255,255,.2)"><option value="aim">跟随摇杆方向</option><option value="foe">朝对手方向</option></select></div>
         <div>移动灵敏度 <input type="range" id="setSens" min="30" max="150" value="80" style="width:100%"></div>
         <div>摇杆位置 <select id="setJoyPos" style="width:100%;padding:6px;border-radius:6px;background:#1a2340;color:#fff;border:1px solid rgba(255,255,255,.2)"><option value="left">左下角</option><option value="right">右下角</option></select></div>
         <div>开火键位置 <select id="setFirePos" style="width:100%;padding:6px;border-radius:6px;background:#1a2340;color:#fff;border:1px solid rgba(255,255,255,.2)"><option value="right">右下角</option><option value="left">左下角</option></select></div>
@@ -968,12 +969,15 @@ body.fire-left #btnFire{left:18px !important;right:auto !important}
         <div><b style="color:#e8eefc">制作人</b>　刘伟骏</div>
         <div style="margin-top:6px">独立开发者。一个人从零写的网页枪战游戏，纯 HTML 单文件，没用任何游戏引擎。从画第一个圆点开始，一步一步改到现在。</div>
         <div style="margin-top:6px"><b style="color:#e8eefc">技术</b>　Canvas 2D · 原生 JS · MQTT 公网联机 · PWA 可装到桌面</div>
+        <button class="btn ghost" id="btnCheckUpdate" style="width:100%;margin-top:10px;padding:7px;font-size:12px">检查是否最新版本</button>
+        <div id="updHint" style="font-size:11.5px;color:#9fb2d0;margin-top:6px;line-height:1.7"></div>
         <button class="btn ghost" id="btnHistory" style="width:100%;margin-top:10px;padding:7px;font-size:12px">查看修改历史</button>
         <button class="btn ghost" id="btnFeedback" style="width:100%;margin-top:8px;padding:7px;font-size:12px">问题反馈</button>
         <button class="btn" id="btnDeleteAccount" style="width:100%;margin-top:8px;padding:7px;font-size:12px;background:#4a1f28;color:#ffb3bd;border-color:rgba(255,120,140,.35)">注销账号（清除本机全部数据）</button>
         <div id="historyBox" style="display:none;margin-top:10px;border-top:1px solid rgba(255,255,255,.1);padding-top:10px">
           <div style="font-size:13px;font-weight:800;color:#67e8f9;margin-bottom:6px">修改历史</div>
           <div style="line-height:1.8">
+            <div><b style="color:#ffd34d">v2.6.1</b>　设置改了立刻生效（界面边距、摇杆大小这些以前要重开页面才动）；技能方向可在设置里选「跟随摇杆」或「朝对手」；关于我们加了「检查是否最新版本」，有新版本能一键更新；档案号改成点一下就复制</div>
             <div><b style="color:#ffd34d">v2.6.0</b>　修技能键冷却结束时的弹跳（现在位置、大小完全不动，只改光圈）；手机端 5V5 顶部重新显示蓝队击杀数（之前第三块比分被藏掉了）；全站禁止长按选中复制文字，只有档案号和名字可以选；关掉双指缩放和双击放大</div>
             <div><b style="color:#ffd34d">v2.5.9</b>　管理终端可改角色数值（移速/伤害/射速/弹速/技能冷却/血量/半径）并能批量清理测试名；界面边距上限提到 64px，左右面板真的会跟着变宽；突击手技能改成朝自己瞄准方向贴脸突刺，撞到的人吃 34 伤害；5V5 里「你」显示为你的名字；自检扩到 35 项</div>
             <div><b style="color:#ffd34d">v2.5.8</b>　对手子弹改成真正飞行的弹丸（0.6 秒飞完全程，枪口带一段短曳光），对面开枪能看见子弹飞过来；对手掉线超过 5 秒自动判你获胜</div>
@@ -1445,8 +1449,22 @@ function netGhostSkill(m){
 function castSkill(p){
   if(!p.alive || p.skillCD>0) return;
   const s=p.role.skill;
-  if(s.dash){ // 突击手：朝自己瞄准的方向突刺（不是自动对着对手），撞上的人直接吃伤害
-    p.dashT=0.22; p.dashVX=Math.cos(p.aim)*1250; p.dashVY=Math.sin(p.aim)*1250;
+  if(s.dash){ // 突击手：突刺方向由设置决定（跟随摇杆 / 朝对手），撞上的人直接吃伤害
+    let dir=p.aim;
+    try{
+      const cfg=lsGet('gunSettings',{});
+      if(cfg.skillDir==='foe'){
+        let best=null, bd=1e9;
+        for(const q of state.players){
+          if(!q.alive || q.team===p.team || q===p) continue;
+          const d=Math.hypot(q.x-p.x, q.y-p.y);
+          if(d<bd){ bd=d; best=q; }
+        }
+        if(best) dir=Math.atan2(best.y-p.y, best.x-p.x);
+      }
+    }catch(e){}
+    p.dashAng=dir;
+    p.dashT=0.22; p.dashVX=Math.cos(dir)*1250; p.dashVY=Math.sin(dir)*1250;
     p.dashHits=[]; p.dashDmg=(s.dashDmg||34);
     sDash();
   } else if(s.shield){ // 重装：护盾
@@ -4098,7 +4116,7 @@ function renderProfile(){
   const rnBtn=document.getElementById('btnRename');
   if(rnBtn) rnBtn.textContent = '改名';
   const uidEl=document.getElementById('profUidLine');
-  if(uidEl) uidEl.textContent='档案号 '+ensureUid()+'（长按可复制）';
+  if(uidEl){ uidEl.textContent='档案号 '+ensureUid()+' · 点击复制'; }
   const subEl=document.getElementById('profSub');
   if(subEl) subEl.textContent = '';   // 名字规则、改名额度都收进说明书，主页不再挂说明
   const wr = v.matches ? Math.round(v.wins/v.matches*100) : 0;
@@ -4387,6 +4405,42 @@ document.addEventListener('click', (e)=>{
   }
 });
 
+document.getElementById('btnCheckUpdate').addEventListener('click', async ()=>{
+  sClick();
+  const hint=document.getElementById('updHint');
+  hint.textContent='正在检查…';
+  const cur=(document.getElementById('verTag').textContent||'').trim().replace(/^v/,'');
+  try{
+    const base=location.href.split('?')[0].split('#')[0];
+    const res=await fetch(base+'?chk='+Date.now(), {cache:'no-store'});
+    const txt=await res.text();
+    const m=txt.match(/id="verTag"[^>]*>v(\d+\.\d+\.\d+)/);
+    if(!m){ hint.textContent='读不到线上版本号，稍后再试'; return; }
+    const remote=m[1];
+    const cmp=(a,b)=>{ const x=a.split('.').map(Number), y=b.split('.').map(Number);
+      for(let i=0;i<3;i++){ if(x[i]!==y[i]) return x[i]>y[i]?1:-1; } return 0; };
+    if(cmp(remote,cur)>0){
+      hint.innerHTML='发现新版本 v'+remote+'（当前 v'+cur+'）<br>';
+      const b=document.createElement('button');
+      b.className='btn'; b.style.cssText='width:100%;margin-top:6px;padding:7px;font-size:12px';
+      b.textContent='更新到最新版'; b.onclick=()=>{ location.href=base+'?v='+Date.now(); };
+      hint.appendChild(b);
+    } else {
+      hint.textContent='已是最新版（v'+cur+'）';
+    }
+  }catch(e){
+    hint.textContent='检查失败：'+e.message+'（可能是网络或文件协议限制）';
+  }
+});
+document.getElementById('profUidLine').addEventListener('click', async ()=>{
+  const uid=ensureUid();
+  try{ await navigator.clipboard.writeText(uid); toastMsg('档案号已复制：'+uid); }
+  catch(e){
+    const ta=document.createElement('textarea'); ta.value=uid; document.body.appendChild(ta);
+    ta.select(); try{ document.execCommand('copy'); toastMsg('档案号已复制：'+uid); }catch(_){ toastMsg('复制失败，档案号 '+uid); }
+    document.body.removeChild(ta);
+  }
+});
 bindBtn('btnHistory', ()=>{
   sClick();
   const b=document.getElementById('historyBox');
@@ -4486,6 +4540,7 @@ function saveSettings(){
     fire: +document.getElementById('setFire').value,
     alpha: +document.getElementById('setAlpha').value,
     gap: +document.getElementById('setGap').value,
+    skillDir: document.getElementById('setSkillDir').value,
     sens: +document.getElementById('setSens').value,
     joyPos: document.getElementById('setJoyPos').value,
     firePos: document.getElementById('setFirePos').value,
@@ -4509,8 +4564,8 @@ function saveSettings(){
   }
   applySettings();
 }
-['setJoy','setFire','setAlpha','setSens','setJoyPos','setFirePos','setSkillPos','setAutoFire','setAutoAim','setRadarShow','setRadarSize','setRadarAlpha','setRadarPos','setSkin','setAimStick','setGap'].forEach(id=>{
-  document.getElementById(id).addEventListener('input', ()=>{ saveSettings(); });
+['setJoy','setFire','setAlpha','setSens','setJoyPos','setFirePos','setSkillPos','setAutoFire','setAutoAim','setRadarShow','setRadarSize','setRadarAlpha','setRadarPos','setSkin','setAimStick','setGap','setSkillDir'].forEach(id=>{
+  document.getElementById(id).addEventListener('input', ()=>{ saveSettings(); applySettings(); });
 });
 applySettings();
 bindBtn('btnFight', ()=>{
