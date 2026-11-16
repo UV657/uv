@@ -933,25 +933,26 @@ body.is-touch .nhTime{display:none !important}
     <div id="maintBar" class="hidden" style="position:fixed;top:calc(env(safe-area-inset-top,0px) + 62px);left:52px;right:52px;max-width:430px;margin:0 auto;z-index:40;background:rgba(255,140,90,.16);border:1px solid rgba(255,150,80,.5);border-radius:12px;padding:7px 12px;font-size:12px;color:#ffd0ad;text-align:center">系统维护中，匹配暂停</div>
     <style>body.in-game #noticeBar,body.in-game #maintBar,body.ended #noticeBar,body.ended #maintBar{display:none !important}
 /* ===== 管理终端样式（2026 改版：卡片分组、统一输入、可滚动顶栏） ===== */
-#adminScreen{position:fixed !important;inset:0 !important;z-index:9999 !important;background:#05070d !important;border-radius:0 !important;overflow:hidden !important}
+#adminScreen{position:fixed !important;inset:0 !important;z-index:9999 !important;background:#05070d !important;border-radius:0 !important;overflow-y:auto !important;overflow-x:hidden !important;-webkit-overflow-scrolling:touch}
 #adminScreen::before{content:'';position:absolute;inset:0;pointer-events:none;background:
  radial-gradient(1200px 620px at 18% -12%, rgba(34,211,238,.11), transparent 62%),
  radial-gradient(900px 520px at 112% 8%, rgba(59,130,246,.09), transparent 62%),
  linear-gradient(rgba(103,232,249,.038) 1px, transparent 1px) 0 0/34px 34px,
  linear-gradient(90deg, rgba(103,232,249,.038) 1px, transparent 1px) 0 0/34px 34px}
-#admWrap{position:relative;z-index:1;height:100%;display:flex;flex-direction:column}
+#admWrap{position:relative;z-index:1;min-height:100%;display:block}
 #adminGate{padding-top:10vh}
 #adminScreen.adm-gate{overflow:hidden !important;justify-content:center !important;align-items:center !important}
-#adminScreen.adm-gate #admWrap{max-width:520px !important;height:auto !important;display:block}
+#adminScreen.adm-gate #admWrap{max-width:520px !important;display:block;min-height:0 !important}
 #adminScreen.adm-gate #adminGate{padding-top:0}
-#adminBody{flex:1 1 auto;min-height:0;overflow-y:auto;overflow-x:hidden;padding:0 14px 26px;box-sizing:border-box}
+#adminScreen.adm-gate #adminBody{display:none !important}
+#adminBody{padding:0 14px 30px;box-sizing:border-box}
 @media (min-width:900px){
   #admWrap{max-width:1180px !important;margin:0 auto}
-  #adminBody{display:grid !important;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;align-items:start;padding:0 0 26px}
+  #adminBody{display:grid !important;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;align-items:start;padding:0 0 30px}
   #adminBody .admCard{margin-bottom:0}
   #adminGate{max-width:640px;margin:0 auto}
 }
-.admTop{position:relative;z-index:6;flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;padding:12px 0 10px;background:#05070d;border-bottom:1px solid rgba(120,180,255,.16);text-align:left}
+.admTop{position:relative;z-index:2;display:flex;align-items:center;justify-content:space-between;padding:14px 14px 12px;background:linear-gradient(180deg,rgba(8,14,24,.98),rgba(5,7,13,.82));border-bottom:1px solid rgba(120,180,255,.14);text-align:left}
 .admT{font-size:17px;font-weight:800;color:#67e8f9;letter-spacing:.5px}
 .admTSub{font-size:10.5px;color:#5f748c;letter-spacing:1.2px;margin-top:2px}
 .admCard{background:linear-gradient(180deg,rgba(16,26,42,.96),rgba(8,13,22,.96));border:1px solid rgba(103,232,249,.18);border-radius:16px;padding:13px 13px 11px;margin-bottom:11px;box-shadow:0 4px 14px rgba(0,0,0,.24);text-align:left}
@@ -1173,7 +1174,7 @@ body.is-touch .nhTime{display:none !important}
       </div>
     </div>
     <div class="overlay hidden" id="settingsScreen">
-      <div class="title">自定义设置 <span id="verTag" style="font-size:11px;color:#7d8aa8;font-weight:400;display:block;margin-top:2px">v2.8.4</span></div>
+      <div class="title">自定义设置 <span id="verTag" style="font-size:11px;color:#7d8aa8;font-weight:400;display:block;margin-top:2px">v2.8.5</span></div>
       <div id="settingsWrap" style="text-align:left;max-width:320px;line-height:2.2">
         <div>摇杆大小 <input type="range" id="setJoy" min="60" max="140" value="88" style="width:100%"></div>
         <div>开火键大小 <input type="range" id="setFire" min="50" max="120" value="74" style="width:100%"></div>
@@ -1217,6 +1218,7 @@ body.is-touch .nhTime{display:none !important}
         <div id="historyBox" style="display:none;margin-top:10px;border-top:1px solid rgba(255,255,255,.1);padding-top:10px">
           <div style="font-size:13px;font-weight:800;color:#67e8f9;margin-bottom:6px">修改历史</div>
           <div style="line-height:1.8">
+            <div><b style="color:#ffd34d">v2.8.5</b>　界面细节修复：滚动与布局更顺，标题区不再遮挡内容</div>
             <div><b style="color:#ffd34d">v2.8.4</b>　玩法说明书排版优化：战场地图改成卡片式（每图地形 / 打法分行显示），角色表在手机上可横向滑动；界面细节修复</div>
             <div><b style="color:#ffd34d">v2.8.3</b>　玩法说明书新增「战场地图」章节：6 张地图逐图写明地形与打法要点；手机操作说明整章并入说明书（摇杆、开火、技能、退出、界面调节、联机规则）</div>
             <div><b style="color:#ffd34d">v2.8.1</b>　界面与稳定性优化：修复若干操作后状态不同步、提示错位的问题，整体布局更清爽；对局数值与玩法保持不变</div>
