@@ -770,126 +770,147 @@ body.is-touch .nhTime{display:none !important}
     <!-- 管理终端（?admin=1 打开） -->
     <div class="overlay hidden" id="adminScreen" style="background:#05070d;align-items:flex-start;justify-content:center;overflow-y:auto;padding:calc(env(safe-area-inset-top,0px) + 16px) 14px calc(env(safe-area-inset-bottom,0px) + 96px)">
       <div style="width:100%;max-width:520px">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-          <div style="font-size:17px;font-weight:800;color:#67e8f9">管理终端</div>
-          <div style="display:flex;gap:8px">
-            <button class="btn ghost" id="btnAdminFull" style="padding:6px 12px;font-size:12px">全屏</button>
-            <button class="btn ghost" id="btnAdminClose" style="padding:6px 12px;font-size:12px">退出</button>
+        <div class="admTop">
+          <div>
+            <div class="admT">管理终端</div>
+            <div class="admTSub">GUNFIGHT ARENA · 运营后台</div>
+          </div>
+          <div style="display:flex;gap:8px;flex:none">
+            <button class="btn ghost" id="btnAdminFull" style="padding:7px 12px;font-size:12px">全屏</button>
+            <button class="btn ghost" id="btnAdminClose" style="padding:7px 12px;font-size:12px">退出</button>
           </div>
         </div>
+
         <div id="adminGate">
-          <div style="font-size:12px;color:#9fb2d0;margin-bottom:8px">输入管理口令</div>
-          <input id="adminPass" type="password" placeholder="口令" style="width:100%;padding:10px 12px;border-radius:10px;background:#0b1220;border:1px solid rgba(255,255,255,.16);color:#e8eefc;font-size:14px;outline:none">
-          <button class="btn" id="btnAdminLogin" style="width:100%;margin-top:10px;padding:9px;font-size:13px">进入</button>
-          <div id="adminErr" style="font-size:12px;color:#ff8fa0;margin-top:8px;min-height:16px"></div>
+          <div class="admCard">
+            <div class="admH">管理员验证 <span class="admSub">口令错误 5 次锁定 60 秒</span></div>
+            <label class="admField">口令<input id="adminPass" type="password" placeholder="输入管理口令" class="admInput"></label>
+            <button class="btn" id="btnAdminLogin" style="width:100%;margin-top:6px;padding:10px;font-size:13px">进入后台</button>
+            <div id="adminErr" style="font-size:12px;color:#ff8fa0;margin-top:8px;min-height:16px"></div>
+          </div>
         </div>
+
         <div id="adminBody" style="display:none">
-          <div id="adminStat" style="font-size:12px;color:#9fb2d0;line-height:1.9;margin-bottom:10px"></div>
-          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">
-            <button class="btn ghost" id="btnAdminReload" style="padding:7px 12px;font-size:12px">刷新</button>
-            <button class="btn ghost" id="btnAdminLobby" style="padding:7px 12px;font-size:12px">清空公告板</button>
+
+          <div class="admCard">
+            <div class="admH">运营概览 <span class="admSub" id="admNickCount"></span></div>
+            <div id="adminStat" class="admStat">正在读取中转数据…</div>
+            <div class="admBtnRow" style="margin-top:8px">
+              <button class="btn ghost admBtn" id="btnAdminReload">刷新数据</button>
+              <button class="btn ghost admBtn" id="btnAdminLobby">清空公告板</button>
+            </div>
           </div>
-          <div style="font-size:13px;font-weight:800;color:#67e8f9;margin:4px 0 6px">全服公告（发布后所有玩家主页可见）</div>
-          <label style="font-size:11.5px;color:#9fb2d0;display:block">标题<input id="admNoticeTitle" maxlength="40" placeholder="例如：v2.6.1 已上线" style="width:100%;margin-top:3px;padding:8px;border-radius:8px;background:#0b1220;color:#e8eefc;border:1px solid rgba(255,255,255,.16);font-size:12.5px"></label>
-          <label style="font-size:11.5px;color:#9fb2d0;display:block;margin-top:6px">正文<textarea id="admNoticeBody" maxlength="400" rows="4" placeholder="最多 400 字" style="width:100%;margin-top:3px;padding:8px;border-radius:8px;background:#0b1220;color:#e8eefc;border:1px solid rgba(255,255,255,.16);font-size:12.5px;resize:vertical"></textarea></label>
-          <div style="display:flex;gap:6px;margin-top:6px">
-            <select id="admNoticeDays" style="flex:1;padding:7px;border-radius:8px;background:#0b1220;color:#e8eefc;border:1px solid rgba(255,255,255,.16);font-size:12px">
-              <option value="1">1 天</option><option value="3" selected>3 天</option><option value="7">7 天</option><option value="0">永久</option>
-            </select>
-            <label style="flex:1;display:flex;align-items:center;gap:6px;font-size:12px;color:#9fb2d0;padding:0 6px"><input id="admNoticePin" type="checkbox">置顶</label>
+
+          <div class="admCard">
+            <div class="admH">全服公告 <span class="admSub">发布后所有玩家可见</span></div>
+            <label class="admField">标题<input id="admNoticeTitle" maxlength="40" placeholder="例如：v2.8.0 已上线" class="admInput"></label>
+            <label class="admField">正文<textarea id="admNoticeBody" maxlength="400" rows="4" placeholder="最多 400 字" class="admInput" style="resize:vertical"></textarea></label>
+            <div class="admGrid2">
+              <select id="admNoticeDays" class="admInput"><option value="1">1 天</option><option value="3" selected>3 天</option><option value="7">7 天</option><option value="0">永久</option></select>
+              <label class="admCheck" style="margin-top:5px"><input id="admNoticePin" type="checkbox"> 置顶这条</label>
+            </div>
+            <div class="admBtnRow" style="margin-top:10px">
+              <button class="btn admBtn" id="btnAdmNoticePub">发布公告</button>
+              <button class="btn ghost admBtn" id="btnAdmNoticeDel" style="color:#ffb3bd">删除公告</button>
+            </div>
+            <div id="admNoticeHint" class="admHint"></div>
           </div>
-          <div style="display:flex;gap:8px;margin:8px 0 6px">
-            <button class="btn" id="btnAdmNoticePub" style="flex:1;padding:8px;font-size:12px">发布公告</button>
-            <button class="btn ghost" id="btnAdmNoticeDel" style="flex:1;padding:8px;font-size:12px;color:#ffb3bd">删除公告</button>
+
+          <div class="admCard">
+            <div class="admH">运营开关</div>
+            <div class="admBtnRow">
+              <button class="btn ghost admBtn" id="btnAdmMaint">开启维护模式</button>
+            </div>
+            <div id="admMaintState" class="admHint" style="margin-top:6px">当前：正常</div>
           </div>
-          <div id="admNoticeHint" style="font-size:11.5px;color:#7d8aa8;margin-bottom:10px;line-height:1.7"></div>
-          <div style="display:flex;gap:8px;transition:opacity .2s;align-items:center;margin-bottom:12px">
-            <button class="btn ghost" id="btnAdmMaint" style="flex:1;padding:8px;font-size:12px">开启维护模式</button>
-            <div id="admMaintState" style="flex:1;font-size:11.5px;color:#7d8aa8">当前：正常</div>
+
+          <div class="admCard">
+            <div class="admH">对局参数 <span class="admSub">新武器 / 准备室</span></div>
+            <div class="admGrid2">
+              <label class="admField">轻机枪过热弹数<input id="admTuneHeat" type="number" min="6" max="40" step="1" class="admInput"></label>
+              <label class="admField">过热冷却（秒）<input id="admTuneHeatCd" type="number" min="0.4" max="3" step="0.1" class="admInput"></label>
+              <label class="admField">双管冷却倍率<input id="admTuneDb" type="number" min="1" max="3" step="0.05" class="admInput"></label>
+              <label class="admField">手枪冷却倍率<input id="admTunePistol" type="number" min="0.3" max="1.5" step="0.05" class="admInput"></label>
+              <label class="admField">准备室倒计时（秒）<input id="admTunePrep" type="number" min="2" max="10" step="1" class="admInput"></label>
+              <label class="admField">堡垒正面减伤（0-1）<input id="admTuneFront" type="number" min="0.3" max="0.85" step="0.05" class="admInput"></label>
+              <label class="admField">地雷伤害<input id="admTuneMine" type="number" min="20" max="120" step="5" class="admInput"></label>
+              <label class="admField">地雷同时上限<input id="admTuneMineMax" type="number" min="1" max="6" step="1" class="admInput"></label>
+              <label class="admField">静默封锁时长（秒）<input id="admTuneJam" type="number" min="1" max="8" step="0.5" class="admInput"></label>
+            </div>
+            <div class="admBtnRow" style="margin-top:10px">
+              <button class="btn admBtn" id="btnAdmTuneApply">应用</button>
+              <button class="btn ghost admBtn" id="btnAdmTuneSync">同步全服</button>
+            </div>
+            <div id="admTuneHint" class="admHint"></div>
           </div>
-          <div style="font-size:13px;font-weight:800;color:#67e8f9;margin:8px 0 6px">对局参数（新武器 / 准备室）</div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
-            <label style="font-size:11px;color:#9fb2d0">轻机枪过热弹数<input id="admTuneHeat" type="number" min="6" max="40" step="1" style="width:100%;margin-top:3px;padding:7px;border-radius:8px;background:#0b1220;color:#e8eefc;border:1px solid rgba(255,255,255,.16);font-size:12px"></label>
-            <label style="font-size:11px;color:#9fb2d0">过热冷却（秒）<input id="admTuneHeatCd" type="number" min="0.4" max="3" step="0.1" style="width:100%;margin-top:3px;padding:7px;border-radius:8px;background:#0b1220;color:#e8eefc;border:1px solid rgba(255,255,255,.16);font-size:12px"></label>
-            <label style="font-size:11px;color:#9fb2d0">双管冷却倍率<input id="admTuneDb" type="number" min="1" max="3" step="0.05" style="width:100%;margin-top:3px;padding:7px;border-radius:8px;background:#0b1220;color:#e8eefc;border:1px solid rgba(255,255,255,.16);font-size:12px"></label>
-            <label style="font-size:11px;color:#9fb2d0">手枪冷却倍率<input id="admTunePistol" type="number" min="0.3" max="1.5" step="0.05" style="width:100%;margin-top:3px;padding:7px;border-radius:8px;background:#0b1220;color:#e8eefc;border:1px solid rgba(255,255,255,.16);font-size:12px"></label>
-            <label style="font-size:11px;color:#9fb2d0">准备室倒计时（秒）<input id="admTunePrep" type="number" min="2" max="10" step="1" style="width:100%;margin-top:3px;padding:7px;border-radius:8px;background:#0b1220;color:#e8eefc;border:1px solid rgba(255,255,255,.16);font-size:12px"></label>
-            <label style="font-size:11px;color:#9fb2d0">堡垒正面减伤（0-1）<input id="admTuneFront" type="number" min="0.3" max="0.85" step="0.05" style="width:100%;margin-top:3px;padding:7px;border-radius:8px;background:#0b1220;color:#e8eefc;border:1px solid rgba(255,255,255,.16);font-size:12px"></label>
-            <label style="font-size:11px;color:#9fb2d0">地雷伤害<input id="admTuneMine" type="number" min="20" max="120" step="5" style="width:100%;margin-top:3px;padding:7px;border-radius:8px;background:#0b1220;color:#e8eefc;border:1px solid rgba(255,255,255,.16);font-size:12px"></label>
-            <label style="font-size:11px;color:#9fb2d0">地雷同时上限<input id="admTuneMineMax" type="number" min="1" max="6" step="1" style="width:100%;margin-top:3px;padding:7px;border-radius:8px;background:#0b1220;color:#e8eefc;border:1px solid rgba(255,255,255,.16);font-size:12px"></label>
-            <label style="font-size:11px;color:#9fb2d0">静默封锁时长（秒）<input id="admTuneJam" type="number" min="1" max="8" step="0.5" style="width:100%;margin-top:3px;padding:7px;border-radius:8px;background:#0b1220;color:#e8eefc;border:1px solid rgba(255,255,255,.16);font-size:12px"></label>
+
+          <div class="admCard">
+            <div class="admH">角色数值 <span class="admSub">改完下一局生效</span></div>
+            <label class="admField">选择角色<select id="admRole" class="admInput"></select></label>
+            <div class="admGrid2">
+              <label class="admField">移速<input id="admSpeed" type="number" min="120" max="600" class="admInput"></label>
+              <label class="admField">单发伤害<input id="admDmg" type="number" min="2" max="120" class="admInput"></label>
+              <label class="admField">射速（秒）<input id="admCd" type="number" min="0.06" max="2" step="0.02" class="admInput"></label>
+              <label class="admField">弹速<input id="admBul" type="number" min="300" max="2400" step="40" class="admInput"></label>
+              <label class="admField">技能冷却<input id="admSkillCd" type="number" min="0.5" max="40" step="0.5" class="admInput"></label>
+              <label class="admField">玩家半径<input id="admRadius" type="number" min="8" max="40" class="admInput"></label>
+            </div>
+            <label class="admField" style="margin-top:2px">全员血量上限<input id="admHp" type="number" min="40" max="400" class="admInput"></label>
+            <div class="admBtnRow" style="margin-top:8px">
+              <button class="btn admBtn" id="btnAdmApply">应用</button>
+              <button class="btn ghost admBtn" id="btnAdmReset">恢复默认</button>
+            </div>
+            <div id="admRoleHint" class="admHint"></div>
           </div>
-          <div style="display:flex;gap:8px;margin:8px 0 6px">
-            <button class="btn" id="btnAdmTuneApply" style="flex:1;padding:8px;font-size:12px">应用</button>
-            <button class="btn ghost" id="btnAdmTuneSync" style="flex:1;padding:8px;font-size:12px">同步全服</button>
+
+          <div class="admCard">
+            <div class="admH">玩家处罚 <span class="admSub">封号 / 禁言</span></div>
+            <label class="admField">玩家<input id="admBanWho" placeholder="名字 或 10 位档案号" class="admInput"></label>
+            <div class="admGrid2">
+              <select id="admBanType" class="admInput"><option value="ban">封号（禁止登录）</option><option value="mute">禁言（禁改名/邀请/点赞）</option></select>
+              <select id="admBanDays" class="admInput"><option value="1">1 天</option><option value="7" selected>7 天</option><option value="30">30 天</option><option value="0">永久</option></select>
+            </div>
+            <label class="admField" style="margin-top:8px">原因（可选，玩家能看到）<input id="admBanReason" maxlength="30" placeholder="例如：恶意刷屏" class="admInput"></label>
+            <div class="admBtnRow" style="margin-top:8px">
+              <button class="btn admBtn" id="btnAdmBan">执行处罚</button>
+              <button class="btn ghost admBtn" id="btnAdmBanSync">同步名单</button>
+            </div>
+            <div id="admBanHint" class="admHint"></div>
+            <div id="admBanList" class="admList"></div>
           </div>
-          <div id="admTuneHint" style="font-size:11.5px;color:#7d8aa8;margin-bottom:10px;line-height:1.7"></div>
-          <div style="font-size:13px;font-weight:800;color:#67e8f9;margin:10px 0 6px">玩家处罚（封号 / 禁言）</div>
-          <input id="admBanWho" placeholder="玩家名字 或 10 位档案号" style="width:100%;padding:8px;border-radius:8px;background:#0b1220;color:#e8eefc;border:1px solid rgba(255,255,255,.16);font-size:12.5px">
-          <div style="display:flex;gap:6px;margin-top:6px">
-            <select id="admBanType" style="flex:1;padding:7px;border-radius:8px;background:#0b1220;color:#e8eefc;border:1px solid rgba(255,255,255,.16);font-size:12px">
-              <option value="ban">封号（禁止登录）</option><option value="mute">禁言（禁止改名/邀请/点赞）</option>
-            </select>
-            <select id="admBanDays" style="flex:1;padding:7px;border-radius:8px;background:#0b1220;color:#e8eefc;border:1px solid rgba(255,255,255,.16);font-size:12px">
-              <option value="1">1 天</option><option value="7" selected>7 天</option><option value="30">30 天</option><option value="0">永久</option>
-            </select>
+
+          <div class="admCard">
+            <div class="admH">单人调参 <span class="admSub">只对填写的代号生效</span></div>
+            <label class="admField">玩家代号<input id="admPtName" placeholder="必填，例如 UV" class="admInput"></label>
+            <div class="admGrid2">
+              <select id="admPtField" class="admInput"><option value="speed">移速</option><option value="dmg">单发伤害</option><option value="fireCD">射速(秒/发)</option><option value="bulletSpeed">弹速</option><option value="skillCd">技能冷却</option><option value="hp">血量上限</option></select>
+              <input id="admPtVal" type="number" placeholder="数值" class="admInput">
+            </div>
+            <div class="admBtnRow" style="margin-top:8px">
+              <button class="btn admBtn" id="btnAdmPtApply">应用</button>
+              <button class="btn ghost admBtn" id="btnAdmPtClear">清除该玩家</button>
+              <button class="btn ghost admBtn" id="btnAdmPtSync">同步</button>
+            </div>
+            <div id="admPtHint" class="admHint">按代号单独改数值：只有这个代号进对局时生效，其他玩家和同角色的 AI 都不受影响</div>
+            <div id="admPtList" class="admList"></div>
           </div>
-          <input id="admBanReason" maxlength="30" placeholder="原因（可选，玩家能看到）" style="width:100%;margin-top:6px;padding:8px;border-radius:8px;background:#0b1220;color:#e8eefc;border:1px solid rgba(255,255,255,.16);font-size:12.5px">
-          <div style="display:flex;gap:8px;margin:8px 0 6px">
-            <button class="btn" id="btnAdmBan" style="flex:1;padding:8px;font-size:12px">执行处罚</button>
-            <button class="btn ghost" id="btnAdmBanSync" style="flex:1;padding:8px;font-size:12px">同步名单</button>
+
+          <div class="admCard">
+            <div class="admH">名字库 <span class="admSub">点右侧删除即可释放该名字</span></div>
+            <div class="admBtnRow">
+              <button class="btn ghost admBtn" id="btnAdmCleanTest" style="color:#ffb3bd">清理测试名</button>
+            </div>
+            <div id="admNickHint" class="admHint"></div>
+            <div id="adminList" class="admList"></div>
           </div>
-          <div id="admBanHint" style="font-size:11.5px;color:#7d8aa8;margin-bottom:8px;line-height:1.7"></div>
-          <div id="admBanList" style="display:flex;flex-direction:column;gap:5px;margin-bottom:12px"></div>
-          <div style="font-size:13px;font-weight:800;color:#67e8f9;margin:4px 0 6px">单人调参（只对填写的代号生效）</div>
-          <div style="display:flex;gap:6px;margin-bottom:6px">
-            <input id="admPtName" placeholder="玩家代号（必填）" style="flex:1;padding:8px;border-radius:8px;background:#0b1220;color:#e8eefc;border:1px solid rgba(255,255,255,.16);font-size:12px">
+
+          <div class="admCard">
+            <div class="admH">操作日志</div>
+            <div id="adminLog" class="admLog"></div>
           </div>
-          <div style="display:flex;gap:6px;margin-bottom:8px">
-            <select id="admPtField" style="flex:1;padding:7px;border-radius:8px;background:#0b1220;color:#e8eefc;border:1px solid rgba(255,255,255,.16);font-size:12px">
-              <option value="speed">移速</option><option value="dmg">单发伤害</option><option value="fireCD">射速(秒/发)</option>
-              <option value="bulletSpeed">弹速</option><option value="skillCd">技能冷却</option><option value="hp">血量上限</option>
-            </select>
-            <input id="admPtVal" type="number" placeholder="数值" style="flex:1;padding:7px;border-radius:8px;background:#0b1220;color:#e8eefc;border:1px solid rgba(255,255,255,.16);font-size:12px">
-          </div>
-          <div style="display:flex;gap:8px;margin-bottom:8px">
-            <button class="btn" id="btnAdmPtApply" style="flex:1;padding:8px;font-size:12px">应用</button>
-            <button class="btn ghost" id="btnAdmPtClear" style="flex:1;padding:8px;font-size:12px">清除该玩家</button>
-            <button class="btn ghost" id="btnAdmPtSync" style="flex:1;padding:8px;font-size:12px">同步</button>
-          </div>
-          <div id="admPtList" style="display:flex;flex-direction:column;gap:5px;margin-bottom:6px"></div>
-          <div id="admPtHint" style="font-size:11.5px;color:#7d8aa8;margin-bottom:12px;line-height:1.7">按代号单独改数值：只有这个代号进对局时生效，其他玩家和同角色的 AI 都不受影响</div>
-          <div style="font-size:13px;font-weight:800;color:#67e8f9;margin:4px 0 6px">角色数值（改完立刻对新开局生效）</div>
-          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">
-            <select id="admRole" style="flex:1;min-width:120px;padding:7px;border-radius:8px;background:#0b1220;color:#e8eefc;border:1px solid rgba(255,255,255,.16);font-size:12px">
-              <option value="assault">突击手</option><option value="tank">重装</option><option value="sniper">神射手</option><option value="medic">医疗兵</option><option value="bulwark">堡垒</option><option value="engineer">铁匠</option><option value="jammer">静默</option>
-            </select>
-          </div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px">
-            <label style="font-size:11.5px;color:#9fb2d0;display:block">移速<input id="admSpeed" type="number" min="120" max="600" style="width:100%;padding:7px;border-radius:8px;background:#0b1220;color:#e8eefc;border:1px solid rgba(255,255,255,.16);font-size:12px"></label>
-            <label style="font-size:11.5px;color:#9fb2d0;display:block">单发伤害<input id="admDmg" type="number" min="2" max="120" style="width:100%;padding:7px;border-radius:8px;background:#0b1220;color:#e8eefc;border:1px solid rgba(255,255,255,.16);font-size:12px"></label>
-            <label style="font-size:11.5px;color:#9fb2d0;display:block">射速(s)<input id="admCd" type="number" min="0.06" max="2" step="0.02" style="width:100%;padding:7px;border-radius:8px;background:#0b1220;color:#e8eefc;border:1px solid rgba(255,255,255,.16);font-size:12px"></label>
-            <label style="font-size:11.5px;color:#9fb2d0;display:block">弹速<input id="admBul" type="number" min="300" max="2400" step="40" style="width:100%;padding:7px;border-radius:8px;background:#0b1220;color:#e8eefc;border:1px solid rgba(255,255,255,.16);font-size:12px"></label>
-            <label style="font-size:11.5px;color:#9fb2d0;display:block">技能冷却<input id="admSkillCd" type="number" min="0.5" max="40" step="0.5" style="width:100%;padding:7px;border-radius:8px;background:#0b1220;color:#e8eefc;border:1px solid rgba(255,255,255,.16);font-size:12px"></label>
-            <label style="font-size:11.5px;color:#9fb2d0;display:block">玩家半径<input id="admRadius" type="number" min="8" max="40" style="width:100%;padding:7px;border-radius:8px;background:#0b1220;color:#e8eefc;border:1px solid rgba(255,255,255,.16);font-size:12px"></label>
-          </div>
-          <div style="margin-bottom:8px">
-            <label style="font-size:11.5px;color:#9fb2d0;display:block">全员血量上限<input id="admHp" type="number" min="40" max="400" style="width:100%;padding:7px;border-radius:8px;background:#0b1220;color:#e8eefc;border:1px solid rgba(255,255,255,.16);font-size:12px"></label>
-          </div>
-          <div style="display:flex;gap:8px;margin-bottom:12px">
-            <button class="btn" id="btnAdmApply" style="flex:1;padding:8px;font-size:12px;white-space:nowrap">应用</button>
-            <button class="btn ghost" id="btnAdmReset" style="flex:1;padding:8px;font-size:12px;white-space:nowrap">恢复默认</button>
-          </div>
-          <div id="admTuneHint" style="font-size:11.5px;color:#7d8aa8;margin-bottom:12px;line-height:1.7"></div>
-          <div style="font-size:13px;font-weight:800;color:#67e8f9;margin:10px 0 6px">名字库（可批量清理测试名）</div>
-          <div style="display:flex;gap:8px;margin-bottom:8px">
-            <button class="btn ghost" id="btnAdmCleanTest" style="padding:7px 12px;font-size:12px;color:#ffb3bd">清理测试名</button>
-          </div>
-          <div style="font-size:12px;color:#9fb2d0;margin-bottom:6px">已注册名字（点右侧删除）</div>
-          <div id="adminList" style="display:flex;flex-direction:column;gap:6px"></div>
-          <div style="font-size:13px;font-weight:800;color:#67e8f9;margin:14px 0 6px">操作日志</div>
-          <div id="adminLog" style="font-size:11.5px;color:#8fa1bf;line-height:1.8;background:#0b1220;border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:9px 11px;max-height:160px;overflow-y:auto"></div>
+
         </div>
+      </div>
       </div>
     </div>
     <!-- 全服公告条（登录页 / 主菜单都显示，对局中自动隐藏） -->
@@ -900,7 +921,28 @@ body.is-touch .nhTime{display:none !important}
       <span id="noticeBarClose" style="flex:none;width:20px;height:20px;line-height:20px;text-align:center;border-radius:50%;background:rgba(255,255,255,.1);color:#9fb2d0;font-size:12px">✕</span>
     </div>
     <div id="maintBar" class="hidden" style="position:fixed;top:calc(env(safe-area-inset-top,0px) + 62px);left:52px;right:52px;max-width:430px;margin:0 auto;z-index:40;background:rgba(255,140,90,.16);border:1px solid rgba(255,150,80,.5);border-radius:12px;padding:7px 12px;font-size:12px;color:#ffd0ad;text-align:center">系统维护中，匹配暂停</div>
-    <style>body.in-game #noticeBar,body.in-game #maintBar,body.ended #noticeBar,body.ended #maintBar{display:none !important}</style>
+    <style>body.in-game #noticeBar,body.in-game #maintBar,body.ended #noticeBar,body.ended #maintBar{display:none !important}
+/* ===== 管理终端样式（2026 改版：卡片分组、统一输入、可滚动顶栏） ===== */
+.admTop{position:sticky;top:0;z-index:6;display:flex;align-items:center;justify-content:space-between;padding:10px 0 12px;margin-bottom:4px;background:#05070d;box-shadow:0 10px 18px rgba(5,7,13,.92);text-align:left}
+.admT{font-size:17px;font-weight:800;color:#67e8f9;letter-spacing:.5px}
+.admTSub{font-size:10.5px;color:#5f748c;letter-spacing:1.2px;margin-top:2px}
+.admCard{background:linear-gradient(180deg,rgba(16,26,42,.96),rgba(8,13,22,.96));border:1px solid rgba(103,232,249,.18);border-radius:16px;padding:13px 13px 11px;margin-bottom:11px;box-shadow:0 6px 20px rgba(0,0,0,.35);text-align:left}
+.admH{display:flex;align-items:baseline;gap:8px;font-size:13.5px;font-weight:800;color:#8be9ff;letter-spacing:.3px;margin-bottom:10px}
+.admSub{font-size:10.5px;color:#6f8399;font-weight:400}
+.admField{display:block;font-size:11.5px;color:#9fb2d0;margin-bottom:8px;text-align:left}
+.admInput{width:100%;margin-top:5px;padding:9px 10px;border-radius:10px;background:#080f1a;color:#e8eefc;border:1px solid rgba(255,255,255,.13);font-size:12.5px;outline:none;text-align:left}
+.admInput:focus{border-color:rgba(103,232,249,.55)}
+.admGrid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.admBtnRow{display:flex;gap:8px;margin-top:4px}
+.admBtn{flex:1;padding:9px;font-size:12px;border-radius:10px}
+.admHint{font-size:11.5px;color:#7d8aa8;line-height:1.7;margin-top:8px;min-height:14px;text-align:left}
+.admStat{font-size:11.5px;color:#9fb2d0;line-height:1.9;text-align:left}
+.admList{display:flex;flex-direction:column;gap:6px;margin-top:8px;text-align:left}
+.admEmpty{font-size:11.5px;color:#6f8399;padding:10px 2px}
+.admLog{font-size:11px;color:#8fa1bf;line-height:1.8;background:#070d16;border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:9px 11px;max-height:170px;overflow-y:auto}
+.admCheck{display:flex;align-items:center;gap:6px;font-size:12px;color:#9fb2d0}
+.admCheck input{width:16px;height:16px}
+</style>
     <!-- 全服公告 -->
     <div class="overlay hidden" id="noticeScreen" style="align-items:flex-start;justify-content:center;overflow-y:auto;padding:26px 16px;z-index:70">
       <div style="width:100%;max-width:520px;background:rgba(9,14,26,.96);border:1px solid rgba(103,232,249,.3);border-radius:16px;padding:18px 18px 16px;text-align:left">
@@ -1103,7 +1145,7 @@ body.is-touch .nhTime{display:none !important}
       </div>
     </div>
     <div class="overlay hidden" id="settingsScreen">
-      <div class="title">自定义设置 <span id="verTag" style="font-size:11px;color:#7d8aa8;font-weight:400;display:block;margin-top:2px">v2.8.0</span></div>
+      <div class="title">自定义设置 <span id="verTag" style="font-size:11px;color:#7d8aa8;font-weight:400;display:block;margin-top:2px">v2.8.1</span></div>
       <div id="settingsWrap" style="text-align:left;max-width:320px;line-height:2.2">
         <div>摇杆大小 <input type="range" id="setJoy" min="60" max="140" value="88" style="width:100%"></div>
         <div>开火键大小 <input type="range" id="setFire" min="50" max="120" value="74" style="width:100%"></div>
@@ -1147,6 +1189,7 @@ body.is-touch .nhTime{display:none !important}
         <div id="historyBox" style="display:none;margin-top:10px;border-top:1px solid rgba(255,255,255,.1);padding-top:10px">
           <div style="font-size:13px;font-weight:800;color:#67e8f9;margin-bottom:6px">修改历史</div>
           <div style="line-height:1.8">
+            <div><b style="color:#ffd34d">v2.8.1</b>　界面与稳定性优化：修复若干操作后状态不同步、提示错位的问题，整体布局更清爽；对局数值与玩法保持不变</div>
             <div><b style="color:#ffd34d">v2.8.0</b>　新增 3 个角色：幽灵（潜行 3.5 秒从对手雷达上消失、移速 +20%）、炮锤（放遥控炸药，再按一次引爆，范围 65 伤、自伤 20）、铆钉（放补给站，队友站 3 秒回 15 血、技能冷却 -2 秒）；新增 3 把武器：猎隼栓狙（一枪重伤、拉栓慢）、铆钉枪（命中拖慢对手）、破障榴弹（落点爆炸、隔墙不穿）；准备室和联机都支持选用并同步</div>
             <div><b style="color:#ffd34d">v2.7.20</b>　选人卡片上三根看不出含义的进度条去掉，改成直接显示移速 / 伤害 / 射速数值，卡片更清爽</div>
             <div><b style="color:#ffd34d">v2.7.19</b>　修好公共中转读取不完整的问题（以前只读一条通道，名字登记表会显示空白）；顺手清掉测试期残留的 3 个昵称与卡片</div>
@@ -5255,7 +5298,8 @@ const ADMIN={open:false, names:{}};
 function adminShow(on){ ADMIN.open=on; document.getElementById('adminScreen').classList.toggle('hidden', !on); }
 async function adminLoad(){
   const stat=document.getElementById('adminStat'), list=document.getElementById('adminList');
-  stat.textContent='正在读取中转数据…'; list.innerHTML='';
+  stat.textContent='正在读取中转数据…';
+  list.innerHTML='<div class="admEmpty">正在读取名字库（约 10 秒）…</div>';
   try{
     const ok=await netOpen();
     if(!ok || !NET.client || !NET.client.connected){ stat.textContent='连不上中转，检查网络后点刷新'; return; }
@@ -5413,7 +5457,8 @@ function adminTuneSave(){
   t.maxHp=num('admHp'); t.playerRadius=num('admRadius');
   lsSet('gunAdminTune', t);
   adminTuneApply();
-  const hint=document.getElementById('admTuneHint');
+  const hint=document.getElementById('admRoleHint')||document.getElementById('admTuneHint');
+  if(hint){ hint.style.color='#7ee7a0'; }
   if(hint) hint.textContent='已保存：'+ROLES[id].name+' 移速 '+ROLES[id].speed+' · 伤害 '+ROLES[id].dmg+' · 射速 '+ROLES[id].fireCD+'s · 技能CD '+ROLES[id].skill.cd+'s · 全员血量 '+CFG.maxHp;
 }
 document.getElementById('btnAdmApply').addEventListener('click', ()=>{ sClick(); adminTuneSave(); toastMsg('数值已应用，下一局生效'); });
@@ -5452,10 +5497,23 @@ document.getElementById('btnAdmPtSync').addEventListener('click', ()=>{
   ptunePublish(); ptuneAdmRender();
   if(hint) hint.textContent='已同步，当前 '+PTUNE.list.length+' 条单人调参';
 });
-document.getElementById('btnAdmReset').addEventListener('click', ()=>{ sClick(); lsSet('gunAdminTune',{}); location.reload(); });
+document.getElementById('btnAdmReset').addEventListener('click', ()=>{
+  sClick();
+  try{
+    lsSet('gunAdminTune',{});
+    adminTuneApply();
+    admRoleFill();
+    const hint=document.getElementById('admRoleHint');
+    if(hint){ hint.style.color='#7ee7a0'; hint.textContent='已恢复出厂数值：全部角色 + 全员血量'; }
+    admLog('角色数值恢复默认');
+  }catch(e){
+    const hint=document.getElementById('admRoleHint');
+    if(hint){ hint.style.color='#ff8fa0'; hint.textContent='恢复失败：'+(e&&e.message||e); }
+  }
+});
 document.getElementById('btnAdmCleanTest').addEventListener('click', async ()=>{
   sClick();
-  const stat=document.getElementById('admTuneHint');
+  const stat=document.getElementById('admNickHint');
   if(!(NET.client && NET.client.connected)){ if(stat) stat.textContent='中转未连接，先点刷新'; return; }
   const pats=[/^[A-Za-z]{2,4}\d{3,4}$/i,/^体检\d+$/,/^测试\d*$/,/^[A-Za-z]{3,5}Test/i];
   const targets=Object.entries(ADMIN.names).filter(([t,d])=>pats.some(p=>p.test(d.name||'')));
@@ -5479,8 +5537,23 @@ document.getElementById('adminList').addEventListener('click', async (e)=>{
   const b=e.target.closest('.admDel'); if(!b) return;
   const t=b.dataset.t, u=b.dataset.u; if(!t) return;
   if(!confirm('删除名字「'+(ADMIN.names[t]?ADMIN.names[t].name:'')+'」？删掉后这个名字可以被别人注册。')) return;
-  try{ NET.client.publish(t,'',{qos:1,retain:true}); if(u) NET.client.publish('gunfight9/card/'+fwKey(u),'',{qos:1,retain:true}); }catch(err){}
-  toastMsg('已删除'); b.closest('div').remove();
+  const delName=(ADMIN.names[t]&&ADMIN.names[t].name)||t;
+  // 昵称登记分散在 hivemq / mosquitto / emqx 三条通道，删除必须三通道一起清，否则会被旧 retained 读回来
+  const chans=[NT.cli, FW.cli, NET.client].filter(c=>c && c.connected);
+  const uniq=[...new Set(chans)];
+  uniq.forEach(c=>{
+    try{ c.publish(t,'',{qos:1,retain:true}); }catch(err){}
+    try{ if(u) c.publish('gunfight9/card/'+fwKey(u),'',{qos:1,retain:true}); }catch(err){}
+    try{ if(u) c.publish('gunfight9/online/'+fwKey(u),'',{qos:1,retain:true}); }catch(err){}
+  });
+  try{
+    delete ADMIN.names[t];
+    const n=Object.keys(ADMIN.names).length;
+    const stat=document.getElementById('adminStat');
+    if(stat) stat.innerHTML=stat.innerHTML.replace(/注册名字\s*\d+\s*个/, '注册名字 '+n+' 个');
+    admLog('删除名字：'+delName);
+  }catch(err){}
+  toastMsg('已删除'); const row=b.closest('div'); if(row) row.remove();
 });
 function adminBoot(){
   if(!/[?&]admin=1/.test(location.search)) return;
