@@ -861,7 +861,7 @@ body.is-touch .nhTime{display:none !important}
           <div style="font-size:13px;font-weight:800;color:#67e8f9;margin:4px 0 6px">角色数值（改完立刻对新开局生效）</div>
           <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">
             <select id="admRole" style="flex:1;min-width:120px;padding:7px;border-radius:8px;background:#0b1220;color:#e8eefc;border:1px solid rgba(255,255,255,.16);font-size:12px">
-              <option value="assault">突击手</option><option value="tank">重装</option><option value="sniper">神射手</option><option value="medic">医疗兵</option>
+              <option value="assault">突击手</option><option value="tank">重装</option><option value="sniper">神射手</option><option value="medic">医疗兵</option><option value="bulwark">堡垒</option><option value="engineer">铁匠</option><option value="jammer">静默</option>
             </select>
           </div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px">
@@ -1102,7 +1102,7 @@ body.is-touch .nhTime{display:none !important}
       </div>
     </div>
     <div class="overlay hidden" id="settingsScreen">
-      <div class="title">自定义设置 <span id="verTag" style="font-size:11px;color:#7d8aa8;font-weight:400;display:block;margin-top:2px">v2.7.17</span></div>
+      <div class="title">自定义设置 <span id="verTag" style="font-size:11px;color:#7d8aa8;font-weight:400;display:block;margin-top:2px">v2.7.18</span></div>
       <div id="settingsWrap" style="text-align:left;max-width:320px;line-height:2.2">
         <div>摇杆大小 <input type="range" id="setJoy" min="60" max="140" value="88" style="width:100%"></div>
         <div>开火键大小 <input type="range" id="setFire" min="50" max="120" value="74" style="width:100%"></div>
@@ -1146,6 +1146,7 @@ body.is-touch .nhTime{display:none !important}
         <div id="historyBox" style="display:none;margin-top:10px;border-top:1px solid rgba(255,255,255,.1);padding-top:10px">
           <div style="font-size:13px;font-weight:800;color:#67e8f9;margin-bottom:6px">修改历史</div>
           <div style="line-height:1.8">
+            <div><b style="color:#ffd34d">v2.7.18</b>　修好公告看完关掉、下次进游戏又重复弹出的问题（已看标记以前根本没存住）；公告发布后会自己回读一遍确认真的到服务器；准备室与新角色联机同步回归复核通过</div>
             <div><b style="color:#ffd34d">v2.7.17</b>　新增 3 个角色：堡垒（举盾 5 秒，正面减伤 60%、移速降 35%，背后照常吃伤害）、铁匠（脚下布雷，敌人踩到吃 55 伤害并减速，最多同时 3 颗）、静默（压制附近对手，3 秒不能放技能、冷却还额外 +2 秒）；三个角色都进准备室、5V5 配队与 AI；管理终端「对局参数」也能调这几项数值</div>
             <div><b style="color:#ffd34d">v2.7.16</b>　联机对决加准备室：房主选地图（3 张实时同步给对手），双方各自选角色和武器，两边都点「准备」才开始，3 秒倒计时开局；新增 3 把武器——轻机枪（连打 14 发过热、要等它散热）、双管霰弹（贴脸两发、打完等 1.8 秒）、手枪（出枪快、单发最准）；管理终端新增「对局参数」，可改过热弹数、散热时间、双管/手枪射速、准备室倒计时，改完能一键同步全服</div>
             <div><b style="color:#ffd34d">v2.7.15</b>　终端公告发不出去的原因找到了：公共中转偶尔连不上，点了只会在那儿等 9 秒超时。现在主中转连不上会自动换另一个（两个公共中转互为备用），发布时两条通道各写一份，不管玩家走哪条通道都能看到公告；同一条公告重复发布的间隔从 10 秒放宽到 5 秒</div>
@@ -1330,6 +1331,13 @@ const ROLES = {
     ai:{ jam:true } },
 };
 const ROLE_IDS = Object.keys(ROLES);
+/* 角色出厂数值：终端删掉某角色的调参后能真正还原回默认 */
+const ROLE_BASE={};
+for(const __id in ROLES){
+  const __r=ROLES[__id];
+  ROLE_BASE[__id]={speed:__r.speed, dmg:__r.dmg, fireCD:__r.fireCD,
+    bulletSpeed:__r.bulletSpeed, skillCd:(__r.skill&&__r.skill.cd)||0};
+}
 
 /* 武器：影响伤害、射速、弹道、射程。角色决定机动和技能，武器决定手感。 */
 const WEAPONS = {
@@ -4748,7 +4756,7 @@ function noticeApply(o){
   NOTICE.list = NOTICE.list.filter(x=>x.id!==n.id);
   NOTICE.list.unshift(n);
   NOTICE.list = NOTICE.list.slice(0,10);   // 历史保留 10 条，过期只标灰不删
-  const seen=lsGet('gunNoticeSeen','');
+  const seen=noticeSeenGet();
   NOTICE.cur = (n.id!==seen) ? n : (NOTICE.list.find(x=>x.id!==seen)||null);
   if(n.pin) NOTICE.cur=n;
   noticeSave(); noticeRender();
@@ -4773,7 +4781,7 @@ function noticeRender(){
   // 首页（菜单）有公告卡，顶部横幅只在登录页显示，避免同一条挂两遍；未读才显示
   const loginEl=document.getElementById('loginScreen');
   const inLogin=!!(loginEl && !loginEl.classList.contains('hidden'));
-  const seen=lsGet('gunNoticeSeen','');
+  const seen=noticeSeenGet();
   const top=noticeLive()[0]||null;
   if(bar){
     if(!top || !inLogin || top.id===seen || NOTICE.suppress || document.body.classList.contains('ended')){ bar.classList.add('hidden'); }
@@ -4870,9 +4878,12 @@ function noticeOpen(){
   if(!top) return;
   noticeOpenItem(top.id);
 }
+/* 已看过标记统一用 Raw 读写（lsSet 存字符串是裸串，lsGet 会 JSON.parse 失败） */
+function noticeSeenGet(){ return lsGetRaw('gunNoticeSeen'); }
+function noticeSeenSet(id){ lsSet('gunNoticeSeen', String(id||'')); }
 function noticeClose(){
   const top=noticeLive()[0] || NOTICE.cur;
-  if(top) lsSet('gunNoticeSeen', top.id);
+  if(top) noticeSeenSet(top.id);
   document.getElementById('noticeScreen').classList.add('hidden');
   if(NOTICE.fromList){   // 从历史列表进来的，关掉详情回列表
     NOTICE.fromList=false;
@@ -4968,7 +4979,7 @@ function noticeBoot(){
   noticeLoad();
   banLoad();
   ptuneLoad();
-  NOTICE.cur = NOTICE.list.find(x=> x.id!==lsGet('gunNoticeSeen','') && (!x.until||Date.now()<x.until)) || null;
+  NOTICE.cur = NOTICE.list.find(x=> x.id!==noticeSeenGet() && (!x.until||Date.now()<x.until)) || null;
   if(NOTICE.list.some(x=>x.pin)) NOTICE.cur = NOTICE.list.find(x=>x.pin);
   noticeRender();
   noticeConnect();
@@ -4983,6 +4994,24 @@ async function noticeReady(timeoutMs){
     waited+=step;
   }
   return !!(NT.cli && NT.cli.connected);
+}
+/* 发布回读校验：重新订阅一次 retained，确认这条公告真的到了服务器 */
+function noticeVerifyPublish(obj){
+  return new Promise(resolve=>{
+    const cli=NT.cli;
+    if(!cli || !cli.connected || !obj || !obj.id) return resolve(false);
+    let fin=false;
+    const onMsg=(t,pl)=>{
+      if(fin) return;
+      let o=null; try{ o=JSON.parse(pl.toString()||'null'); }catch(e){ return; }
+      if(t===NOTICE_TOPIC && o && o.id===obj.id){ fin=true; try{ cli.removeListener('message',onMsg); }catch(e){} resolve(true); }
+    };
+    try{
+      cli.on('message',onMsg);
+      cli.subscribe(NOTICE_TOPIC,{qos:1});
+      setTimeout(()=>{ if(!fin){ fin=true; try{ cli.removeListener('message',onMsg); }catch(e){} resolve(false); } }, 3200);
+    }catch(e){ resolve(false); }
+  });
 }
 function noticePublish(obj){ return ntPublish(NOTICE_TOPIC, JSON.stringify(obj)); }
 function noticeClearRemote(){ return ntPublish(NOTICE_TOPIC, ''); }
@@ -5049,9 +5078,18 @@ function admGameRead(){
               mineMax:num('admTuneMineMax',TUNE.mineMax), jamDur:num('admTuneJam',TUNE.jamDur) };
   return tuneNorm(raw)||{};
 }
+/* 角色下拉按 ROLES 全量生成：以后再加角色，终端不用手动改 */
+function admRoleFill(){
+  const sel=document.getElementById('admRole'); if(!sel) return;
+  const keep=sel.value;
+  sel.innerHTML=ROLE_IDS.map(id=>'<option value="'+id+'">'+ROLES[id].name+'</option>').join('');
+  if(ROLE_IDS.indexOf(keep)>=0) sel.value=keep;
+  adminTuneFill();
+}
 function admEnterBody(){
   document.getElementById('adminGate').style.display='none';
   document.getElementById('adminBody').style.display='block';
+  try{ admRoleFill(); }catch(e){}
   adminTuneFill();
   adminNoticeFill();
   try{ admGameFill(); }catch(e){}
@@ -5097,6 +5135,12 @@ document.getElementById('btnAdminClose').addEventListener('click', ()=>{ adminSh
 /* ---- 终端调参：写进本地存储，开局时套到 ROLES 上 ---- */
 function adminTuneLoad(){ return lsGet('gunAdminTune', {}); }
 function adminTuneApply(){
+  // 先全部回出厂值，再按保存的调参覆盖：删掉某角色的调参也能立刻还原
+  for(const id in ROLE_BASE){
+    const b=ROLE_BASE[id], r=ROLES[id]; if(!b||!r) continue;
+    r.speed=b.speed; r.dmg=b.dmg; r.fireCD=b.fireCD; r.bulletSpeed=b.bulletSpeed;
+    if(r.skill) r.skill.cd=b.skillCd;
+  }
   const t=adminTuneLoad();
   if(t.roles) for(const id in t.roles){
     const r=ROLES[id]; if(!r || !t.roles[id]) continue;
@@ -6006,8 +6050,14 @@ document.getElementById('btnAdmNoticePub').addEventListener('click', async ()=>{
   const err=await noticePublish(obj);
   if(err){ hint.style.color='#ff8fa0'; hint.textContent=err; admLog('公告发布失败：'+err); return; }
   lastPubAt=Date.now();
-  hint.style.color='#7ee7a0'; hint.textContent='已发布：'+title+'（'+(days>0?days+' 天后过期':'永久')+'）';
-  admLog('发布公告：'+title);
+  const ok=await noticeVerifyPublish(obj);
+  if(ok){
+    hint.style.color='#7ee7a0'; hint.textContent='已发布并确认全服可见：'+title+'（'+(days>0?days+' 天后过期':'永久')+'）';
+    admLog('发布公告（已回读确认）：'+title);
+  }else{
+    hint.style.color='#ffd34d'; hint.textContent='已提交，但 3 秒内没读回（服务器可能延迟，稍后重开页面确认）';
+    admLog('发布公告（未读回）：'+title);
+  }
   noticeApply(obj);
 });
 document.getElementById('btnAdmNoticeDel').addEventListener('click', async ()=>{
