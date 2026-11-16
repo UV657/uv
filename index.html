@@ -987,7 +987,7 @@ body.is-touch .nhTime{display:none !important}
 .rankName{flex:1;min-width:0;font-size:13px;color:#dbe6f7;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .rankName em{font-style:normal;font-size:10.5px;color:#7d8aa8;margin-left:6px}
 .rankVal{flex:none;font-size:12.5px;font-weight:800;color:#a5f3fc}
-.rankDim{flex:1;padding:7px;border-radius:9px;font-size:12px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);color:#9fb2d0;cursor:pointer}
+.rankDim{flex:1 1 30%;min-width:78px;padding:7px;border-radius:9px;font-size:12px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);color:#9fb2d0;cursor:pointer}
 .rankDim.on{background:rgba(34,211,238,.22);border-color:rgba(103,232,249,.6);color:#e8f7ff;font-weight:800}
 </style>
     <!-- 全服公告 -->
@@ -1193,14 +1193,14 @@ body.is-touch .nhTime{display:none !important}
           </div>
           <button id="rankClose" style="width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);color:#cdd9f0;font-size:16px;cursor:pointer">✕</button>
         </div>
-        <div id="rankDims" style="display:flex;gap:6px;margin-bottom:10px"></div>
+        <div id="rankDims" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px"></div>
         <div id="rankList" style="max-height:56vh;overflow-y:auto"></div>
-        <div style="font-size:11px;color:#7d8aa8;margin-top:10px;line-height:1.7">榜单取全服玩家自己发布的明信片数据，有人更新会自动刷新；点任意一行可以看他的明信片。</div>
+        <div style="font-size:11px;color:#7d8aa8;margin-top:10px;line-height:1.7">榜单取全服玩家自己发布的明信片数据，有人更新会自动刷新；点任意一行可以看他的明信片。<br>「今日」两个榜只算当天的战绩，每天 0 点自动换榜归零。</div>
         <div class="rowBtns" style="margin-top:12px"><button class="btn" id="rankBack">返 回</button></div>
       </div>
     </div>
     <div class="overlay hidden" id="settingsScreen">
-      <div class="title">自定义设置 <span id="verTag" style="font-size:11px;color:#7d8aa8;font-weight:400;display:block;margin-top:2px">v2.8.8</span></div>
+      <div class="title">自定义设置 <span id="verTag" style="font-size:11px;color:#7d8aa8;font-weight:400;display:block;margin-top:2px">v2.8.9</span></div>
       <div id="settingsWrap" style="text-align:left;max-width:320px;line-height:2.2">
         <div>摇杆大小 <input type="range" id="setJoy" min="60" max="140" value="88" style="width:100%"></div>
         <div>开火键大小 <input type="range" id="setFire" min="50" max="120" value="74" style="width:100%"></div>
@@ -1244,6 +1244,7 @@ body.is-touch .nhTime{display:none !important}
         <div id="historyBox" style="display:none;margin-top:10px;border-top:1px solid rgba(255,255,255,.1);padding-top:10px">
           <div style="font-size:13px;font-weight:800;color:#67e8f9;margin-bottom:6px">修改历史</div>
           <div style="line-height:1.8">
+            <div><b style="color:#ffd34d">v2.8.9</b>　排行榜新增「今日击杀 / 今日胜场」，只算当天战绩、每天 0 点自动换榜归零；自检新增本地数据健康检查，发现问题在面板顶部一键修复后自动重新检查</div>
             <div><b style="color:#ffd34d">v2.8.8</b>　玩法说明书每张地图加了俯视示意图（障碍与红蓝出生点都画出来）；首页顶部新增排行榜入口卡（击杀 / 胜场 / 段位 / 点赞 实时更新，点谁看谁的明信片）；公告同步改为双中转各发一份并逐台回读确认</div>
             <div><b style="color:#ffd34d">v2.8.7</b>　新增排行榜：击杀 / 胜场 / 段位分 / 点赞 四个榜，全服实时刷新，点任意一位可以看他的明信片（自己那行会高亮）</div>
             <div><b style="color:#ffd34d">v2.8.6</b>　战场地图新增 4 张（5V5：集装箱堆场、双门推进；1V1：中央回字、长廊对峙），共 10 张，说明书已同步；手机操作说明整章并入玩法说明书，去掉独立入口</div>
@@ -1747,6 +1748,22 @@ function rankUpdate(win, grade){
 
 /* ---- 生涯战绩（本地存储，绑定 uid） ---- */
 function profBlank(){ return {uid:ensureUid(), matches:0,wins:0,kills:0,deaths:0,dmg:0,streak:0,best:0,recent:[]}; }
+/* 每日榜：按自然日统计，跨天自动归零（榜单每天更新靠这里） */
+function dayKey(){
+  const d=new Date();
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+function dailyLoad(){
+  let v=lsGet('gunDaily', null);
+  if(!v || typeof v!=='object' || v.day!==dayKey()) v={day:dayKey(), kills:0, wins:0, matches:0};
+  return v;
+}
+function dailyAdd(k, win){
+  const v=dailyLoad();
+  v.kills+=(+k||0); if(win) v.wins++; v.matches++;
+  lsSet('gunDaily', v);
+  return v;
+}
 function profLoad(){
   const uid=ensureUid();
   const v=lsGet('gunProfile',null);
@@ -1763,6 +1780,8 @@ function profRecord(win,k,d,dmg,grade){
   v.recent.unshift({t:Date.now(),mode:state.mode,win, r:state.scores.red, b:state.scores.blue, k, d, dmg, g:grade||''});
   v.recent=v.recent.slice(0,10);
   profSave(v);
+  try{ dailyAdd(k, win); }catch(e){}
+  try{ fwPublishCard(); }catch(e){}   // 战绩变了立刻更新全服明信片，排行榜随之刷新
 }
 
 function buildPlayers(){
@@ -3760,7 +3779,7 @@ document.getElementById('btnEnter').addEventListener('click', async ()=>{
 /* ================= 运行时自检 ================= */
 function runSelfCheck(){
   const r=[];
-  const ok=(n,cond,detail)=>r.push({n, ok:!!cond, d:detail||''});
+  const ok=(n,cond,detail,fix)=>r.push({n, ok:!!cond, d:detail||'', fix:(typeof fix==='function'?fix:null)});
 
   // 1. 渲染环境
   ok('Canvas 2D 上下文可用', !!(ctx2d && ctx2d.fillRect));
@@ -3993,6 +4012,16 @@ function runSelfCheck(){
   // 10. 无 JS 错误标记
   ok('本次会话无未捕获错误', !document.body.getAttribute('data-js-error'));
 
+  // 11. 本地数据健康（坏了能自己修）
+  ok('本地战绩档案可读', (()=>{ try{ const p=profLoad(); return !!(p && typeof p.matches==='number' && typeof p.kills==='number'); }catch(e){ return false; } })(),
+     '', ()=>{ const v={matches:0,wins:0,kills:0,deaths:0,dmg:0,streak:0,best:0,recent:[]}; v.uid=ensureUid(); lsSet('gunProfile', v); return true; });
+  ok('明信片卡面合法', (()=>{ try{ const c=fwCardLocal(); return !!CARD_THEMES[c.color]; }catch(e){ return true; } })(),
+     '', ()=>{ const c=lsGet('gunCard',{})||{}; c.color='cyan'; lsSet('gunCard', c); return true; });
+  ok('昵称有效', (()=>{ const n=(currentNick()||'').trim(); return n.length>0 && n.length<=12; })(),
+     '', ()=>{ const n=('玩家'+(ensureUid()||'').slice(-4)).slice(0,12); lsSet('gunNick', n); return true; });
+  ok('每日战绩可读', (()=>{ try{ const d=dailyLoad(); return !!(d && typeof d.kills==='number' && d.day===dayKey()); }catch(e){ return false; } })(),
+     '', ()=>{ lsSet('gunDaily', {day:dayKey(), kills:0, wins:0, matches:0}); return true; });
+
   return r;
 }
 function showSelfCheck(){
@@ -4013,6 +4042,17 @@ function showSelfCheck(){
       const sm=document.getElementById('scSum');
       if(sm){ sm.style.color=(pass===list.length?'#5eead4':'#ff9f9f'); sm.textContent=pass+' / '+list.length+' 项通过'; }
       console.log('[自检]', pass+'/'+list.length, list.filter(x=>!x.ok));
+      const fixable=list.filter(x=>!x.ok && typeof x.fix==='function');
+      if(fixable.length && sm){
+        sm.insertAdjacentHTML('afterend','<div id="scFixBar" style="margin:6px 0 8px;text-align:left"><button class="btn" id="btnSelfFix" style="width:100%;padding:10px;font-size:13px">一键修复 '+fixable.length+' 项并重新检查</button><div style="font-size:11px;color:#7d8aa8;margin-top:6px;line-height:1.7">能自动修的是本地数据类问题（档案、卡面、昵称、每日统计）；代码或渲染类问题修不了，会继续标红等你反馈。</div></div>');
+        const b=document.getElementById('btnSelfFix');
+        if(b) b.addEventListener('click', ()=>{
+          let n=0;
+          fixable.forEach(x=>{ try{ if(x.fix()) n++; }catch(e){} });
+          sClick(); toastMsg(n?('已修复 '+n+' 项，正在重新检查…'):'这几项自动修不了，需要人工处理');
+          setTimeout(()=>{ try{ showSelfCheck(); }catch(e){} }, 500);
+        });
+      }
       return;
     }
     const x=list[i++];
@@ -4734,6 +4774,7 @@ function fwMyCard(){
     color: loc.color||'cyan',
     rank: ri.name, pts: ri.pts,
     kills: p.kills||0, wins: p.wins||0, matches: p.matches||0, best: p.best||0,
+    day: dailyLoad().day, dayKills: dailyLoad().kills, dayWins: dailyLoad().wins,
     ts: Date.now()
   };
 }
@@ -5976,15 +6017,17 @@ function fwShowCard(uid){
 
 /* ===== 排行榜：全服明信片数据实时聚合，点一行看明信片 ===== */
 const RANK={cards:{},likes:{},dim:'kills',timer:null};
-const RANK_DIMS=[['kills','击杀'],['wins','胜场'],['pts','段位分'],['likes','点赞']];
+const RANK_DIMS=[['kills','击杀'],['dayKills','今日击杀'],['wins','胜场'],['dayWins','今日胜场'],['pts','段位分'],['likes','点赞']];
 function rankTouch(){ if(RANK.timer) return; RANK.timer=setTimeout(()=>{ RANK.timer=null; rankRender(); },500); }
 function rankData(){
   const map={};
   const put=(c,own)=>{
     if(!c || !c.uid) return;
     const k=fwKey(c.uid), prev=map[k]||{};
+    const today=(c.day===dayKey());
     map[k]={ uid:c.uid, name:(c.name||prev.name||'').trim(), kills:+(c.kills||0), wins:+(c.wins||0),
       pts:+(c.pts||0), matches:+(c.matches||0), rank:c.rank||prev.rank||'青铜',
+      dayKills: today?+(c.dayKills||0):0, dayWins: today?+(c.dayWins||0):0,
       likes:RANK.likes[k]||0, own:!!own };
   };
   Object.keys(RANK.cards).forEach(k=>put(RANK.cards[k]));
@@ -6004,7 +6047,7 @@ function rankRender(){
   if(dimsEl) [].forEach.call(dimsEl.children, b=>b.classList.toggle('on', b.dataset.dim===RANK.dim));
   const all=rankData().sort((a,b)=>(b[RANK.dim]||0)-(a[RANK.dim]||0) || (b.kills-a.kills));
   const rows=all.slice(0,60);
-  const unit={kills:'杀',wins:'胜',pts:'分',likes:'赞'}[RANK.dim];
+  const unit={kills:'杀',dayKills:'杀',wins:'胜',dayWins:'胜',pts:'分',likes:'赞'}[RANK.dim];
   const cnt=document.getElementById('rankCount'); if(cnt) cnt.textContent=all.length?all.length+' 人上榜':'';
   const me=all.findIndex(r=>r.own);
   if(!rows.length){ list.innerHTML='<div style="font-size:12px;color:#7d8aa8;padding:14px 2px">还没有收到别人的战绩，等几个玩家进过游戏就会出现在这里</div>'; return; }
