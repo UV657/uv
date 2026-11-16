@@ -704,6 +704,14 @@ body.is-touch .nhTime{display:none !important}
         </div>
         <div class="nhMain" id="nhMain"></div>
       </div>
+      <div id="rankHero" style="display:flex;align-items:center;gap:10px;margin:10px 0 2px;padding:11px 13px;border-radius:12px;cursor:pointer;background:linear-gradient(90deg,rgba(255,211,77,.14),rgba(34,211,238,.10));border:1px solid rgba(255,211,77,.34)">
+        <span style="flex:none;width:26px;height:26px;border-radius:8px;background:rgba(255,211,77,.2);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:900;color:#ffd75e">1</span>
+        <span style="flex:1;min-width:0;text-align:left">
+          <span style="display:block;font-size:13.5px;font-weight:800;color:#ffe9a8;letter-spacing:.5px">排行榜</span>
+          <span style="display:block;font-size:10.5px;color:#9fb2d0;margin-top:2px">击杀 · 胜场 · 段位 · 点赞 实时更新，点谁看谁的明信片</span>
+        </span>
+        <span style="flex:none;font-size:11px;color:#67e8f9;border:1px solid rgba(103,232,249,.4);border-radius:999px;padding:2px 8px">查看</span>
+      </div>
       <div class="modeGrid">
         <div class="modeCard" id="mode5v5">
           <div class="mcName red">5V5 团队战</div>
@@ -1192,7 +1200,7 @@ body.is-touch .nhTime{display:none !important}
       </div>
     </div>
     <div class="overlay hidden" id="settingsScreen">
-      <div class="title">自定义设置 <span id="verTag" style="font-size:11px;color:#7d8aa8;font-weight:400;display:block;margin-top:2px">v2.8.7</span></div>
+      <div class="title">自定义设置 <span id="verTag" style="font-size:11px;color:#7d8aa8;font-weight:400;display:block;margin-top:2px">v2.8.8</span></div>
       <div id="settingsWrap" style="text-align:left;max-width:320px;line-height:2.2">
         <div>摇杆大小 <input type="range" id="setJoy" min="60" max="140" value="88" style="width:100%"></div>
         <div>开火键大小 <input type="range" id="setFire" min="50" max="120" value="74" style="width:100%"></div>
@@ -1236,6 +1244,7 @@ body.is-touch .nhTime{display:none !important}
         <div id="historyBox" style="display:none;margin-top:10px;border-top:1px solid rgba(255,255,255,.1);padding-top:10px">
           <div style="font-size:13px;font-weight:800;color:#67e8f9;margin-bottom:6px">修改历史</div>
           <div style="line-height:1.8">
+            <div><b style="color:#ffd34d">v2.8.8</b>　玩法说明书每张地图加了俯视示意图（障碍与红蓝出生点都画出来）；首页顶部新增排行榜入口卡（击杀 / 胜场 / 段位 / 点赞 实时更新，点谁看谁的明信片）；公告同步改为双中转各发一份并逐台回读确认</div>
             <div><b style="color:#ffd34d">v2.8.7</b>　新增排行榜：击杀 / 胜场 / 段位分 / 点赞 四个榜，全服实时刷新，点任意一位可以看他的明信片（自己那行会高亮）</div>
             <div><b style="color:#ffd34d">v2.8.6</b>　战场地图新增 4 张（5V5：集装箱堆场、双门推进；1V1：中央回字、长廊对峙），共 10 张，说明书已同步；手机操作说明整章并入玩法说明书，去掉独立入口</div>
             <div><b style="color:#ffd34d">v2.8.5</b>　界面细节修复：滚动与布局更顺，标题区不再遮挡内容</div>
@@ -5345,24 +5354,57 @@ async function noticeReady(timeoutMs){
 }
 /* 发布回读校验：重新订阅一次 retained，确认这条公告真的到了服务器 */
 function noticeVerifyPublish(obj){
-  return new Promise(resolve=>{
-    const cli=NT.cli;
-    if(!cli || !cli.connected || !obj || !obj.id) return resolve(false);
+  // 用全新连接分别回读两台中转（模拟真正的玩家），任意一台读到就能保证玩家看得到
+  const one=(url)=>new Promise(async resolve=>{
+    let mqtt=null; try{ mqtt=await loadMqttLib(); }catch(e){ return resolve(false); }
+    let c=null;
+    try{ c=mqtt.connect(url,{clientId:ntClientId(), clean:true, reconnectPeriod:0, connectTimeout:5000, keepalive:20}); }catch(e){ return resolve(false); }
     let fin=false;
-    const onMsg=(t,pl)=>{
-      if(fin) return;
-      let o=null; try{ o=JSON.parse(pl.toString()||'null'); }catch(e){ return; }
-      if(t===NOTICE_TOPIC && o && o.id===obj.id){ fin=true; try{ cli.removeListener('message',onMsg); }catch(e){} resolve(true); }
+    const done=(ok)=>{ if(fin) return; fin=true; try{ c.end(true); }catch(e){} resolve(ok); };
+    c.on('connect', ()=>{ try{ c.subscribe(NOTICE_TOPIC,{qos:1}); }catch(e){} });
+    c.on('message',(t,pl)=>{ if(fin) return; let o=null; try{ o=JSON.parse(pl.toString()||'null'); }catch(e){ return; } if(t===NOTICE_TOPIC && o && o.id===obj.id) done(true); });
+    c.on('error', ()=>{});
+    setTimeout(()=>done(false), 6000);
+  });
+  if(!obj || !obj.id) return Promise.resolve(false);
+  return (async ()=>{
+    for(const u of NT_BROKERS){ if(await one(u)) return true; }
+    return false;
+  })();
+}
+/* 公告必须两台中转各发一份：玩家可能连任意一台，只发一台就会出现"发了但全服看不到" */
+function ntPubOne(url, topic, payload){
+  return new Promise(async resolve=>{
+    let mqtt=null; try{ mqtt=await loadMqttLib(); }catch(e){ return resolve(false); }
+    let c=null;
+    try{ c=mqtt.connect(url,{clientId:ntClientId(), clean:true, reconnectPeriod:0, connectTimeout:5000, keepalive:20}); }catch(e){ return resolve(false); }
+    let fin=false;
+    const done=(ok)=>{
+      if(fin) return; fin=true;
+      if(ok){ try{ c.publish(topic, payload, {qos:1, retain:true}, ()=>{ try{c.end(true);}catch(e){} resolve(true); }); return; }catch(e){} }
+      try{ c.end(true); }catch(e){}
+      resolve(false);
     };
-    try{
-      cli.on('message',onMsg);
-      cli.subscribe(NOTICE_TOPIC,{qos:1});
-      setTimeout(()=>{ if(!fin){ fin=true; try{ cli.removeListener('message',onMsg); }catch(e){} resolve(false); } }, 3200);
-    }catch(e){ resolve(false); }
+    c.once('connect', ()=>done(true));
+    c.once('error', ()=>done(false));
+    setTimeout(()=>done(false), 7000);
   });
 }
-function noticePublish(obj){ return ntPublish(NOTICE_TOPIC, JSON.stringify(obj)); }
-function noticeClearRemote(){ return ntPublish(NOTICE_TOPIC, ''); }
+async function ntPublishAll(topic, payload){
+  // 串行发 + 失败重试：公共中转偶尔限流，并发建连更容易被拒
+  let okCount=0;
+  for(const u of NT_BROKERS){
+    let done=false;
+    for(let i=0;i<3 && !done;i++){
+      if(i) await new Promise(r=>setTimeout(r,1400));
+      done = await ntPubOne(u, topic, payload);
+    }
+    if(done) okCount++;
+  }
+  return okCount ? '' : '两个中转都发不出去（网络问题，稍后再试）';
+}
+function noticePublish(obj){ return ntPublishAll(NOTICE_TOPIC, JSON.stringify(obj)); }
+function noticeClearRemote(){ return ntPublishAll(NOTICE_TOPIC, ''); }
 function maintPublish(on){ return ntPublish(NOTICE_STATUS_TOPIC, JSON.stringify({mt:on?1:0, ts:Date.now()})); }
 /* ================= 管理终端（?admin=1） ================= */
 
@@ -6766,10 +6808,19 @@ bindBtn('fbCopy', ()=>{
   }
 });
 bindBtn('btnRank', ()=>{ menuScreen.classList.add('hidden'); rankOpen(); });
+(function(){ const h=document.getElementById('rankHero'); if(h) h.addEventListener('click', ()=>{ sClick(); menuScreen.classList.add('hidden'); rankOpen(); }); })();
 bindBtn('btnRank2', ()=>{ document.getElementById('profileScreen').classList.add('hidden'); rankOpen(); });
 bindBtn('btnHelp', ()=>{ buildHelp(); menuScreen.classList.add('hidden'); helpScreen.classList.remove('hidden'); });
 bindBtn('btnHelpBack', ()=>{ helpScreen.classList.add('hidden'); menuScreen.classList.remove('hidden'); renderRankBar(); });
 
+/* 地图示意图：按真实障碍坐标画俯视缩略图（红线红点是红方出生，蓝点蓝方） */
+function mapSvg(obs, W, H, redSpawn, blueSpawn){
+  const body=(obs||[]).map(o=>'<rect x="'+o.x+'" y="'+o.y+'" width="'+o.w+'" height="'+o.h+'" fill="#2d4a68" stroke="#5b8fb8" stroke-width="2.5" rx="3"/>').join('');
+  const rs=(redSpawn||[]).map(p=>'<circle cx="'+p.x+'" cy="'+p.y+'" r="9" fill="#ff6b7a" stroke="#ffd0d5" stroke-width="1.5"/>').join('');
+  const bs=(blueSpawn||[]).map(p=>'<circle cx="'+p.x+'" cy="'+p.y+'" r="9" fill="#5ec8ff" stroke="#d8f2ff" stroke-width="1.5"/>').join('');
+  return '<svg viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="xMidYMid meet" style="width:100%;display:block;margin:7px 0 5px;border-radius:8px;background:#091321;border:1px solid rgba(120,180,255,.2)">'
+    +'<rect x="0" y="0" width="'+W+'" height="'+H+'" fill="#091321"/>'+body+rs+bs+'</svg>';
+}
 /* 玩法说明书（首页按钮打开） */
 function buildHelp(){
   const rows=ROLE_IDS.map(r=>{const o=ROLES[r];
@@ -6786,8 +6837,14 @@ function buildHelp(){
     ['1V1','双塔对峙','两座竖塔 + 左右小掩体','卡塔侧视野打预瞄，用侧掩体换血再进'],
     ['1V1','中央回字','四块掩体围成回字，中间留空','绕圈走位，从缺口切进去贴脸'],
     ['1V1','长廊对峙','上下两道长墙，中央小掩体','远距离对枪消耗，靠中央掩体换角度'],
-  ].map(r=>'<div class="mapItem"><div class="mapHead">'+r[0]+' · '+r[1]+'</div>'
-    +'<div class="mapLine">地形：'+r[2]+'</div><div class="mapLine">打法：'+r[3]+'</div></div>').join('');
+  ].map(r=>{
+    const mode = r[0]==='5V5' ? '5v5' : '1v1';
+    const conf = CFG.modes[mode];
+    const m = (MAPS[mode]||[]).find(x=>x.name===r[1]);
+    const pic = m ? mapSvg(m.obs, conf.W, conf.H, conf.redSpawn, conf.blueSpawn) : '';
+    return '<div class="mapItem"><div class="mapHead">'+r[0]+' · '+r[1]+'</div>'+pic
+      +'<div class="mapLine">地形：'+r[2]+'</div><div class="mapLine">打法：'+r[3]+'</div></div>';
+  }).join('');
   document.getElementById('helpBody').innerHTML =
     '<h4>一、游戏模式</h4>'+
     '<div><b>5V5 团队战</b>：红蓝各 5 人，你带 4 名 AI 队友对战 5 名 AI 敌人，先到 30 杀，或 3 分钟结束击杀多者胜；角色随机分配，只需选择难度与地图。</div>'+
