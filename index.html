@@ -1102,7 +1102,7 @@ body.is-touch .nhTime{display:none !important}
       </div>
     </div>
     <div class="overlay hidden" id="settingsScreen">
-      <div class="title">自定义设置 <span id="verTag" style="font-size:11px;color:#7d8aa8;font-weight:400;display:block;margin-top:2px">v2.7.18</span></div>
+      <div class="title">自定义设置 <span id="verTag" style="font-size:11px;color:#7d8aa8;font-weight:400;display:block;margin-top:2px">v2.7.19</span></div>
       <div id="settingsWrap" style="text-align:left;max-width:320px;line-height:2.2">
         <div>摇杆大小 <input type="range" id="setJoy" min="60" max="140" value="88" style="width:100%"></div>
         <div>开火键大小 <input type="range" id="setFire" min="50" max="120" value="74" style="width:100%"></div>
@@ -1146,6 +1146,7 @@ body.is-touch .nhTime{display:none !important}
         <div id="historyBox" style="display:none;margin-top:10px;border-top:1px solid rgba(255,255,255,.1);padding-top:10px">
           <div style="font-size:13px;font-weight:800;color:#67e8f9;margin-bottom:6px">修改历史</div>
           <div style="line-height:1.8">
+            <div><b style="color:#ffd34d">v2.7.19</b>　修好公共中转读取不完整的问题（以前只读一条通道，名字登记表会显示空白）；顺手清掉测试期残留的 3 个昵称与卡片</div>
             <div><b style="color:#ffd34d">v2.7.18</b>　修好公告看完关掉、下次进游戏又重复弹出的问题（已看标记以前根本没存住）；公告发布后会自己回读一遍确认真的到服务器；准备室与新角色联机同步回归复核通过</div>
             <div><b style="color:#ffd34d">v2.7.17</b>　新增 3 个角色：堡垒（举盾 5 秒，正面减伤 60%、移速降 35%，背后照常吃伤害）、铁匠（脚下布雷，敌人踩到吃 55 伤害并减速，最多同时 3 颗）、静默（压制附近对手，3 秒不能放技能、冷却还额外 +2 秒）；三个角色都进准备室、5V5 配队与 AI；管理终端「对局参数」也能调这几项数值</div>
             <div><b style="color:#ffd34d">v2.7.16</b>　联机对决加准备室：房主选地图（3 张实时同步给对手），双方各自选角色和武器，两边都点「准备」才开始，3 秒倒计时开局；新增 3 把武器——轻机枪（连打 14 发过热、要等它散热）、双管霰弹（贴脸两发、打完等 1.8 秒）、手枪（出枪快、单发最准）；管理终端新增「对局参数」，可改过热弹数、散热时间、双管/手枪射速、准备室倒计时，改完能一键同步全服</div>
@@ -5035,11 +5036,20 @@ async function adminLoad(){
     const name=d.n||d.name||''; if(!name) return;
     ADMIN.names[t]={name, uid:d.uid||''};
   };
-  try{ NET.client.on('message',h); NET.client.subscribe('gunfight9/nick/+',{qos:1}); }catch(e){}
+  // 昵称登记写在 hivemq / mosquitto（公告·好友通道），联机中转是 emqx 读不到；
+  // 这里把能连上的通道全都订阅一遍，名字库才不会显示 0 条
+  const clis=[];
+  try{ if(!(NT.cli && NT.cli.connected)) await noticeConnect(); }catch(e){}
+  if(NT.cli && NT.cli.connected) clis.push(NT.cli);
+  if(FW.cli && FW.cli.connected) clis.push(FW.cli);
+  if(NET.client && NET.client.connected) clis.push(NET.client);
+  const uniq=[...new Set(clis)];
+  uniq.forEach(c=>{ try{ c.on('message',h); c.subscribe('gunfight9/nick/+',{qos:1}); }catch(e){} });
   await new Promise(r=>setTimeout(r,4200));
-  try{ NET.client.removeListener('message',h); }catch(e){}
+  uniq.forEach(c=>{ try{ c.removeListener('message',h); }catch(e){} });
   const arr=Object.entries(ADMIN.names);
-  stat.innerHTML='注册名字 '+arr.length+' 个 · 当前房间 '+(NET.code?NET.code:'无')+' · 中转 '+(NET.client&&NET.client.connected?'已连接':'未连接');
+  const src=uniq.length?('已连接 '+(uniq.length>1?uniq.length+' 条':'1 条')+'通道'):'未连接';
+  stat.innerHTML='注册名字 '+arr.length+' 个 · 当前房间 '+(NET.code?NET.code:'无')+' · 中转 '+src;
   list.innerHTML = arr.length ? arr.map(([t,d])=>
     '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;background:#0b1220;border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:8px 10px">'
     +'<div style="min-width:0"><div style="font-size:13px;color:#e8eefc;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(d.name)+'</div>'
