@@ -787,6 +787,10 @@ body.is-touch .nhTime{display:none !important}
             <label class="admField">口令<input id="adminPass" type="password" placeholder="输入管理口令" class="admInput"></label>
             <button class="btn" id="btnAdminLogin" style="width:100%;margin-top:6px;padding:10px;font-size:13px">进入后台</button>
             <div id="adminErr" style="font-size:12px;color:#ff8fa0;margin-top:8px;min-height:16px"></div>
+            <div class="admHint" style="margin-top:6px;font-size:11px">
+              这里是运营后台，仅通过 <b style="color:#8be9ff">?admin=1</b> 进入，玩家看不到这一页。<br>
+              公告、封号/禁言、对局参数与单人调参会同步到全服；角色数值只作用于本机。
+            </div>
           </div>
         </div>
 
@@ -924,6 +928,13 @@ body.is-touch .nhTime{display:none !important}
     <style>body.in-game #noticeBar,body.in-game #maintBar,body.ended #noticeBar,body.ended #maintBar{display:none !important}
 /* ===== 管理终端样式（2026 改版：卡片分组、统一输入、可滚动顶栏） ===== */
 #adminScreen{position:fixed !important;inset:0 !important;z-index:9999 !important;background:#05070d !important;border-radius:0 !important}
+#adminScreen::before{content:'';position:absolute;inset:0;pointer-events:none;background:
+ radial-gradient(1200px 620px at 18% -12%, rgba(34,211,238,.11), transparent 62%),
+ radial-gradient(900px 520px at 112% 8%, rgba(59,130,246,.09), transparent 62%),
+ linear-gradient(rgba(103,232,249,.038) 1px, transparent 1px) 0 0/34px 34px,
+ linear-gradient(90deg, rgba(103,232,249,.038) 1px, transparent 1px) 0 0/34px 34px}
+#admWrap{position:relative;z-index:1}
+#adminGate{padding-top:10vh}
 @media (min-width:900px){
   #admWrap{max-width:1180px !important;margin:0 auto}
   #adminBody{display:grid !important;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;align-items:start}
@@ -933,7 +944,7 @@ body.is-touch .nhTime{display:none !important}
 .admTop{position:sticky;top:0;z-index:6;display:flex;align-items:center;justify-content:space-between;padding:10px 0 12px;margin-bottom:4px;background:#05070d;box-shadow:0 10px 18px rgba(5,7,13,.92);text-align:left}
 .admT{font-size:17px;font-weight:800;color:#67e8f9;letter-spacing:.5px}
 .admTSub{font-size:10.5px;color:#5f748c;letter-spacing:1.2px;margin-top:2px}
-.admCard{background:linear-gradient(180deg,rgba(16,26,42,.96),rgba(8,13,22,.96));border:1px solid rgba(103,232,249,.18);border-radius:16px;padding:13px 13px 11px;margin-bottom:11px;box-shadow:0 6px 20px rgba(0,0,0,.35);text-align:left}
+.admCard{background:linear-gradient(180deg,rgba(16,26,42,.96),rgba(8,13,22,.96));border:1px solid rgba(103,232,249,.18);border-radius:16px;padding:13px 13px 11px;margin-bottom:11px;box-shadow:0 4px 14px rgba(0,0,0,.24);text-align:left}
 .admH{display:flex;align-items:baseline;gap:8px;font-size:13.5px;font-weight:800;color:#8be9ff;letter-spacing:.3px;margin-bottom:10px}
 .admSub{font-size:10.5px;color:#6f8399;font-weight:400}
 .admField{display:block;font-size:11.5px;color:#9fb2d0;margin-bottom:8px;text-align:left}
@@ -1152,7 +1163,7 @@ body.is-touch .nhTime{display:none !important}
       </div>
     </div>
     <div class="overlay hidden" id="settingsScreen">
-      <div class="title">自定义设置 <span id="verTag" style="font-size:11px;color:#7d8aa8;font-weight:400;display:block;margin-top:2px">v2.8.1</span></div>
+      <div class="title">自定义设置 <span id="verTag" style="font-size:11px;color:#7d8aa8;font-weight:400;display:block;margin-top:2px">v2.8.2</span></div>
       <div id="settingsWrap" style="text-align:left;max-width:320px;line-height:2.2">
         <div>摇杆大小 <input type="range" id="setJoy" min="60" max="140" value="88" style="width:100%"></div>
         <div>开火键大小 <input type="range" id="setFire" min="50" max="120" value="74" style="width:100%"></div>
@@ -5302,7 +5313,24 @@ function maintPublish(on){ return ntPublish(NOTICE_STATUS_TOPIC, JSON.stringify(
 const VER_PROBE='https://uv657.github.io/uv/version.json';
 const ADMIN_PASS='liuweijun2026';     // 想改口令就改这一行
 const ADMIN={open:false, names:{}};
-function adminShow(on){ ADMIN.open=on; document.getElementById('adminScreen').classList.toggle('hidden', !on); }
+function adminShow(on){
+  ADMIN.open=on;
+  const scr=document.getElementById('adminScreen');
+  scr.classList.toggle('hidden', !on);
+  const stage=document.getElementById('stage');
+  if(stage){
+    [...stage.children].forEach(el=>{
+      if(el===scr) return;
+      if(on){
+        if(el.dataset.admPrev==null) el.dataset.admPrev=(el.style.display||'');
+        el.style.display='none';
+      } else if(el.dataset.admPrev!=null){
+        el.style.display=el.dataset.admPrev;
+        delete el.dataset.admPrev;
+      }
+    });
+  }
+}
 async function adminLoad(){
   const stat=document.getElementById('adminStat'), list=document.getElementById('adminList');
   stat.textContent='正在读取中转数据…';
