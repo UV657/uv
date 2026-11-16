@@ -186,6 +186,7 @@ kbd{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);bord
 .roleCard .rcBar{height:4px;border-radius:2px;background:rgba(255,255,255,.1);margin:3px 0;overflow:hidden}
 .roleCard .rcBar i{display:block;height:100%;background:linear-gradient(90deg,#22d3ee,#67e8f9)}
 .roleCard .rcSkill{font-size:10.5px;color:#9fb2d0;line-height:1.5}
+.roleCard .rcStat{font-size:9.5px;color:#8fa3c0;line-height:1.45}
 
 /* 结算 MVP 动画 */
 #mvpWrap,#loserWrap{display:flex;flex-direction:column;align-items:center;gap:10px}
@@ -1102,7 +1103,7 @@ body.is-touch .nhTime{display:none !important}
       </div>
     </div>
     <div class="overlay hidden" id="settingsScreen">
-      <div class="title">自定义设置 <span id="verTag" style="font-size:11px;color:#7d8aa8;font-weight:400;display:block;margin-top:2px">v2.7.19</span></div>
+      <div class="title">自定义设置 <span id="verTag" style="font-size:11px;color:#7d8aa8;font-weight:400;display:block;margin-top:2px">v2.7.20</span></div>
       <div id="settingsWrap" style="text-align:left;max-width:320px;line-height:2.2">
         <div>摇杆大小 <input type="range" id="setJoy" min="60" max="140" value="88" style="width:100%"></div>
         <div>开火键大小 <input type="range" id="setFire" min="50" max="120" value="74" style="width:100%"></div>
@@ -1146,6 +1147,7 @@ body.is-touch .nhTime{display:none !important}
         <div id="historyBox" style="display:none;margin-top:10px;border-top:1px solid rgba(255,255,255,.1);padding-top:10px">
           <div style="font-size:13px;font-weight:800;color:#67e8f9;margin-bottom:6px">修改历史</div>
           <div style="line-height:1.8">
+            <div><b style="color:#ffd34d">v2.7.20</b>　选人卡片上三根看不出含义的进度条去掉，改成直接显示移速 / 伤害 / 射速数值，卡片更清爽</div>
             <div><b style="color:#ffd34d">v2.7.19</b>　修好公共中转读取不完整的问题（以前只读一条通道，名字登记表会显示空白）；顺手清掉测试期残留的 3 个昵称与卡片</div>
             <div><b style="color:#ffd34d">v2.7.18</b>　修好公告看完关掉、下次进游戏又重复弹出的问题（已看标记以前根本没存住）；公告发布后会自己回读一遍确认真的到服务器；准备室与新角色联机同步回归复核通过</div>
             <div><b style="color:#ffd34d">v2.7.17</b>　新增 3 个角色：堡垒（举盾 5 秒，正面减伤 60%、移速降 35%，背后照常吃伤害）、铁匠（脚下布雷，敌人踩到吃 55 伤害并减速，最多同时 3 颗）、静默（压制附近对手，3 秒不能放技能、冷却还额外 +2 秒）；三个角色都进准备室、5V5 配队与 AI；管理终端「对局参数」也能调这几项数值</div>
@@ -3252,8 +3254,8 @@ function bindBtn(id,fn){
 /* ---- 选人界面 ---- */
 function roleCardHTML(r){
   const role=ROLES[r];
-  const bars=[['移速',role.speed/300],['伤害',role.dmg/30],['射速',(1/role.fireCD)/6]].map(b=>
-    '<div class="rcBar"><i style="width:'+(clamp(b[1],0,1)*100)+'%"></i></div>').join('');
+  // 原来是三条没有标注的青色进度条，占地方又看不出含义；改成一行直接给数字
+  const bars='<div class="rcStat">移速 '+Math.round(role.speed)+' · 伤害 '+role.dmg+'<br>射速 '+(1/role.fireCD).toFixed(1)+' 发/秒</div>';
   return '<div class="roleCard" data-role="'+r+'">'+
     '<div class="rcIcon">'+role.icon+'</div>'+
     '<div class="rcName">'+role.name+'</div>'+bars+
