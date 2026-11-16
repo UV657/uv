@@ -5323,6 +5323,7 @@ async function adminLoad(){
   uniq.forEach(c=>{ try{ c.removeListener('message',h); }catch(e){} });
   const arr=Object.entries(ADMIN.names);
   const src=uniq.length?('已连接 '+(uniq.length>1?uniq.length+' 条':'1 条')+'通道'):'未连接';
+  const cnt=document.getElementById('admNickCount'); if(cnt) cnt.textContent=arr.length+' 个名字';
   stat.innerHTML='注册名字 '+arr.length+' 个 · 当前房间 '+(NET.code?NET.code:'无')+' · 中转 '+src;
   list.innerHTML = arr.length ? arr.map(([t,d])=>
     '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;background:#0b1220;border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:8px 10px">'
