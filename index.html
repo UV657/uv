@@ -1103,7 +1103,7 @@ body.is-touch .nhTime{display:none !important}
       </div>
     </div>
     <div class="overlay hidden" id="settingsScreen">
-      <div class="title">自定义设置 <span id="verTag" style="font-size:11px;color:#7d8aa8;font-weight:400;display:block;margin-top:2px">v2.7.20</span></div>
+      <div class="title">自定义设置 <span id="verTag" style="font-size:11px;color:#7d8aa8;font-weight:400;display:block;margin-top:2px">v2.8.0</span></div>
       <div id="settingsWrap" style="text-align:left;max-width:320px;line-height:2.2">
         <div>摇杆大小 <input type="range" id="setJoy" min="60" max="140" value="88" style="width:100%"></div>
         <div>开火键大小 <input type="range" id="setFire" min="50" max="120" value="74" style="width:100%"></div>
@@ -1147,6 +1147,7 @@ body.is-touch .nhTime{display:none !important}
         <div id="historyBox" style="display:none;margin-top:10px;border-top:1px solid rgba(255,255,255,.1);padding-top:10px">
           <div style="font-size:13px;font-weight:800;color:#67e8f9;margin-bottom:6px">修改历史</div>
           <div style="line-height:1.8">
+            <div><b style="color:#ffd34d">v2.8.0</b>　新增 3 个角色：幽灵（潜行 3.5 秒从对手雷达上消失、移速 +20%）、炮锤（放遥控炸药，再按一次引爆，范围 65 伤、自伤 20）、铆钉（放补给站，队友站 3 秒回 15 血、技能冷却 -2 秒）；新增 3 把武器：猎隼栓狙（一枪重伤、拉栓慢）、铆钉枪（命中拖慢对手）、破障榴弹（落点爆炸、隔墙不穿）；准备室和联机都支持选用并同步</div>
             <div><b style="color:#ffd34d">v2.7.20</b>　选人卡片上三根看不出含义的进度条去掉，改成直接显示移速 / 伤害 / 射速数值，卡片更清爽</div>
             <div><b style="color:#ffd34d">v2.7.19</b>　修好公共中转读取不完整的问题（以前只读一条通道，名字登记表会显示空白）；顺手清掉测试期残留的 3 个昵称与卡片</div>
             <div><b style="color:#ffd34d">v2.7.18</b>　修好公告看完关掉、下次进游戏又重复弹出的问题（已看标记以前根本没存住）；公告发布后会自己回读一遍确认真的到服务器；准备室与新角色联机同步回归复核通过</div>
@@ -1332,6 +1333,21 @@ const ROLES = {
     skill:{name:'信号压制', key:'E', cd:10, jamRange:230, jamDur:3, jamExtra:2,
       desc:'压制附近对手：3 秒内不能放技能，技能冷却额外 +2 秒', tag:'干扰'},
     ai:{ jam:true } },
+  recon: { id:'recon', name:'幽灵', icon:'👁', color:'#9ad7ff',
+    speed:278, dmg:11, fireCD:0.30, bulletSpeed:790, bulletLife:1.2,
+    skill:{name:'静默潜行', key:'E', cd:9, ghostDur:3.5, ghostSpeed:1.2,
+      desc:'3.5 秒内从对手雷达上消失，同时移速 +20%', tag:'潜行'},
+    ai:{ ghost:true } },
+  demo: { id:'demo', name:'炮锤', icon:'💣', color:'#ffa07a',
+    speed:235, dmg:13, fireCD:0.36, bulletSpeed:740, bulletLife:1.2,
+    skill:{name:'遥控炸药', key:'E', cd:12, bombDmg:65, bombR:70, bombLife:6, bombSelf:20,
+      desc:'放下炸药包，再按一次立刻引爆：范围 70，敌人吃 65，自己吃 20', tag:'爆破'},
+    ai:{ bomb:true } },
+  rivet: { id:'rivet', name:'铆钉', icon:'🔧', color:'#ffd9a0',
+    speed:258, dmg:10, fireCD:0.30, bulletSpeed:760, bulletLife:1.2,
+    skill:{name:'补给站', key:'E', cd:14, supR:120, supHeal:15, supCdCut:2, supDur:12,
+      desc:'放一个补给站（12 秒）：队友站进去 3 秒，回 15 血、技能冷却 -2 秒', tag:'支援'},
+    ai:{ supply:true } },
 };
 const ROLE_IDS = Object.keys(ROLES);
 /* 角色出厂数值：终端删掉某角色的调参后能真正还原回默认 */
@@ -1351,6 +1367,9 @@ const WEAPONS = {
   lmg:    { id:'lmg',    name:'轻机枪',   dmgMul:0.85, cdMul:0.62, spread:0.11, pellets:1, lifeMul:1.0,  spdMul:1.0,  overheat:14, overheatCd:1.0, desc:'持续压制，连射会过热' },
   db:     { id:'db',     name:'双管霰弹', dmgMul:0.30, cdMul:1.75, spread:0.20, pellets:9, lifeMul:0.42, spdMul:0.85, desc:'贴脸一击致命，打完要等 1.8 秒' },
   pistol: { id:'pistol', name:'手枪',     dmgMul:0.75, cdMul:0.70, spread:0.012,pellets:1, lifeMul:1.0,  spdMul:1.05, desc:'出枪快、单发最准，贴脸补刀' },
+  falcon: { id:'falcon', name:'猎隼',     dmgMul:2.60, cdMul:4.00, spread:0.000,pellets:1, lifeMul:2.2,  spdMul:1.50, desc:'栓动狙击，一枪重伤，拉栓慢' },
+  rivetgun:{ id:'rivetgun',name:'铆钉枪', dmgMul:0.90, cdMul:0.42, spread:0.050,pellets:1, lifeMul:0.55, spdMul:0.80, slowHit:0.5, desc:'高速钉弹，命中拖慢对手' },
+  breaker:{ id:'breaker', name:'破障',    dmgMul:1.00, cdMul:3.60, spread:0.010,pellets:1, lifeMul:1.4,  spdMul:0.60, explode:{r:60,selfMul:0.3}, desc:'榴弹，命中或落点爆炸，范围伤害' },
 };
 const WEAPON_IDS = Object.keys(WEAPONS);
 /* 每把枪的弹道光束参数：粗细 / 长度 / 存活时长 / 拖尾形状 */
@@ -1361,7 +1380,10 @@ const TRACER_STYLE = {
   rifle:  { wid:4.2, len:250, ms:280, core:0.95, halo:0.30 },
   smg:    { wid:3.4, len:215, ms:265, core:0.88, halo:0.26 },
   shotgun:{ wid:3.0, len:195, ms:250, core:0.82, halo:0.22, beams:3 },
-  dmr:    { wid:5.2, len:330, ms:340, core:1.00, halo:0.34 }
+  dmr:    { wid:5.2, len:330, ms:340, core:1.00, halo:0.34 },
+  falcon: { wid:4.0, len:420, ms:360, core:1.00, halo:0.30 },
+  rivetgun:{ wid:2.8, len:170, ms:200, core:0.85, halo:0.20 },
+  breaker:{ wid:5.6, len:210, ms:300, core:0.95, halo:0.34 }
 };
 function tracerStyle(id){ return TRACER_STYLE[id] || TRACER_STYLE.rifle; }
 function currentWeapon(){ return WEAPONS[lsGetRaw('gunWeapon')] ? WEAPONS[lsGetRaw('gunWeapon')] : WEAPONS.rifle; }
@@ -1401,6 +1423,7 @@ function movePlayer(p, dx, dy, dt){
   const len=Math.hypot(dx,dy);
   if(len>0){ dx/=len; dy/=len; }
   let spd=p.role.speed;
+  if(p.ghostT>0) spd *= ((p.role.skill&&p.role.skill.ghostSpeed)||1.2);   // 幽灵潜行时更快
   if(p.frontT>0) spd*= (1-((p.role.skill&&p.role.skill.slow)||0.35));   // 举盾时移动变慢
   if(p.slowT>0) spd*=0.6;                                               // 踩雷后短时间减速
   p.vx=dx*spd; p.vy=dy*spd; // 记录速度，自动瞄准据此算提前量
@@ -1681,7 +1704,8 @@ function shoot(p){
   for(let i=0;i<(wp.pellets||1);i++){
     const a2 = ang + (rng()-0.5)*wp.spread*2;
     state.bullets.push({ x:sx,y:sy,vx:Math.cos(a2)*spd,vy:Math.sin(a2)*spd,
-      r:CFG.bulletRadius, team:p.team, dmg, life, owner:p });
+      r:CFG.bulletRadius, team:p.team, dmg, life, owner:p,
+      wid:wp.id, slowHit:(wp.slowHit||0), explode:(wp.explode||null) });
   }
   // 不做曳光：开火只有实心弹头飞出，没有光束
   if(state.netMode && p.isHuman){
@@ -1710,6 +1734,35 @@ function shoot(p){
   }
 }
 
+/* 破障（榴弹）：命中或落点炸开，范围伤害按距离衰减，隔墙不穿透 */
+function explodeBullet(b, hitPlayer){
+  const ex=b.explode||{}, r=ex.r||60, own=b.owner||null;
+  const x=hitPlayer?hitPlayer.x:b.x, y=hitPlayer?hitPlayer.y:b.y;
+  spawnRing(x,y,'#ffb020',r*1.5);
+  for(let i=0;i<20;i++){ const a=rng()*Math.PI*2, sp=80+rng()*260;
+    spawnParticle(x,y,Math.cos(a)*sp,Math.sin(a)*sp,'#ffcf6a',0.3+rng()*0.25,3); }
+  state.shake=Math.max(state.shake||0,5);
+  sHit();
+  for(const q of state.players){
+    if(!q.alive) continue;
+    if(q!==own && q.team===b.team) continue;             // 不误伤队友，只炸敌人和自己
+    const d=Math.hypot(q.x-x,q.y-y); if(d>r) continue;
+    if(!hasLOS(x,y,q.x,q.y)) continue;                   // 隔墙不减血
+    let dmg = (own && q===own) ? b.dmg*((ex.selfMul!=null?ex.selfMul:0.3)) : b.dmg*(0.9-0.4*(d/r));
+    dmg=Math.round(dmg); if(dmg<=0) continue;
+    if(q.isRemote){
+      netSend({t:'dmg', v:dmg, s:0.5}, 1);
+      q.slowT=Math.max(q.slowT||0,0.5); q.flash=1;
+      addFloater(q.x,q.y-18,'-'+dmg,'#ffb020');
+    } else {
+      q.hp-=dmg; q.flash=1; q.slowT=Math.max(q.slowT||0,0.5);
+      addFloater(q.x,q.y-18,'-'+dmg,'#ffb020');
+      if(q.hp<=0) killPlayer(q, own);
+    }
+    if(own){ own.hits=(own.hits||0)+1; own.dmgDealt=(own.dmgDealt||0)+dmg; }
+  }
+}
+
 /* ================= 5. 技能 ================= */
 function skillKind(s){
   if(!s) return 'none';
@@ -1719,6 +1772,9 @@ function skillKind(s){
   if(s.mineDmg) return 'mine';
   if(s.jamRange) return 'jam';
   if(s.dmg) return 'snipe';
+  if(s.ghostDur) return 'ghost';
+  if(s.bombDmg) return 'bomb';
+  if(s.supR) return 'supply';
   if(s.heal) return 'heal';
   return 'none';
 }
@@ -1731,10 +1787,20 @@ function netGhostSkill(m){
   else if(m.k==='front'){ for(let i=0;i<10;i++){ const a=Math.random()*Math.PI*2, sp=80+Math.random()*110; spawnParticle(f.x,f.y,Math.cos(a)*sp,Math.sin(a)*sp,'#f2a65a',0.5,3); } }
   else if(m.k==='mine'){ spawnRing(f.x,f.y,'#c9a7ff',30); }
   else if(m.k==='jam'){ spawnRing(f.x,f.y,'#8fb8ff',60); }
+  else if(m.k==='ghost'){ spawnRing(f.x,f.y,'#9ad7ff',44); }
+  else if(m.k==='bomb'){ spawnRing(f.x,f.y,'#ffa07a',30); }
+  else if(m.k==='supply'){ spawnRing(f.x,f.y,'#ffd9a0',42); }
   else if(m.k==='heal'){ for(let i=0;i<12;i++){ const a=Math.random()*Math.PI*2; spawnParticle(f.x,f.y,Math.cos(a)*(60+Math.random()*120),Math.sin(a)*(60+Math.random()*120),'#86efac',0.45,3); } }
 }
 function castSkill(p){
-  if(!p.alive || p.skillCD>0) return;
+  if(!p.alive) return;
+  // 炮锤：已放出的炸药包随时可以引爆，不受冷却限制（同一技能键当引爆器用）
+  const __sk=p.role&&p.role.skill;
+  if(__sk && __sk.bombDmg && state.bombs){
+    const b=state.bombs.find(x=>x.owner===p && !x.dead);
+    if(b){ boomBomb(b); return; }
+  }
+  if(p.skillCD>0) return;
   if(p.skillBlockT>0){ if(p.isHuman) toastMsg('被信号压制，技能暂时用不了'); return; }
   const s=p.role.skill;
   if(s.dash){ // 突击手：突刺方向由设置决定（跟随摇杆 / 朝对手），撞上的人直接吃伤害
@@ -1803,6 +1869,16 @@ function castSkill(p){
     spawnRing(p.x,p.y,'#8fb8ff',64);
     if(p.isHuman && !hit) toastMsg('附近没有对手，压制落空');
     sClick();
+  } else if(s.ghostDur){ // 幽灵：静默潜行
+    p.ghostT=(s.ghostDur||3.5);
+    spawnRing(p.x,p.y,'#9ad7ff',44);
+    addFloater(p.x,p.y-26,'潜行','#9ad7ff');
+    if(state.netMode && p.isHuman) netSend({t:'ghost', dur:(s.ghostDur||3.5)}, 1);
+    sClick();
+  } else if(s.bombDmg){ // 炮锤：放炸药包
+    castBomb(p, s);
+  } else if(s.supR){ // 铆钉：补给站
+    castSupply(p, s);
   } else if(s.heal){ // 医疗兵：治疗
     p.hp=Math.min(p.maxHp||CFG.maxHp, p.hp+s.heal);
     addFloater(p.x,p.y-24,'+'+s.heal,'#86efac');
@@ -2090,6 +2166,14 @@ function updateAI(p,dt){
     else if(s.front && ai.front && p.hp<72 && p.frontT<=0) castSkill(p);
     else if(s.mineDmg && ai.mine && bdPx<320 && rng()>0.55) castSkill(p);
     else if(s.jamRange && ai.jam && bdPx<s.jamRange && rng()>0.45) castSkill(p);
+    else if(s.ghostDur && ai.ghost && (p.hp<70 || bdPx>420) && rng()>0.5) castSkill(p);
+    else if(s.bombDmg && ai.bomb && bdPx<240 && rng()>0.5) castSkill(p);
+    else if(s.supR && ai.supply && p.hp<75 && rng()>0.4) castSkill(p);
+  }
+  // 炮锤 AI：炸药放好后，敌人走近就引爆（引爆走 castSkill 的免冷却分支）
+  if(p.role.skill && p.role.skill.bombDmg && state.bombs){
+    const mb=state.bombs.find(x=>x.owner===p && !x.dead);
+    if(mb && bdPx<90) castSkill(p);
   }
 
   // 射击：AI 按「点射」节奏——连打 3~5 发后停顿，不做无限机枪
@@ -2111,7 +2195,8 @@ function damagePlayer(victim, bullet){
   if(!victim.alive || victim.invuln>0) return;
   if(victim.isRemote){
     // 伤害由攻击方判定并下发，本地只做即时视觉反馈，避免两边各扣一次
-    netSend({t:'dmg', v:Math.round(bullet.dmg)}, 1);
+    netSend({t:'dmg', v:Math.round(bullet.dmg), s:(bullet.slowHit||0)}, 1);
+    if(bullet.slowHit) victim.slowT=Math.max(victim.slowT||0, bullet.slowHit);
     if(bullet.owner){ bullet.owner.hits++; bullet.owner.dmgDealt += Math.round(bullet.dmg); }
     addFloater(victim.x,victim.y-16,'-'+Math.round(bullet.dmg),'#ffd34d');
     spawnParticle(bullet.x,bullet.y,(rng()-0.5)*120,(rng()-0.5)*120,'#ffe9a8',0.25,3);
@@ -2148,6 +2233,7 @@ function damagePlayer(victim, bullet){
   }
   spawnParticle(bullet.x,bullet.y,(rng()-0.5)*120,(rng()-0.5)*120,'#ffe9a8',0.25,3);
   spawnRing(bullet.x,bullet.y,victim.team==='red'?'#ff5b6e':'#4dc3ff',26); // 命中冲击波
+  if(bullet.slowHit) victim.slowT=Math.max(victim.slowT||0, bullet.slowHit);
   victim.flash=1; // 受击闪白
   if(victim.isHuman){ // 血条面板受击闪动反馈
     const panel = state.mode==='1v1' ? (victim.team==='red'?panelP1:panelP2) : panelP1;
@@ -2244,6 +2330,8 @@ function update(dt, rawDt){
 
   const p1=localP();
   updateMines(dt);
+  updateBombs(dt);
+  updateSupplies(dt);
   for(const p of state.players){
     p.cooldown-=dt; p.invuln-=dt; p.skillCD-=dt;
     p.heatIdle=(p.heatIdle||0)+dt;
@@ -2252,6 +2340,7 @@ function update(dt, rawDt){
     if(p.frontT>0) p.frontT-=dt;
     if(p.skillBlockT>0) p.skillBlockT-=dt;
     if(p.slowT>0) p.slowT-=dt;
+    if(p.ghostT>0) p.ghostT-=dt;
     if(!p.alive){
       p.respawn-=realDt; // 复活等待按真实秒数算，手机端不再被拖成 3 秒多
       if(p.respawn<=0){ const s=(p.team==='red'?state.world.redSpawn:state.world.blueSpawn)[p.idx];
@@ -2353,8 +2442,14 @@ function update(dt, rawDt){
     if(!dead) for(const q of state.players){
       if(!q.alive||q.team===b.team) continue;
       const rr=CFG.playerRadius+b.r;
-      if((b.x-q.x)**2+(b.y-q.y)**2<rr*rr){ damagePlayer(q,b); dead=true; break; }
+      if((b.x-q.x)**2+(b.y-q.y)**2<rr*rr){
+        if(b.explode){ b.exploded=true; explodeBullet(b,q); }
+        else damagePlayer(q,b);
+        dead=true; break;
+      }
     }
+    // 榴弹：打到墙上、飞到期、或者命中没爆，都要在落点炸开
+    if(dead && b.explode && !b.exploded){ b.exploded=true; explodeBullet(b,null); }
     if(dead){ spawnParticle(b.x,b.y,-b.vx*0.08,-b.vy*0.08,b.team==='red'?'#ff8fa0':'#8fd8ff',0.15,3);
       state.bullets.splice(i,1); }
   }
@@ -2420,6 +2515,7 @@ function drawRadar(){
   for(let i=0;i<ps.length;i++){
     const p=ps[i];
     if(!p.alive) continue;
+    if((p.ghostT||0)>0 && !selfIs(p)) continue;   // 幽灵潜行：对手雷达上看不到
     const px=x+p.x*sx, py=y+p.y*sy;
     if(selfIs(p)){
       ctx2d.strokeStyle='rgba(255,203,87,.75)'; ctx2d.lineWidth=1.6*dpr;
@@ -2464,7 +2560,7 @@ function render(){
     ctx2d.scale(VIEW.scale, VIEW.scale);
   }
   if(state.shake>0) ctx2d.translate((rng()-0.5)*state.shake,(rng()-0.5)*state.shake);
-  drawFloor(); drawObstacles(); drawMines(); drawPlayers(); drawFrontArcs(); drawBullets(); drawParticles(); drawFloaters();
+  drawFloor(); drawObstacles(); drawMines(); drawBombs(); drawSupplies(); drawPlayers(); drawFrontArcs(); drawBullets(); drawParticles(); drawFloaters();
   drawDanger();
   drawRadar();
 }
@@ -2521,6 +2617,115 @@ function roundRect(x,y,w,h,r){
   ctx2d.arcTo(x,y+h,x,y,r); ctx2d.arcTo(x,y,x+w,y,r); ctx2d.closePath();
 }
 /* 地雷：埋雷方本地判定，远端只画不判（避免两边各扣一次） */
+/* ---- 炮锤：遥控炸药包（再按一次引爆，倒计时到也会炸） ---- */
+function castBomb(p, s){
+  state.bombs=state.bombs||[];
+  const bomb={ x:p.x, y:p.y, team:p.team, dmg:(s.bombDmg||65), r:(s.bombR||70),
+    selfDmg:(s.bombSelf||20), life:(s.bombLife||6), arm:0.7, owner:p };
+  state.bombs.push(bomb);
+  if(state.bombs.length>6) state.bombs.shift();
+  if(state.netMode && p.isHuman) netSend({t:'bomb', x:Math.round(bomb.x), y:Math.round(bomb.y), team:bomb.team, dur:bomb.life}, 1);
+  spawnRing(p.x,p.y,'#ffa07a',30);
+  addFloater(p.x,p.y-26,'炸药已放','#ffa07a');
+  sClick();
+}
+function boomBomb(b){
+  if(!b || b.dead || b.remote) return;
+  b.dead=true;
+  const r=b.r||70;
+  spawnRing(b.x,b.y,'#ffb020',r*1.6);
+  for(let i=0;i<26;i++){ const a=rng()*Math.PI*2, sp=90+rng()*300;
+    spawnParticle(b.x,b.y,Math.cos(a)*sp,Math.sin(a)*sp,'#ffcf6a',0.3+rng()*0.25,3); }
+  state.shake=Math.max(state.shake||0,8);
+  sHit();
+  for(const q of state.players){
+    if(!q.alive) continue;
+    const d=Math.hypot(q.x-b.x,q.y-b.y); if(d>r) continue;
+    if(!hasLOS(b.x,b.y,q.x,q.y)) continue;
+    const dmg=(q===b.owner) ? (b.selfDmg||20) : (b.dmg||65);
+    if(q.isRemote){
+      netSend({t:'dmg', v:dmg, s:0.4}, 1);
+      q.slowT=Math.max(q.slowT||0,0.4); q.flash=1;
+      addFloater(q.x,q.y-18,'-'+dmg,'#ffb020');
+    } else {
+      q.hp-=dmg; q.flash=1; q.slowT=Math.max(q.slowT||0,0.4);
+      addFloater(q.x,q.y-18,'-'+dmg,'#ffb020');
+      if(q.hp<=0) killPlayer(q, b.owner);
+    }
+    if(b.owner){ b.owner.hits=(b.owner.hits||0)+1; b.owner.dmgDealt=(b.owner.dmgDealt||0)+dmg; }
+  }
+  if(state.netMode && b.owner && b.owner.isHuman) netSend({t:'boom', x:Math.round(b.x), y:Math.round(b.y)}, 1);
+}
+function updateBombs(dt){
+  if(!state.bombs || !state.bombs.length) return;
+  for(const b of state.bombs){
+    b.life-=dt; if(b.arm>0) b.arm-=dt;
+    if(b.life<=0 && !b.dead){ if(b.remote) b.dead=true; else boomBomb(b); }
+  }
+  state.bombs=state.bombs.filter(b=>!b.dead);
+}
+function drawBombs(){
+  if(!state.bombs || !state.bombs.length) return;
+  for(const b of state.bombs){
+    const pulse=0.5+0.5*Math.sin(performance.now()/130 + (b.x||0)*0.01);
+    ctx2d.save();
+    ctx2d.fillStyle='rgba(10,16,28,.85)';
+    ctx2d.beginPath(); ctx2d.arc(b.x,b.y,10,0,Math.PI*2); ctx2d.fill();
+    ctx2d.strokeStyle='#ffa07a'; ctx2d.lineWidth=2;
+    ctx2d.beginPath(); ctx2d.arc(b.x,b.y,10,0,Math.PI*2); ctx2d.stroke();
+    ctx2d.globalAlpha=0.3+0.55*pulse; ctx2d.strokeStyle='#ffa07a';
+    ctx2d.beginPath(); ctx2d.arc(b.x,b.y,(b.r||70)*0.7,0,Math.PI*2); ctx2d.stroke();
+    ctx2d.globalAlpha=1; ctx2d.fillStyle='#ffa07a';
+    ctx2d.beginPath(); ctx2d.arc(b.x,b.y,3,0,Math.PI*2); ctx2d.fill();
+    ctx2d.restore();
+  }
+}
+/* ---- 铆钉：补给站（队友站进去 3 秒回血 + 技能冷却 -2 秒） ---- */
+function castSupply(p, s){
+  state.supplies=state.supplies||[];
+  const sup={ x:p.x, y:p.y, team:p.team, r:(s.supR||120), life:(s.supDur||12) };
+  state.supplies.push(sup);
+  if(state.supplies.length>4) state.supplies.shift();
+  if(state.netMode && p.isHuman) netSend({t:'supply', x:Math.round(sup.x), y:Math.round(sup.y), team:sup.team, r:sup.r, dur:sup.life}, 1);
+  spawnRing(p.x,p.y,'#ffd9a0',42);
+  addFloater(p.x,p.y-26,'补给站','#ffd9a0');
+  sClick();
+}
+function updateSupplies(dt){
+  if(!state.supplies || !state.supplies.length) return;
+  for(const sf of state.supplies) sf.life-=dt;
+  state.supplies=state.supplies.filter(sf=>sf.life>0);
+  for(const p of state.players){
+    if(!p.alive) continue;
+    const sf=state.supplies.find(x=>x.team===p.team && Math.hypot(p.x-x.x,p.y-x.y)<x.r);
+    if(!sf){ p.supT=0; continue; }
+    p.supT=(p.supT||0)+dt;
+    if(p.supT>=3){
+      p.supT=0;
+      if(p.hp < (p.maxHp||CFG.maxHp)){
+        p.hp=Math.min(p.maxHp||CFG.maxHp, p.hp+15);
+        addFloater(p.x,p.y-24,'+15','#ffd9a0');
+      }
+      p.skillCD=Math.max(0,(p.skillCD||0)-2);
+      spawnRing(p.x,p.y,'#ffd9a0',26);
+    }
+  }
+}
+function drawSupplies(){
+  if(!state.supplies || !state.supplies.length) return;
+  for(const sf of state.supplies){
+    const col=sf.team==='red'?'#ff5b6e':'#4dc3ff';
+    ctx2d.save();
+    ctx2d.fillStyle=col; ctx2d.globalAlpha=0.14+0.06*Math.sin(performance.now()/300);
+    ctx2d.beginPath(); ctx2d.arc(sf.x,sf.y,sf.r,0,Math.PI*2); ctx2d.fill();
+    ctx2d.globalAlpha=0.75; ctx2d.strokeStyle='#ffd9a0'; ctx2d.lineWidth=2;
+    ctx2d.beginPath(); ctx2d.arc(sf.x,sf.y,sf.r,0,Math.PI*2); ctx2d.stroke();
+    ctx2d.fillStyle='#ffd9a0';
+    ctx2d.beginPath(); ctx2d.arc(sf.x,sf.y,5,0,Math.PI*2); ctx2d.fill();
+    ctx2d.restore();
+  }
+}
+
 function updateMines(dt){
   if(!state.mines || !state.mines.length) return;
   for(const m of state.mines){
@@ -3596,7 +3801,7 @@ function runSelfCheck(){
   ok('血量配置正常', CFG.maxHp>0 && CFG.respawnTime>0, 'HP'+CFG.maxHp+' 复活'+CFG.respawnTime+'s');
   ok('两种模式都注册', !!(CFG.modes['5v5'] && CFG.modes['1v1']));
   ok('地图数据完整', !!(MAPS['5v5'] && MAPS['1v1'] && MAPS['5v5'].length===3 && MAPS['1v1'].length===3 && MAPS['5v5'].every(m=>Array.isArray(m.obs))));
-  ok('角色表 7 个且数值合法（含堡垒/铁匠/静默）', ROLE_IDS.length===7 && ROLE_IDS.every(id=>ROLES[id].dmg>0 && ROLES[id].speed>0 && ROLES[id].fireCD>0), ROLE_IDS.join('/'));
+  ok('角色表 10 个且数值合法（含堡垒/铁匠/静默/幽灵/炮锤/铆钉）', ROLE_IDS.length===10 && ROLE_IDS.every(id=>ROLES[id].dmg>0 && ROLES[id].speed>0 && ROLES[id].fireCD>0), ROLE_IDS.join('/'));
 
   // 4. 命名与身份
   const n9=pickAINames(9,'测试名');
@@ -3614,11 +3819,13 @@ function runSelfCheck(){
   })());
 
   // 4.5 新增系统：武器 / 段位 / 皮肤 / 技能键自定义
-  ok('武器表 7 把齐全（含轻机枪/双管/手枪）', WEAPON_IDS.length===7 && !!WEAPONS.lmg && !!WEAPONS.db && !!WEAPONS.pistol, WEAPON_IDS.map(k=>WEAPONS[k].name).join('/'));
+  ok('武器表 10 把齐全（含轻机枪/双管/手枪/猎隼/铆钉枪/破障）', WEAPON_IDS.length===10 && !!WEAPONS.lmg && !!WEAPONS.db && !!WEAPONS.pistol && !!WEAPONS.falcon && !!WEAPONS.rivetgun && !!WEAPONS.breaker, WEAPON_IDS.map(k=>WEAPONS[k].name).join('/'));
   ok('轻机枪有热量机制', !!WEAPONS.lmg.overheat && (TUNE.lmgHeatShots>0));
   ok('准备室模块齐全', typeof prepOpen==='function' && typeof prepRender==='function' && typeof prepGo==='function' && !!document.getElementById('prepScreen'));
   ok('新角色技能齐全（举盾/地雷/禁技）', !!(ROLES.bulwark.skill.front&&ROLES.engineer.skill.mineDmg&&ROLES.jammer.skill.jamRange&&typeof updateMines==='function'&&typeof drawMines==='function'));
   ok('对局参数含角色项', TUNE.frontReduce>0&&TUNE.mineDmg>0&&TUNE.jamDur>0&&TUNE.mineMax>0);
+  ok('新角色技能链路齐全（潜行/炸药/补给）', !!(ROLES.recon.skill.ghostDur && ROLES.demo.skill.bombDmg && ROLES.rivet.skill.supR && typeof castBomb==='function' && typeof updateBombs==='function' && typeof updateSupplies==='function' && typeof drawBombs==='function' && typeof drawSupplies==='function'));
+  ok('新武器特性到位（栓狙/拖慢/爆破）', WEAPONS.falcon.dmgMul>=2.4 && WEAPONS.rivetgun.slowHit>0 && !!(WEAPONS.breaker.explode&&WEAPONS.breaker.explode.r>0) && typeof explodeBullet==='function');
   ok('准备室可锁定地图与角色武器', typeof prepSend==='function' && String(prepRender).indexOf('data-prep-map')>=0 && String(prepRender).indexOf('data-prep-role')>=0);
   ok('霰弹枪 5 弹丸', WEAPONS.shotgun.pellets===5);
   ok('武器伤害倍率合法', WEAPON_IDS.every(k=>WEAPONS[k].dmgMul>0&&WEAPONS[k].cdMul>0));
@@ -3986,6 +4193,27 @@ function netOnMsg(m){
       state.mines=state.mines||[];
       state.mines.push({x:m.x|0, y:m.y|0, team:m.team||'red', dmg:0, r:42, life:8, arm:0, remote:true});
       addFloater(m.x|0,(m.y|0)-20,'对方布雷','#c9a7ff');
+    }
+    else if(m.t==='ghost'){
+      const f=netFoe(); if(f) f.ghostT=(m.dur||3.5);
+      spawnRing((f&&f.x)||0,(f&&f.y)||0,'#9ad7ff',44);
+    }
+    else if(m.t==='bomb'){
+      state.bombs=state.bombs||[];
+      state.bombs.push({x:m.x|0, y:m.y|0, team:m.team||'blue', dmg:0, r:70, life:(m.dur||6), arm:0, remote:true});
+    }
+    else if(m.t==='boom'){
+      state.bombs=state.bombs||[];
+      const rb=state.bombs.find(x=>x.remote && Math.hypot((x.x|0)-(m.x|0),(x.y|0)-(m.y|0))<12);
+      if(rb) rb.dead=true;
+      spawnRing(m.x|0,m.y|0,'#ffb020',96);
+      for(let i=0;i<18;i++){ const a=Math.random()*Math.PI*2, sp=90+Math.random()*240;
+        spawnParticle(m.x|0,m.y|0,Math.cos(a)*sp,Math.sin(a)*sp,'#ffcf6a',0.3+Math.random()*0.2,3); }
+      state.shake=Math.max(state.shake||0,6);
+    }
+    else if(m.t==='supply'){
+      state.supplies=state.supplies||[];
+      state.supplies.push({x:m.x|0, y:m.y|0, team:m.team||'blue', r:(m.r||120), life:(m.dur||12), remote:true});
     }
     else if(m.t==='jam'){
       const me=netMe();
