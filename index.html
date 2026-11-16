@@ -160,6 +160,12 @@ body.is-touch.in-game.paused-fight #btnExitFight{display:none !important}
 .rowBtns{display:flex;gap:12px}
 .helpBody{max-width:760px;max-height:60vh;overflow:auto;text-align:left;background:rgba(10,18,36,.88);border:1px solid rgba(120,180,255,.25);border-radius:12px;padding:16px 22px;font-size:13px;line-height:1.7;color:#cfe4ff}
 .helpBody h4{margin:12px 0 6px;font-size:14px;color:#7dd3fc;letter-spacing:1px}
+.helpBody h5{margin:10px 0 4px;font-size:13px;color:#9fd0ff;letter-spacing:.5px}
+.helpBody .mapItem{background:rgba(20,40,70,.6);border:1px solid rgba(120,180,255,.22);border-radius:10px;padding:9px 11px;margin:7px 0}
+.helpBody .mapHead{font-size:12.5px;font-weight:800;color:#a5f3fc;margin-bottom:3px}
+.helpBody .mapLine{font-size:11.5px;color:#c7d6ee;line-height:1.7}
+.helpBody .tblWrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.helpBody .tblWrap table{min-width:560px}
 .helpBody table{width:100%;border-collapse:collapse;margin:6px 0}
 .helpBody th,.helpBody td{border:1px solid rgba(120,180,255,.2);padding:4px 8px;text-align:left;font-size:12px}
 .helpBody th{background:rgba(60,120,200,.28);color:#e0f2fe}
@@ -935,6 +941,9 @@ body.is-touch .nhTime{display:none !important}
  linear-gradient(90deg, rgba(103,232,249,.038) 1px, transparent 1px) 0 0/34px 34px}
 #admWrap{position:relative;z-index:1}
 #adminGate{padding-top:10vh}
+#adminScreen.adm-gate{overflow:hidden !important;justify-content:center !important;align-items:center !important}
+#adminScreen.adm-gate #admWrap{max-width:520px !important}
+#adminScreen.adm-gate #adminGate{padding-top:0}
 @media (min-width:900px){
   #admWrap{max-width:1180px !important;margin:0 auto}
   #adminBody{display:grid !important;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;align-items:start}
@@ -1163,7 +1172,7 @@ body.is-touch .nhTime{display:none !important}
       </div>
     </div>
     <div class="overlay hidden" id="settingsScreen">
-      <div class="title">自定义设置 <span id="verTag" style="font-size:11px;color:#7d8aa8;font-weight:400;display:block;margin-top:2px">v2.8.2</span></div>
+      <div class="title">自定义设置 <span id="verTag" style="font-size:11px;color:#7d8aa8;font-weight:400;display:block;margin-top:2px">v2.8.3</span></div>
       <div id="settingsWrap" style="text-align:left;max-width:320px;line-height:2.2">
         <div>摇杆大小 <input type="range" id="setJoy" min="60" max="140" value="88" style="width:100%"></div>
         <div>开火键大小 <input type="range" id="setFire" min="50" max="120" value="74" style="width:100%"></div>
@@ -1207,6 +1216,7 @@ body.is-touch .nhTime{display:none !important}
         <div id="historyBox" style="display:none;margin-top:10px;border-top:1px solid rgba(255,255,255,.1);padding-top:10px">
           <div style="font-size:13px;font-weight:800;color:#67e8f9;margin-bottom:6px">修改历史</div>
           <div style="line-height:1.8">
+            <div><b style="color:#ffd34d">v2.8.3</b>　玩法说明书新增「战场地图」章节：6 张地图逐图写明地形与打法要点；手机操作说明整章并入说明书（摇杆、开火、技能、退出、界面调节、联机规则）</div>
             <div><b style="color:#ffd34d">v2.8.1</b>　界面与稳定性优化：修复若干操作后状态不同步、提示错位的问题，整体布局更清爽；对局数值与玩法保持不变</div>
             <div><b style="color:#ffd34d">v2.8.0</b>　新增 3 个角色：幽灵（潜行 3.5 秒从对手雷达上消失、移速 +20%）、炮锤（放遥控炸药，再按一次引爆，范围 65 伤、自伤 20）、铆钉（放补给站，队友站 3 秒回 15 血、技能冷却 -2 秒）；新增 3 把武器：猎隼栓狙（一枪重伤、拉栓慢）、铆钉枪（命中拖慢对手）、破障榴弹（落点爆炸、隔墙不穿）；准备室和联机都支持选用并同步</div>
             <div><b style="color:#ffd34d">v2.7.20</b>　选人卡片上三根看不出含义的进度条去掉，改成直接显示移速 / 伤害 / 射速数值，卡片更清爽</div>
@@ -5313,6 +5323,11 @@ function maintPublish(on){ return ntPublish(NOTICE_STATUS_TOPIC, JSON.stringify(
 const VER_PROBE='https://uv657.github.io/uv/version.json';
 const ADMIN_PASS='liuweijun2026';     // 想改口令就改这一行
 const ADMIN={open:false, names:{}};
+function admGateMode(on){
+  const scr=document.getElementById('adminScreen');
+  if(scr) scr.classList.toggle('adm-gate', !!on);
+  if(on) try{ scr.scrollTop=0; }catch(e){}
+}
 function adminShow(on){
   ADMIN.open=on;
   const scr=document.getElementById('adminScreen');
@@ -5407,6 +5422,7 @@ function admRoleFill(){
   adminTuneFill();
 }
 function admEnterBody(){
+  admGateMode(false);
   document.getElementById('adminGate').style.display='none';
   document.getElementById('adminBody').style.display='block';
   try{ admRoleFill(); }catch(e){}
@@ -5604,6 +5620,7 @@ function adminBoot(){
   let authed=false;
   try{ authed = sessionStorage.getItem('gfAdm')==='1'; }catch(e){}
   if(authed){ document.getElementById('adminGate').style.display='none'; admEnterBody(); }
+  else { admGateMode(true); }
 }
 /* ---- 改名额度：每月 3 次，用光要靠改名卡 ---- */
 const RENAME_FREE=3, CARD_COST=500;
@@ -6669,35 +6686,52 @@ function buildHelp(){
   const rows=ROLE_IDS.map(r=>{const o=ROLES[r];
     return '<tr><td>'+o.icon+' '+o.name+'</td><td>'+o.speed+'</td><td>'+o.dmg+'</td><td>'+(1/o.fireCD).toFixed(1)+'/s</td><td>'+o.skill.name+'（'+o.skill.cd+'s）</td><td>'+o.skill.desc+'</td></tr>';
   }).join('');
+  const mapRows = [
+    ['5V5','经典巷战','中路开阔，两翼零散矮墙','正面压制推进，两翼绕后夹击，别在中路站桩'],
+    ['5V5','横排走廊','上下两道长墙 + 中央竖掩体','沿走廊对枪、卡墙角探头，从侧门切后排'],
+    ['5V5','中央要塞','中央大方块要塞 + 四角小掩体','先抢中央控制视野，被打退就退四角打游击'],
+    ['1V1','对称十字','十字形掩体，两侧完全对称','中距离卡十字边角对枪，绕半圈换角度'],
+    ['1V1','四角掩体','四角各一块掩体，中间空旷','贴角突进、短兵相接，别在空地停留'],
+    ['1V1','双塔对峙','两座竖塔 + 左右小掩体','卡塔侧视野打预瞄，用侧掩体换血再进'],
+  ].map(r=>'<div class="mapItem"><div class="mapHead">'+r[0]+' · '+r[1]+'</div>'
+    +'<div class="mapLine">地形：'+r[2]+'</div><div class="mapLine">打法：'+r[3]+'</div></div>').join('');
   document.getElementById('helpBody').innerHTML =
     '<h4>一、游戏模式</h4>'+
     '<div><b>5V5 团队战</b>：红蓝各 5 人，你带 4 名 AI 队友对战 5 名 AI 敌人，先到 30 杀，或 3 分钟结束击杀多者胜；角色随机分配，只需选择难度与地图。</div>'+
     '<div><b>1V1 真人决斗</b>：同一台电脑本地双人对战，先到 5 杀，或 2 分钟结束击杀多者胜；全键盘操作，直接开战。</div>'+
     '<h4>二、角色与技能</h4>'+
-    '<table><tr><th>角色</th><th>移速</th><th>单发伤害</th><th>射速</th><th>技能（冷却）</th><th>说明</th></tr>'+rows+'</table>'+
-    '<h4>三、操作键位</h4>'+
+    '<div class="tblWrap"><table><tr><th>角色</th><th>移速</th><th>单发伤害</th><th>射速</th><th>技能（冷却）</th><th>说明</th></tr>'+rows+'</table></div>'+
+    '<h4>三、战场地图</h4>'+
+    '<div>单机在选择页选图；1V1 联机由房主在准备室定图，双方都看得到。每张图障碍布局不同，打法也不一样。</div>'+
+    mapRows+
+    '<h4>四、操作键位</h4>'+
     '<table><tr><th>模式</th><th>移动</th><th>射击</th><th>技能</th><th>转身瞄准</th></tr>'+
     '<tr><td>5V5</td><td>W A S D</td><td>鼠标瞄准 · 左键 / 空格</td><td>E</td><td>鼠标</td></tr>'+
     '<tr><td>1V1 · P1</td><td>W A S D</td><td>J / 空格</td><td>E</td><td>Z 左转 · X 右转</td></tr>'+
     '<tr><td>1V1 · P2</td><td>方向键</td><td>回车 Enter</td><td>数字 1</td><td>，左转 · 。右转</td></tr></table>'+
     '<div>通用：P 暂停菜单 · Esc 中途退出对局 · M 静音 · 结算后 R 再来一局。<br>1V1 转身键可让枪口 360 度停在任意角度，移动不再锁死朝向。</div>'+
-    '<h4>四、规则说明</h4>'+
+    '<h5>五、规则说明</h5>'+
     '<div>· 每人 100 点血量，死亡后 3 秒复活，复活后短暂无敌。<br>'+
     '· 击杀对方得 1 分；技能有冷却时间，冷却结束前不能重复释放。<br>'+
     '· 结算界面展示双方伤害、命中率与全场最佳 MVP。</div>'
-    +'<h4>五、账号与名字</h4>'
+    +'<h5>六、账号与名字</h5>'
     +'<div>· <b>昵称全网唯一</b>：先注册先得，一个名字只能用一次，别人再输同一个名字会被直接拒绝。<br>'
     +'· <b>档案号</b>（10 位纯数字，形如 4829137560）是你的身份凭证，改名不影响战绩归属；别人搜你时输名字或档案号都可以。<br>'
     +'· <b>改名次数</b>：每个自然月 3 次免费；用完后花 '+CARD_COST+' 荣誉在「我的明信片」里换一张改名卡，再用卡改名。<br>'
     +'· <b>名字是永久的</b>：你改用别的名字后，旧名字仍归你，别人拿不走，你也随时能改回来。<br>'
     +'· 断网时查不了重名，会直接放行；清掉浏览器缓存换设备，档案号会变，原来的名字可能被别人抢注。</div>'
-    +'<h4>六、手机与电脑</h4>'
+    +'<h5>七、手机与电脑</h5>'
     +'<div>· 同一个网址，浏览器自动判断：有触屏按手机模式，没触屏按电脑模式。<br>'
     +'· <b>两端联机互不相通</b>：电脑只能连电脑，手机只能连手机；房间码格式一样，但交叉输入进不去。<br>'
-    +'· 手机：左半屏拖动移动、自动瞄准最近敌人、右下大红键开火、黄色小键放技能，摇杆位置与大小可在设置里调。<br>'
-    +'· 电脑：W A S D 移动、鼠标瞄准、左键开火、E 放技能。<br>'
+    +'· <b>手机移动</b>：左半屏任意位置拖动就是摇杆，手指松开回中；摇杆大小、透明度、离边距离都能在「自定义设置」里调。<br>'
+    +'· <b>手机开火</b>：右下红色大键，按下即开火并自动瞄准最近敌人；按住可连发。<br>'
+    +'· <b>手机技能</b>：开火键上方的黄色小键，冷却好了会亮起；技能可设为朝敌人放或跟摇杆方向放（设置里切换）。<br>'
+    +'· <b>手机退出</b>：左上角 ✕ 随时退出本局回主菜单；暂停需要双方同意，掉线直接判对方胜。<br>'
+    +'· <b>手机显示</b>：竖屏拿起来会自动转横屏；顶部左右两侧是双方角色与血量，血条绿>黄>红；雷达在左上角，只显示你自己和已探测到的对手。<br>'
+    +'· <b>手机手感</b>：开火键大小、雷达大小、界面间距都可在设置里改；已禁用双指缩放和长按复制，只有档案号那一处点一下可复制。<br>'
+    +'· 电脑：W A S D 移动、鼠标瞄准、左键开火、E 放技能、P 暂停、M 静音。<br>'
     +'· 竖屏可以玩，横屏视野更广。</div>'
-    +'<h4>七、好友与明信片</h4>'
+    +'<h5>八、好友与明信片</h5>'
     +'<div>· 主菜单「好友」里输名字或档案号就能搜人，搜到直接看到对方的明信片（签名、段位、击杀、胜率）。<br>'
     +'· 关注后好友列表会显示在线/离线：两分钟没心跳算离线。<br>'
     +'· 你先创建房间，再点好友那一行的「邀请」，对方会弹出房间码，点接受直接进房，不用手输码。<br>'
