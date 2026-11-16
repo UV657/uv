@@ -718,6 +718,7 @@ body.is-touch .nhTime{display:none !important}
       <div class="rowBtns" style="margin-top:14px">
         <button class="btn ghost" id="btnHelp">玩法说明书</button>
         <button class="btn ghost" id="btnNet">联机对战</button>
+        <button class="btn ghost" id="btnRank">排行榜</button>
         <button class="btn ghost" id="btnFriends">好友 <span id="fwBadge" style="color:#5eead4;font-weight:800"></span></button>
         <button class="btn ghost" id="btnShare">分享给好友</button>
       </div>
@@ -971,6 +972,15 @@ body.is-touch .nhTime{display:none !important}
 .admLog{font-size:11px;color:#8fa1bf;line-height:1.8;background:#070d16;border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:9px 11px;max-height:170px;overflow-y:auto}
 .admCheck{display:flex;align-items:center;gap:6px;font-size:12px;color:#9fb2d0}
 .admCheck input{width:16px;height:16px}
+.rankRow{display:flex;align-items:center;gap:10px;padding:9px 11px;border-radius:10px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);margin-bottom:6px;cursor:pointer}
+.rankRow:active{background:rgba(103,232,249,.12)}
+.rankRow.me{background:rgba(103,232,249,.14);border-color:rgba(103,232,249,.4)}
+.rankNo{width:26px;text-align:center;font-size:13px;font-weight:800;color:#67e8f9;flex:none}
+.rankName{flex:1;min-width:0;font-size:13px;color:#dbe6f7;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rankName em{font-style:normal;font-size:10.5px;color:#7d8aa8;margin-left:6px}
+.rankVal{flex:none;font-size:12.5px;font-weight:800;color:#a5f3fc}
+.rankDim{flex:1;padding:7px;border-radius:9px;font-size:12px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);color:#9fb2d0;cursor:pointer}
+.rankDim.on{background:rgba(34,211,238,.22);border-color:rgba(103,232,249,.6);color:#e8f7ff;font-weight:800}
 </style>
     <!-- 全服公告 -->
     <div class="overlay hidden" id="noticeScreen" style="align-items:flex-start;justify-content:center;overflow-y:auto;padding:26px 16px;z-index:70">
@@ -1013,7 +1023,7 @@ body.is-touch .nhTime{display:none !important}
         <div class="profGrid" id="profGrid"></div>
         <div class="profTitle">最近对局</div>
         <div class="profList" id="profList"></div>
-        <div class="rowBtns" style="margin-bottom:8px"><button class="btn ghost" id="btnMyCard">我的明信片</button></div>
+        <div class="rowBtns" style="margin-bottom:8px"><button class="btn ghost" id="btnMyCard">我的明信片</button><button class="btn ghost" id="btnRank2">排行榜</button></div>
         <div class="rowBtns"><button class="btn" id="btnProfileBack">返 回</button></div>
       </div>
     </div>
@@ -1166,8 +1176,23 @@ body.is-touch .nhTime{display:none !important}
         <button class="btn" id="btnHelpBack">返回主菜单</button>
       </div>
     </div>
+    <div class="overlay hidden" id="rankScreen">
+      <div style="width:100%;max-width:420px;text-align:left">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+          <div style="display:flex;align-items:baseline;gap:8px">
+            <div class="title" style="margin:0;font-size:22px">排行榜</div>
+            <span id="rankCount" style="font-size:11px;color:#7d8aa8"></span>
+          </div>
+          <button id="rankClose" style="width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);color:#cdd9f0;font-size:16px;cursor:pointer">✕</button>
+        </div>
+        <div id="rankDims" style="display:flex;gap:6px;margin-bottom:10px"></div>
+        <div id="rankList" style="max-height:56vh;overflow-y:auto"></div>
+        <div style="font-size:11px;color:#7d8aa8;margin-top:10px;line-height:1.7">榜单取全服玩家自己发布的明信片数据，有人更新会自动刷新；点任意一行可以看他的明信片。</div>
+        <div class="rowBtns" style="margin-top:12px"><button class="btn" id="rankBack">返 回</button></div>
+      </div>
+    </div>
     <div class="overlay hidden" id="settingsScreen">
-      <div class="title">自定义设置 <span id="verTag" style="font-size:11px;color:#7d8aa8;font-weight:400;display:block;margin-top:2px">v2.8.6</span></div>
+      <div class="title">自定义设置 <span id="verTag" style="font-size:11px;color:#7d8aa8;font-weight:400;display:block;margin-top:2px">v2.8.7</span></div>
       <div id="settingsWrap" style="text-align:left;max-width:320px;line-height:2.2">
         <div>摇杆大小 <input type="range" id="setJoy" min="60" max="140" value="88" style="width:100%"></div>
         <div>开火键大小 <input type="range" id="setFire" min="50" max="120" value="74" style="width:100%"></div>
@@ -1211,6 +1236,7 @@ body.is-touch .nhTime{display:none !important}
         <div id="historyBox" style="display:none;margin-top:10px;border-top:1px solid rgba(255,255,255,.1);padding-top:10px">
           <div style="font-size:13px;font-weight:800;color:#67e8f9;margin-bottom:6px">修改历史</div>
           <div style="line-height:1.8">
+            <div><b style="color:#ffd34d">v2.8.7</b>　新增排行榜：击杀 / 胜场 / 段位分 / 点赞 四个榜，全服实时刷新，点任意一位可以看他的明信片（自己那行会高亮）</div>
             <div><b style="color:#ffd34d">v2.8.6</b>　战场地图新增 4 张（5V5：集装箱堆场、双门推进；1V1：中央回字、长廊对峙），共 10 张，说明书已同步；手机操作说明整章并入玩法说明书，去掉独立入口</div>
             <div><b style="color:#ffd34d">v2.8.5</b>　界面细节修复：滚动与布局更顺，标题区不再遮挡内容</div>
             <div><b style="color:#ffd34d">v2.8.4</b>　玩法说明书排版优化：战场地图改成卡片式（每图地形 / 打法分行显示），角色表在手机上可横向滑动；界面细节修复</div>
@@ -4757,7 +4783,7 @@ function fwOnMsg(topic, payload){
     if(!kind || !id) return;
     const m=JSON.parse(payload.toString());
     if(kind==='online'){ FW.online[id]=m; fwRenderList(); }
-    else if(kind==='card'){ FW.cards[id]=m; fwRenderList(); }
+    else if(kind==='card'){ FW.cards[id]=m; RANK.cards[id]=m; fwRenderList(); rankTouch(); }
     else if(kind==='invite' && id===fwKey(FW.uid)){ fwShowInvite(m); }
     else if(kind==='notice' && id===fwKey(FW.uid)){
       // 有人关注了你。记进“粉丝”，我再回关就是互关
@@ -4770,7 +4796,7 @@ function fwOnMsg(topic, payload){
       toastMsg(msg);
       fwRenderList();
     }
-    else if(kind==='like'){ const n=parseInt(m.count!==undefined?m.count:(payload.toString()))||0; FW.likes[id]=n; if(id===fwKey(FW.uid)) fwRenderLike(); }
+    else if(kind==='like'){ const n=parseInt(m.count!==undefined?m.count:(payload.toString()))||0; FW.likes[id]=n; RANK.likes[id]=n; if(id===fwKey(FW.uid)) fwRenderLike(); rankTouch(); }
   }catch(e){}
 }
 function fwInit(){
@@ -4787,6 +4813,8 @@ function fwInit(){
       c.subscribe(fwTopic('notice',FW.uid), {qos:1});   // 别人关注我时的提醒
       c.subscribe(fwTopic('card',FW.uid), {qos:1});
       c.subscribe('gunfight9/like/'+fwKey(FW.uid), {qos:1});   // 自己收到的赞
+      c.subscribe('gunfight9/card/+', {qos:1});                 // 全服明信片（排行榜数据源）
+      c.subscribe('gunfight9/like/+', {qos:1});                 // 全服点赞数
       fwPublishCard(); fwBeat(); fwWatchFriends(); fwRenderList();
     });
     c.on('message', fwOnMsg);
@@ -5904,6 +5932,62 @@ function fwShowCard(uid){
   document.getElementById('cardScreen').classList.remove('hidden');
 }
 
+/* ===== 排行榜：全服明信片数据实时聚合，点一行看明信片 ===== */
+const RANK={cards:{},likes:{},dim:'kills',timer:null};
+const RANK_DIMS=[['kills','击杀'],['wins','胜场'],['pts','段位分'],['likes','点赞']];
+function rankTouch(){ if(RANK.timer) return; RANK.timer=setTimeout(()=>{ RANK.timer=null; rankRender(); },500); }
+function rankData(){
+  const map={};
+  const put=(c,own)=>{
+    if(!c || !c.uid) return;
+    const k=fwKey(c.uid), prev=map[k]||{};
+    map[k]={ uid:c.uid, name:(c.name||prev.name||'').trim(), kills:+(c.kills||0), wins:+(c.wins||0),
+      pts:+(c.pts||0), matches:+(c.matches||0), rank:c.rank||prev.rank||'青铜',
+      likes:RANK.likes[k]||0, own:!!own };
+  };
+  Object.keys(RANK.cards).forEach(k=>put(RANK.cards[k]));
+  put(fwMyCard(), true);           // 自己永远取本地最新，不被缓存里的旧卡片覆盖
+  // 只留有真实战绩/获赞的人（历史测试留下的空档案不进榜）
+  return Object.values(map).filter(r=>r.name && (r.own || r.kills>0 || r.wins>0 || r.matches>0 || r.likes>0));
+}
+function rankRender(){
+  const list=document.getElementById('rankList'); if(!list) return;
+  const dimsEl=document.getElementById('rankDims');
+  if(dimsEl && !dimsEl.dataset.built){
+    dimsEl.dataset.built='1';
+    dimsEl.innerHTML=RANK_DIMS.map(d=>'<button class="rankDim" data-dim="'+d[0]+'">'+d[1]+'</button>').join('');
+    dimsEl.addEventListener('click', e=>{ const b=e.target.closest('[data-dim]'); if(!b) return;
+      RANK.dim=b.dataset.dim; rankRender(); });
+  }
+  if(dimsEl) [].forEach.call(dimsEl.children, b=>b.classList.toggle('on', b.dataset.dim===RANK.dim));
+  const all=rankData().sort((a,b)=>(b[RANK.dim]||0)-(a[RANK.dim]||0) || (b.kills-a.kills));
+  const rows=all.slice(0,60);
+  const unit={kills:'杀',wins:'胜',pts:'分',likes:'赞'}[RANK.dim];
+  const cnt=document.getElementById('rankCount'); if(cnt) cnt.textContent=all.length?all.length+' 人上榜':'';
+  const me=all.findIndex(r=>r.own);
+  if(!rows.length){ list.innerHTML='<div style="font-size:12px;color:#7d8aa8;padding:14px 2px">还没有收到别人的战绩，等几个玩家进过游戏就会出现在这里</div>'; return; }
+  const noColors=['#ffd75e','#d9e6f2','#e2a06a'];
+  list.innerHTML=rows.map((r,i)=>{
+    const val=r[RANK.dim]||0;
+    return '<div class="rankRow'+(r.own?' me':'')+'" data-rankuid="'+esc(r.uid)+'">'
+      +'<span class="rankNo" style="'+(i<3?'color:'+noColors[i]:'')+'">'+(i+1)+'</span>'
+      +'<span class="rankName">'+esc(r.name)+(r.own?'（你）':'')+'<em>'+esc(r.rank)+'</em></span>'
+      +'<span class="rankVal">'+val+' '+unit+'</span></div>';
+  }).join('')
+  + (me>=60 ? '<div style="font-size:11.5px;color:#7d8aa8;margin-top:10px">你目前排第 '+(me+1)+' 名（只显示前 60 名）</div>' : '');
+}
+function rankOpen(){
+  sClick();
+  document.querySelectorAll('.overlay').forEach(ov=>{ if(ov.id!=='rankScreen') ov.classList.add('hidden'); });
+  document.getElementById('rankScreen').classList.remove('hidden');
+  rankRender();
+}
+async function rankOpenCard(uid){
+  sClick();
+  const k=fwKey(uid);
+  if(FW.cards[k] || fwKey(uid)===fwKey(FW.uid)){ fwShowCard(uid); return; }
+  await fwOpenCardByUid(uid);
+}
 function remoteNickCheck(name, uid){
   return new Promise((resolve)=>{
     const url=netUrl();
@@ -6159,6 +6243,12 @@ bindBtn('fwClose', ()=>{ sClick(); document.getElementById('friendScreen').class
 bindBtn('fwSearchBtn', ()=>{ sClick(); fwDoSearch(); });
 bindBtn('fwRefresh', ()=>{ sClick(); fwWatchFriends(); fwRenderList(); toastMsg('已刷新'); });
 bindBtn('btnMyCard', ()=>{ sClick(); fwShowCard(FW.uid||ensureUid()); });
+bindBtn('rankBack', ()=>{ sClick(); document.getElementById('rankScreen').classList.add('hidden'); menuScreen.classList.remove('hidden'); renderRankBar(); });
+bindBtn('rankClose', ()=>{ sClick(); document.getElementById('rankScreen').classList.add('hidden'); menuScreen.classList.remove('hidden'); renderRankBar(); });
+document.getElementById('rankList').addEventListener('click', e=>{
+  const row=e.target.closest('[data-rankuid]'); if(!row) return;
+  rankOpenCard(row.dataset.rankuid);
+});
 bindBtn('cardClose', ()=>{ sClick(); document.getElementById('cardScreen').classList.add('hidden');
   const back = (FW.cardFrom==='profile') ? 'profileScreen' : 'friendScreen';
   document.getElementById(back).classList.remove('hidden'); });
@@ -6675,6 +6765,8 @@ bindBtn('fbCopy', ()=>{
     }catch(e){ toastMsg('复制失败，手动记一下：'+FEEDBACK_MAIL); }
   }
 });
+bindBtn('btnRank', ()=>{ menuScreen.classList.add('hidden'); rankOpen(); });
+bindBtn('btnRank2', ()=>{ document.getElementById('profileScreen').classList.add('hidden'); rankOpen(); });
 bindBtn('btnHelp', ()=>{ buildHelp(); menuScreen.classList.add('hidden'); helpScreen.classList.remove('hidden'); });
 bindBtn('btnHelpBack', ()=>{ helpScreen.classList.add('hidden'); menuScreen.classList.remove('hidden'); renderRankBar(); });
 
