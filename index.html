@@ -717,7 +717,6 @@ body.is-touch .nhTime{display:none !important}
       <div class="sub pc-only" style="font-size:12px">浏览器里双击打开即玩 · 5V5 团队战 · 1V1 单挑 · 结算含 MVP 动画</div>
       <div class="rowBtns" style="margin-top:14px">
         <button class="btn ghost" id="btnHelp">玩法说明书</button>
-        <button class="btn ghost" id="btnTouchHelp">手机操作说明</button>
         <button class="btn ghost" id="btnNet">联机对战</button>
         <button class="btn ghost" id="btnFriends">好友 <span id="fwBadge" style="color:#5eead4;font-weight:800"></span></button>
         <button class="btn ghost" id="btnShare">分享给好友</button>
@@ -811,7 +810,7 @@ body.is-touch .nhTime{display:none !important}
             </div>
           </div>
 
-          <div class="admCard">
+          <div class="admCard" id="admCardNotice">
             <div class="admH">全服公告 <span class="admSub">发布后所有玩家可见</span></div>
             <label class="admField">标题<input id="admNoticeTitle" maxlength="40" placeholder="例如：v2.8.0 已上线" class="admInput"></label>
             <label class="admField">正文<textarea id="admNoticeBody" maxlength="400" rows="4" placeholder="最多 400 字" class="admInput" style="resize:vertical"></textarea></label>
@@ -950,20 +949,21 @@ body.is-touch .nhTime{display:none !important}
   #admWrap{max-width:1180px !important;margin:0 auto}
   #adminBody{display:grid !important;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;align-items:start;padding:0 0 30px}
   #adminBody .admCard{margin-bottom:0}
+  #admCardNotice{grid-column:span 2}
   #adminGate{max-width:640px;margin:0 auto}
 }
 .admTop{position:relative;z-index:2;display:flex;align-items:center;justify-content:space-between;padding:14px 14px 12px;background:linear-gradient(180deg,rgba(8,14,24,.98),rgba(5,7,13,.82));border-bottom:1px solid rgba(120,180,255,.14);text-align:left}
 .admT{font-size:17px;font-weight:800;color:#67e8f9;letter-spacing:.5px}
 .admTSub{font-size:10.5px;color:#5f748c;letter-spacing:1.2px;margin-top:2px}
 .admCard{background:linear-gradient(180deg,rgba(16,26,42,.96),rgba(8,13,22,.96));border:1px solid rgba(103,232,249,.18);border-radius:16px;padding:13px 13px 11px;margin-bottom:11px;box-shadow:0 4px 14px rgba(0,0,0,.24);text-align:left}
-.admH{display:flex;align-items:baseline;gap:8px;font-size:13.5px;font-weight:800;color:#8be9ff;letter-spacing:.3px;margin-bottom:10px}
+.admH{display:flex;align-items:baseline;gap:8px;font-size:13.5px;font-weight:800;color:#8be9ff;letter-spacing:.3px;margin-bottom:10px;flex-wrap:wrap}
 .admSub{font-size:10.5px;color:#6f8399;font-weight:400}
 .admField{display:block;font-size:11.5px;color:#9fb2d0;margin-bottom:8px;text-align:left}
 .admInput{width:100%;margin-top:5px;padding:9px 10px;border-radius:10px;background:#080f1a;color:#e8eefc;border:1px solid rgba(255,255,255,.13);font-size:12.5px;outline:none;text-align:left}
 .admInput:focus{border-color:rgba(103,232,249,.55)}
 .admGrid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .admBtnRow{display:flex;gap:8px;margin-top:4px}
-.admBtn{flex:1;padding:9px;font-size:12px;border-radius:10px}
+.admBtn{flex:1;padding:9px 8px;font-size:12px;border-radius:10px;white-space:nowrap;line-height:1.35}
 .admHint{font-size:11.5px;color:#7d8aa8;line-height:1.7;margin-top:8px;min-height:14px;text-align:left}
 .admStat{font-size:11.5px;color:#9fb2d0;line-height:1.9;text-align:left}
 .admList{display:flex;flex-direction:column;gap:6px;margin-top:8px;text-align:left}
@@ -1166,15 +1166,8 @@ body.is-touch .nhTime{display:none !important}
         <button class="btn" id="btnHelpBack">返回主菜单</button>
       </div>
     </div>
-    <div class="overlay hidden" id="touchHelpScreen">
-      <div class="title">手机操作说明</div>
-      <div class="helpBody" id="touchHelpBody"></div>
-      <div class="rowBtns">
-        <button class="btn" id="btnTouchHelpBack">返回主菜单</button>
-      </div>
-    </div>
     <div class="overlay hidden" id="settingsScreen">
-      <div class="title">自定义设置 <span id="verTag" style="font-size:11px;color:#7d8aa8;font-weight:400;display:block;margin-top:2px">v2.8.5</span></div>
+      <div class="title">自定义设置 <span id="verTag" style="font-size:11px;color:#7d8aa8;font-weight:400;display:block;margin-top:2px">v2.8.6</span></div>
       <div id="settingsWrap" style="text-align:left;max-width:320px;line-height:2.2">
         <div>摇杆大小 <input type="range" id="setJoy" min="60" max="140" value="88" style="width:100%"></div>
         <div>开火键大小 <input type="range" id="setFire" min="50" max="120" value="74" style="width:100%"></div>
@@ -1218,6 +1211,7 @@ body.is-touch .nhTime{display:none !important}
         <div id="historyBox" style="display:none;margin-top:10px;border-top:1px solid rgba(255,255,255,.1);padding-top:10px">
           <div style="font-size:13px;font-weight:800;color:#67e8f9;margin-bottom:6px">修改历史</div>
           <div style="line-height:1.8">
+            <div><b style="color:#ffd34d">v2.8.6</b>　战场地图新增 4 张（5V5：集装箱堆场、双门推进；1V1：中央回字、长廊对峙），共 10 张，说明书已同步；手机操作说明整章并入玩法说明书，去掉独立入口</div>
             <div><b style="color:#ffd34d">v2.8.5</b>　界面细节修复：滚动与布局更顺，标题区不再遮挡内容</div>
             <div><b style="color:#ffd34d">v2.8.4</b>　玩法说明书排版优化：战场地图改成卡片式（每图地形 / 打法分行显示），角色表在手机上可横向滑动；界面细节修复</div>
             <div><b style="color:#ffd34d">v2.8.3</b>　玩法说明书新增「战场地图」章节：6 张地图逐图写明地形与打法要点；手机操作说明整章并入说明书（摇杆、开火、技能、退出、界面调节、联机规则）</div>
@@ -1357,6 +1351,18 @@ const MAPS = {
         {x:250,y:200,w:120,h:90},{x:910,y:200,w:120,h:90},
         {x:250,y:510,w:120,h:90},{x:910,y:510,w:120,h:90},
       ]},
+    { name:'集装箱堆场', obs:[
+        {x:330,y:150,w:110,h:90},{x:520,y:150,w:110,h:90},{x:710,y:150,w:110,h:90},{x:900,y:150,w:110,h:90},
+        {x:330,y:430,w:110,h:90},{x:520,y:430,w:110,h:90},{x:710,y:430,w:110,h:90},{x:900,y:430,w:110,h:90},
+        {x:330,y:650,w:110,h:90},{x:520,y:650,w:110,h:90},{x:710,y:650,w:110,h:90},{x:900,y:650,w:110,h:90},
+        {x:600,y:300,w:80,h:120},
+      ]},
+    { name:'双门推进', obs:[
+        {x:470,y:120,w:70,h:200},{x:470,y:430,w:70,h:250},
+        {x:710,y:120,w:70,h:200},{x:710,y:430,w:70,h:250},
+        {x:600,y:330,w:120,h:60},
+        {x:250,y:600,w:120,h:80},{x:910,y:600,w:120,h:80},
+      ]},
   ],
   '1v1': [
     { name:'对称十字', obs:CFG.modes['1v1'].obs },
@@ -1367,6 +1373,14 @@ const MAPS = {
     { name:'双塔对峙', obs:[
         {x:430,y:120,w:100,h:140},{x:430,y:340,w:100,h:140},
         {x:180,y:250,w:70,h:110},{x:710,y:250,w:70,h:110}, // 侧翼小掩体：原来只有两座塔，全图无处可躲
+      ]},
+    { name:'中央回字', obs:[
+        {x:430,y:150,w:100,h:60},{x:430,y:430,w:100,h:60},
+        {x:350,y:240,w:60,h:110},{x:550,y:240,w:60,h:110},
+      ]},
+    { name:'长廊对峙', obs:[
+        {x:200,y:110,w:560,h:60},{x:200,y:430,w:560,h:60},
+        {x:450,y:270,w:60,h:60},
       ]},
   ],
 };
@@ -3875,7 +3889,7 @@ function runSelfCheck(){
   // 3. 配置合法性
   ok('血量配置正常', CFG.maxHp>0 && CFG.respawnTime>0, 'HP'+CFG.maxHp+' 复活'+CFG.respawnTime+'s');
   ok('两种模式都注册', !!(CFG.modes['5v5'] && CFG.modes['1v1']));
-  ok('地图数据完整', !!(MAPS['5v5'] && MAPS['1v1'] && MAPS['5v5'].length===3 && MAPS['1v1'].length===3 && MAPS['5v5'].every(m=>Array.isArray(m.obs))));
+  ok('地图数据完整', !!(MAPS['5v5'] && MAPS['1v1'] && MAPS['5v5'].length>=5 && MAPS['1v1'].length>=5 && MAPS['5v5'].every(m=>Array.isArray(m.obs))));
   ok('角色表 10 个且数值合法（含堡垒/铁匠/静默/幽灵/炮锤/铆钉）', ROLE_IDS.length===10 && ROLE_IDS.every(id=>ROLES[id].dmg>0 && ROLES[id].speed>0 && ROLES[id].fireCD>0), ROLE_IDS.join('/'));
 
   // 4. 命名与身份
@@ -6126,27 +6140,6 @@ document.getElementById('btnLoginBack').addEventListener('click', ()=>{
   document.getElementById('menuScreen').classList.remove('hidden'); renderRankBar();
 });
 /* 手机操作说明弹窗 */
-document.getElementById('btnTouchHelp').addEventListener('click', ()=>{
-  document.getElementById('touchHelpBody').innerHTML = `
-    <div style="text-align:left;line-height:1.9">
-      <b style="color:#67e8f9">操作方式</b><br>
-      · <b>左半屏拖动</b> = 移动摇杆（上下左右）<br>
-      · <b>右下大红按钮</b> = 开火（自动瞄准最近敌人）<br>
-      · <b>黄色小按钮</b> = 释放角色技能<br>
-      · <b>左上角 ✕</b> = 中途退出回主菜单<br><br>
-      <b style="color:#67e8f9">1V1 联机</b><br>
-      · 创建房间 → 出 4 位房号<br>
-      · 好友输入房号加入 → 自动开战<br>
-      · 位置和子弹实时同步<br><br>
-      <b style="color:#67e8f9">提示</b><br>
-      · 竖屏拿手机，画面自动横过来<br>
-      · 角色信息在顶部左右两侧<br>
-      · 血量条颜色：绿>黄>红
-    </div>`;
-  menuScreen.classList.add('hidden');
-  touchHelpScreen.classList.remove('hidden');
-});
-bindBtn('btnTouchHelpBack', ()=>{ touchHelpScreen.classList.add('hidden'); menuScreen.classList.remove('hidden'); renderRankBar(); });
 bindBtn('btnShare', ()=>{
   const url = window.location.href;
   if(navigator.share){
@@ -6694,9 +6687,13 @@ function buildHelp(){
     ['5V5','经典巷战','中路开阔，两翼零散矮墙','正面压制推进，两翼绕后夹击，别在中路站桩'],
     ['5V5','横排走廊','上下两道长墙 + 中央竖掩体','沿走廊对枪、卡墙角探头，从侧门切后排'],
     ['5V5','中央要塞','中央大方块要塞 + 四角小掩体','先抢中央控制视野，被打退就退四角打游击'],
+    ['5V5','集装箱堆场','三排集装箱阵列，横向通道多','贴近箱子打巷战，注意背后与侧翼绕后'],
+    ['5V5','双门推进','两列竖墙留双门，中央小桥','分两路破门推进，中央小桥是抢分点'],
     ['1V1','对称十字','十字形掩体，两侧完全对称','中距离卡十字边角对枪，绕半圈换角度'],
     ['1V1','四角掩体','四角各一块掩体，中间空旷','贴角突进、短兵相接，别在空地停留'],
     ['1V1','双塔对峙','两座竖塔 + 左右小掩体','卡塔侧视野打预瞄，用侧掩体换血再进'],
+    ['1V1','中央回字','四块掩体围成回字，中间留空','绕圈走位，从缺口切进去贴脸'],
+    ['1V1','长廊对峙','上下两道长墙，中央小掩体','远距离对枪消耗，靠中央掩体换角度'],
   ].map(r=>'<div class="mapItem"><div class="mapHead">'+r[0]+' · '+r[1]+'</div>'
     +'<div class="mapLine">地形：'+r[2]+'</div><div class="mapLine">打法：'+r[3]+'</div></div>').join('');
   document.getElementById('helpBody').innerHTML =
