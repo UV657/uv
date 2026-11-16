@@ -756,8 +756,10 @@ body.is-touch .nhTime{display:none !important}
 
     <!-- 明信片弹窗 -->
     <div class="overlay hidden" id="cardScreen">
-      <div id="cardBody" style="width:100%;max-width:340px"></div>
-      <div class="rowBtns" style="margin-top:14px"><button class="btn" id="cardClose">关 闭</button></div>
+      <div id="cardScroll" style="width:100%;max-width:340px;max-height:72vh;overflow-y:auto;-webkit-overflow-scrolling:touch;border-radius:14px">
+        <div id="cardBody" style="width:100%"></div>
+      </div>
+      <div class="rowBtns" style="margin-top:12px"><button class="btn" id="cardClose">关 闭</button></div>
     </div>
 
     <!-- 收到好友邀请 -->
@@ -1200,7 +1202,7 @@ body.is-touch .nhTime{display:none !important}
       </div>
     </div>
     <div class="overlay hidden" id="settingsScreen">
-      <div class="title">自定义设置 <span id="verTag" style="font-size:11px;color:#7d8aa8;font-weight:400;display:block;margin-top:2px">v2.8.9</span></div>
+      <div class="title">自定义设置 <span id="verTag" style="font-size:11px;color:#7d8aa8;font-weight:400;display:block;margin-top:2px">v2.8.10</span></div>
       <div id="settingsWrap" style="text-align:left;max-width:320px;line-height:2.2">
         <div>摇杆大小 <input type="range" id="setJoy" min="60" max="140" value="88" style="width:100%"></div>
         <div>开火键大小 <input type="range" id="setFire" min="50" max="120" value="74" style="width:100%"></div>
@@ -1244,6 +1246,7 @@ body.is-touch .nhTime{display:none !important}
         <div id="historyBox" style="display:none;margin-top:10px;border-top:1px solid rgba(255,255,255,.1);padding-top:10px">
           <div style="font-size:13px;font-weight:800;color:#67e8f9;margin-bottom:6px">修改历史</div>
           <div style="line-height:1.8">
+            <div><b style="color:#ffd34d">v2.8.10</b>　修排行榜里点开明信片、一关就跳到好友页的问题（现在从哪进的卡就回哪：榜单回榜单、个人主页回个人主页）；明信片卡片限高可滚动、点空白处也能关；打开排行榜时首页自动收起，画面不再层层叠满</div>
             <div><b style="color:#ffd34d">v2.8.9</b>　排行榜新增「今日击杀 / 今日胜场」，只算当天战绩、每天 0 点自动换榜归零；自检新增本地数据健康检查，发现问题在面板顶部一键修复后自动重新检查</div>
             <div><b style="color:#ffd34d">v2.8.8</b>　玩法说明书每张地图加了俯视示意图（障碍与红蓝出生点都画出来）；首页顶部新增排行榜入口卡（击杀 / 胜场 / 段位 / 点赞 实时更新，点谁看谁的明信片）；公告同步改为双中转各发一份并逐台回读确认</div>
             <div><b style="color:#ffd34d">v2.8.7</b>　新增排行榜：击杀 / 胜场 / 段位分 / 点赞 四个榜，全服实时刷新，点任意一位可以看他的明信片（自己那行会高亮）</div>
@@ -6010,7 +6013,8 @@ function fwShowCard(uid){
       +'<button class="btn" data-inv="'+esc(uid)+'" style="flex:1;padding:9px;font-size:13px">拉他进房间</button>'
       +'<button class="btn ghost" data-copyuid="'+esc(uid)+'" style="flex:1;padding:9px;font-size:13px">复制档案号</button></div>'});
   }
-  FW.cardFrom = document.getElementById('profileScreen').classList.contains('hidden') ? 'friend' : 'profile';
+  const vis=id=>{ const e=document.getElementById(id); return !!(e && !e.classList.contains('hidden')); };
+  FW.cardFrom = vis('rankScreen') ? 'rank' : (vis('profileScreen') ? 'profile' : (vis('friendScreen') ? 'friend' : 'menu'));
   document.querySelectorAll('.overlay').forEach(ov=>{ if(ov.id!=='cardScreen') ov.classList.add('hidden'); });
   document.getElementById('cardScreen').classList.remove('hidden');
 }
@@ -6063,6 +6067,7 @@ function rankRender(){
 }
 function rankOpen(){
   sClick();
+  menuScreen.classList.add('hidden');
   document.querySelectorAll('.overlay').forEach(ov=>{ if(ov.id!=='rankScreen') ov.classList.add('hidden'); });
   document.getElementById('rankScreen').classList.remove('hidden');
   rankRender();
@@ -6334,9 +6339,17 @@ document.getElementById('rankList').addEventListener('click', e=>{
   const row=e.target.closest('[data-rankuid]'); if(!row) return;
   rankOpenCard(row.dataset.rankuid);
 });
-bindBtn('cardClose', ()=>{ sClick(); document.getElementById('cardScreen').classList.add('hidden');
-  const back = (FW.cardFrom==='profile') ? 'profileScreen' : 'friendScreen';
-  document.getElementById(back).classList.remove('hidden'); });
+function closeCardScreen(){
+  sClick();
+  document.getElementById('cardScreen').classList.add('hidden');
+  const from=FW.cardFrom||'menu';
+  if(from==='rank'){ document.getElementById('rankScreen').classList.remove('hidden'); }
+  else if(from==='profile'){ document.getElementById('profileScreen').classList.remove('hidden'); }
+  else if(from==='friend'){ document.getElementById('friendScreen').classList.remove('hidden'); }
+  else { menuScreen.classList.remove('hidden'); }
+}
+bindBtn('cardClose', closeCardScreen);
+document.getElementById('cardScreen').addEventListener('click', e=>{ if(e.target.id==='cardScreen') closeCardScreen(); });
 bindBtn('inviteReject', ()=>{ sClick(); FW.invite=null; document.getElementById('inviteScreen').classList.add('hidden'); });
 bindBtn('inviteAccept', ()=>{
   sClick();
