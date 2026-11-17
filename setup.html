@@ -9,13 +9,16 @@ h1{font-size:19px;margin:4px 0 10px}h2{font-size:14px;margin:20px 0 6px;color:#2
 pre{background:#111a29;border:1px solid rgba(90,140,200,.22);border-radius:12px;padding:12px;font-size:11px;line-height:1.55;overflow-x:auto;white-space:pre;color:#b8cbe6;max-height:320px}
 </style></head><body>
 <h1>枪战 · 云端配置脚本</h1>
-<p>两段分开跑，各复制各的。打开 Supabase → SQL Editor → New query → 粘贴 → Run，看到 Success 就好（跑过一次再点也不会出错）。</p>
+<p>三段分开跑，各复制各的；顺序 ① → ② → ③。打开 Supabase → SQL Editor → New query → 粘贴 → Run，看到 Success 就好（跑过一次再点也不会出错）。</p>
 <h2>① 账号表（已经跑过可跳过）</h2>
 <button class="btn" id="c1">复制账号表 SQL</button>
 <pre id="p1"></pre>
-<h2>② 终端配置上云（这次要跑的）</h2>
+<h2>② 终端配置上云</h2>
 <button class="btn" id="c2">复制终端配置 SQL</button>
 <pre id="p2"></pre>
+<h2>③ 管理口令改哈希（②跑完再跑）</h2>
+<button class="btn" id="c3">复制管理口令 SQL</button>
+<pre id="p3"></pre>
 <script>
 const S1 = `-- 枪战：云端账号表 + 只暴露校验函数（匿名角色不能直接读表）
 create table if not exists public.accounts(
@@ -95,10 +98,24 @@ end $$;
 grant execute on function public.cfg_get(text) to anon;
 grant execute on function public.cfg_set(text, jsonb, text) to anon;
 `;
+const S3 = `-- 管理口令只存哈希：打开终端要联网校验，源码里查不到明文
+delete from public.admin_secret;
+insert into public.admin_secret(t) values ('2b4b9f7a2ec2c003cda8e54e0bc08735976657f931fcf12b11af1711f00f6523');
+
+create or replace function public.adm_verify(p_token text) returns jsonb
+language plpgsql security definer set search_path = public as $$
+begin
+  if exists(select 1 from admin_secret where t = p_token) then return jsonb_build_object('ok', true); end if;
+  return jsonb_build_object('ok', false, 'err', 'bad_token');
+end $$;
+
+grant execute on function public.adm_verify(text) to anon;
+`;
 document.getElementById('p1').textContent = S1;
 document.getElementById('p2').textContent = S2;
+document.getElementById('p3').textContent = S3;
 function hook(id, sql){ document.getElementById(id).addEventListener('click', async (e) => {
   const b=e.currentTarget; try{ await navigator.clipboard.writeText(sql); b.textContent='✓ 已复制，去 SQL Editor 粘贴'; b.classList.add('ok'); }
   catch(err){ b.textContent='复制失败，请长按下面代码手动选中'; } }); }
-hook('c1', S1); hook('c2', S2);
+hook('c1', S1); hook('c2', S2); hook('c3', S3);
 </script></body></html>
