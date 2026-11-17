@@ -1248,7 +1248,7 @@ body.is-touch .nhTime{display:none !important}
       </div>
     </div>
     <div class="overlay hidden" id="settingsScreen">
-      <div class="title">自定义设置 <span id="verTag" style="font-size:11px;color:#7d8aa8;font-weight:400;display:block;margin-top:2px">v2.9.1</span></div>
+      <div class="title">自定义设置 <span id="verTag" style="font-size:11px;color:#7d8aa8;font-weight:400;display:block;margin-top:2px">v2.9.2</span></div>
       <div id="settingsWrap" style="text-align:left;max-width:320px;line-height:2.2">
         <div>摇杆大小 <input type="range" id="setJoy" min="60" max="140" value="88" style="width:100%"></div>
         <div>开火键大小 <input type="range" id="setFire" min="50" max="120" value="74" style="width:100%"></div>
@@ -1292,6 +1292,7 @@ body.is-touch .nhTime{display:none !important}
         <div id="historyBox" style="display:none;margin-top:10px;border-top:1px solid rgba(255,255,255,.1);padding-top:10px">
           <div style="font-size:13px;font-weight:800;color:#67e8f9;margin-bottom:6px">修改历史</div>
           <div style="line-height:1.8">
+            <div><b style="color:#ffd34d">v2.9.2</b>　账号上云：代号和密码存到云端服务器，换手机、清缓存后用同一个代号+密码就能登回来（档案号、好友、明信片、战绩都跟着走）；改密码自动同步云端；一个代号只对应一个账号；断网建号先存本机，联网自动补传</div>
             <div><b style="color:#ffd34d">v2.9.1</b>　关注/互关修好：别人关注你，即使当时你不在线，下次打开也会在好友页「粉丝」里看到（首页好友按钮会亮人数）；双方互关后两人那边都显示「互关」并能拉联机；取关后对方会从你的粉丝里消失</div>
             <div><b style="color:#ffd34d">v2.9.0</b>　账号密码登录：第一次进入要给代号设一个 4-12 位密码，之后每次打开都要输对密码才进战场；密码只在本机保存（加盐哈希，看不到明文），个人主页可以改密码</div>
             <div><b style="color:#ffd34d">v2.8.15</b>　准备室把对手的选择做成卡片：角色、武器、准备状态各自成一块，对手一改房主这边立刻跟着变；首页排行榜卡去掉前面那个「1」</div>
@@ -3819,9 +3820,37 @@ document.getElementById('btnExitFight').addEventListener('touchstart', e=>{ e.pr
 document.getElementById('btnExitFight').addEventListener('click', e=>{ e.preventDefault(); e.stopPropagation(); if(state.running && !state.ended) backToMenu(); });
 
 /* 登录：昵称进入 */
-/* ================= 本机账号与密码 =================
-   没有服务器：账号和密码只存这台设备的 localStorage，换设备/清缓存就不通用。
+/* ================= 账号与密码 =================
+   云端存（Supabase，只开放校验函数）；localStorage 里留一份做离线校验和兜底。
    密码用 salt + SHA-256 迭代 120 次存哈希，localStorage 里看不到明文。 */
+/* 云端账号：Supabase 只开放四个校验函数，表本身匿名角色读不到 */
+const CLOUD={url:'https://tbhtvxchzberndmsesll.supabase.co', key:'sb_publishable_xBtbyqLMhvC6GBjEa4xpoQ_69FO5MX-'};
+async function cloudRpc(fn, body){
+  try{
+    const ac=(typeof AbortController!=='undefined')?new AbortController():null;
+    const tm=ac?setTimeout(()=>{ try{ ac.abort(); }catch(e){} }, 12000):null;
+    const r=await fetch(CLOUD.url+'/rest/v1/rpc/'+fn, {
+      method:'POST',
+      headers:{'apikey':CLOUD.key, 'Authorization':'Bearer '+CLOUD.key, 'Content-Type':'application/json'},
+      body:JSON.stringify(body||{}),
+      signal:ac?ac.signal:undefined
+    });
+    if(tm) clearTimeout(tm);
+    if(!r.ok) return {ok:false, err:'http_'+r.status};
+    const j=await r.json();
+    return (j && typeof j==='object')? j : {ok:false, err:'bad_resp'};
+  }catch(e){ return {ok:false, err:'offline'}; }
+}
+/* 本机老账号补传云端：只在这个代号云端还没有记录时上传 */
+function accCloudSync(){
+  const acc=accLoad(); if(!acc || acc.cloud) return;
+  cloudRpc('acc_salt',{p_name:acc.name}).then(cs=>{
+    if(!cs || cs.ok || cs.err!=='no_account') return;
+    return cloudRpc('acc_register',{p_name:acc.name, p_salt:acc.salt, p_hash:acc.hash, p_uid:ensureUid()}).then(rg=>{
+      if(rg && rg.ok){ const a=accLoad(); if(a){ a.cloud=true; accSave(a); } }
+    });
+  }).catch(()=>{});
+}
 const ACC_KEY='gunAccount', ACC_FAIL={n:0,t:0};
 function accLoad(){ try{ const a=JSON.parse(lsGetRaw(ACC_KEY)||'null'); if(a && a.name && a.salt && a.hash) return a; }catch(e){} return null; }
 function accSave(a){ try{ lsSet(ACC_KEY,a); }catch(e){} }
@@ -3855,9 +3884,9 @@ const nickInput=document.getElementById('nickInput'), loginScreen=document.getEl
 (function(){
   const acc0=accLoad(), pEl=document.getElementById('pwdInput'), eBtn=document.getElementById('btnEnter'), tp=document.getElementById('nickTip');
   if(!acc0){
-    if(eBtn) eBtn.textContent='创建账号 · 进入战场';
-    if(pEl) pEl.placeholder='设置密码（4-12 位，仅本机有效）';
-    if(!lsGetRaw('cs_nick') && tp){ tp.style.color='#ffd34d'; tp.textContent='先取个代号，再设一个密码，账号就绑在这台设备上'; }
+    if(eBtn){ eBtn.textContent='创建账号 · 进入战场'; eBtn.dataset.base='创建账号 · 进入战场'; }
+    if(pEl) pEl.placeholder='设置密码（4-12 位，自动同步云端）';
+    if(!lsGetRaw('cs_nick') && tp){ tp.style.color='#ffd34d'; tp.textContent='先取个代号，再设密码（换手机也能登）'; }
   }
 })();
 const savedNick=lsGetRaw('cs_nick');
@@ -3868,11 +3897,11 @@ if(savedNick){
     if(acc0){
       nickInput.readOnly=true; nickInput.style.opacity='.62';
       if(pEl) pEl.placeholder='输入密码（4-12 位）';
-      if(eBtn) eBtn.textContent='登录 · 进入战场';
+      if(eBtn){ eBtn.textContent='登录 · 进入战场'; eBtn.dataset.base='登录 · 进入战场'; }
     }else{
-      if(pEl) pEl.placeholder='设置密码（4-12 位，仅本机有效）';
-      if(eBtn) eBtn.textContent='创建账号 · 进入战场';
-      if(tp){ tp.style.color='#ffd34d'; tp.textContent='首次使用：给这个账号设一个密码'; }
+      if(pEl) pEl.placeholder='设置密码（4-12 位，自动同步云端）';
+      if(eBtn){ eBtn.textContent='创建账号 · 进入战场'; eBtn.dataset.base='创建账号 · 进入战场'; }
+      if(tp){ tp.style.color='#ffd34d'; tp.textContent='首次使用：给这个账号设一个密码（会存到云端）'; }
     }
   }
   loginScreen.classList.remove('hidden');
@@ -3916,13 +3945,13 @@ document.getElementById('btnEnter').addEventListener('click', async ()=>{
   }
   if(n.length<2){ if(tip) tip.textContent='代号至少 2 个字'; return; }
   if(AI_NAMES.includes(n)){ if(tip) tip.textContent='「'+n+'」是 AI 专用代号，换个名字'; return; }
-  const uid=ensureUid();
+  let uid=ensureUid();
   const pwIn=((document.getElementById('pwdInput')||{}).value||'').trim();
-  /* —— 本机账号密码：先本地校验，密码错就不用等联网查重 —— */
+  /* —— 账号密码：本机有账号先本地校验；换的新设备直接走云端 —— */
   {
     const acc0=accLoad();
+    const tip0=document.getElementById('nickTip');
     if(acc0){
-      const tip0=document.getElementById('nickTip');
       if(fwKey(n)!==fwKey(acc0.name)){
         nickInput.value=acc0.name;
         if(tip0) tip0.textContent='这台设备的账号是「'+acc0.name+'」，请用它登录';
@@ -3930,18 +3959,44 @@ document.getElementById('btnEnter').addEventListener('click', async ()=>{
       }
       if(pwIn.length<4){ if(tip0) tip0.textContent='请输入账号密码'; return; }
       if(ACC_FAIL.n>=5 && Date.now()-ACC_FAIL.t<8000){ if(tip0) tip0.textContent='密码错太多次，8 秒后再试'; return; }
-      if(tip0) tip0.textContent='正在校验密码…';
+      if(tip0){ tip0.style.color='#9fb2d0'; tip0.textContent='正在校验密码…'; }
       const h0=await accHash(pwIn, acc0.salt);
       if(h0!==acc0.hash){
-        ACC_FAIL.n++; ACC_FAIL.t=Date.now();
-        if(tip0) tip0.textContent=ACC_FAIL.n>=5?'密码连续错 5 次，8 秒后再试':'密码不对，还剩 '+(5-ACC_FAIL.n)+' 次';
-        return;
+        let fixed=false;
+        const cs=await cloudRpc('acc_salt',{p_name:n});
+        if(cs && cs.ok && cs.salt && cs.salt!==acc0.salt){
+          const h1=await accHash(pwIn, cs.salt);
+          const lg=await cloudRpc('acc_login',{p_name:n, p_hash:h1});
+          if(lg && lg.ok){ accSave({name:n, salt:cs.salt, hash:h1, ts:Date.now(), cloud:true}); fixed=true; }
+        }
+        if(!fixed){
+          ACC_FAIL.n++; ACC_FAIL.t=Date.now();
+          if(tip0){ tip0.style.color='#ff9f9f'; tip0.textContent=ACC_FAIL.n>=5?'密码连续错 5 次，8 秒后再试':'密码不对，还剩 '+(5-ACC_FAIL.n)+' 次'; }
+          return;
+        }
       }
       ACC_FAIL.n=0;
-    }else if(pwIn.length<4||pwIn.length>12){
-      const tip0=document.getElementById('nickTip');
-      if(tip0) tip0.textContent='首次登录：给这个账号设 4-12 位密码';
-      return;
+    }else{
+      if(pwIn.length<4||pwIn.length>12){ if(tip0){ tip0.style.color='#ff9f9f'; tip0.textContent='输入 4-12 位密码：老账号直接登录，新代号会自动注册'; } return; }
+      if(ACC_FAIL.n>=5 && Date.now()-ACC_FAIL.t<8000){ if(tip0) tip0.textContent='密码错太多次，8 秒后再试'; return; }
+      if(tip0){ tip0.style.color='#9fb2d0'; tip0.textContent='正在连接云端账号…'; }
+      const cs=await cloudRpc('acc_salt',{p_name:n});
+      if(cs && cs.ok && cs.salt){
+        const h=await accHash(pwIn, cs.salt);
+        const lg=await cloudRpc('acc_login',{p_name:n, p_hash:h});
+        if(!lg || !lg.ok){
+          ACC_FAIL.n++; ACC_FAIL.t=Date.now();
+          if(tip0){ tip0.style.color='#ff9f9f'; tip0.textContent=(lg && lg.err==='bad_pwd')?('密码不对，还剩 '+(5-ACC_FAIL.n)+' 次'):'云端暂时连不上，稍后再试'; }
+          return;
+        }
+        accSave({name:n, salt:cs.salt, hash:h, ts:Date.now(), cloud:true});
+        if(lg.uid && /^\d{10}$/.test(lg.uid) && lg.uid!==uid){
+          uid=lg.uid; lsSet('cs_uid', uid);
+          try{ const r=nickReg(); r[n]=uid; lsSet('gunNickReg', r); }catch(e){}
+          toastMsg('已同步云端档案号');
+        }
+        ACC_FAIL.n=0;
+      }
     }
   }
   // 允许重名：和主流射击游戏一致，同名玩家靠档案号区分，不拦人
@@ -3969,13 +4024,20 @@ document.getElementById('btnEnter').addEventListener('click', async ()=>{
     spent=spendRename();
     if(!spent.ok){ nickRelease(n, uid); if(tip) tip.textContent='本月 '+RENAME_FREE+' 次改名已用完：去「我的主页」用 '+CARD_COST+' 荣誉换改名卡，或等下个月'; return; }
   }
-  /* —— 首次登录：这一下才真正建号（昵称已经过查重）—— */
+  /* —— 首次登录：这一下才真正建号（昵称已经过查重，账号写进云端）—— */
   if(!accNow){
     if(pwIn.length<4||pwIn.length>12){ nickRelease(n, uid); if(tip) tip.textContent='首次登录：请设置 4-12 位密码'; return; }
-    if(tip) tip.textContent='正在创建账号…';
+    if(tip){ tip.style.color='#9fb2d0'; tip.textContent='正在创建账号…'; }
     const salt=accRandSalt(), h=await accHash(pwIn, salt);
-    accSave({name:n, salt, hash:h, ts:Date.now()});
+    const rg=await cloudRpc('acc_register',{p_name:n, p_salt:salt, p_hash:h, p_uid:uid});
+    if(rg && rg.ok===false && rg.err==='name_taken'){
+      nickRelease(n, uid);
+      if(tip){ tip.style.color='#ff9f9f'; tip.textContent='「'+n+'」已经有账号了：是你就填原来的密码再点一次；不是就换个代号'; }
+      return;
+    }
+    accSave({name:n, salt, hash:h, ts:Date.now(), cloud:!!(rg && rg.ok)});
     ACC_FAIL.n=0;
+    if(rg && rg.ok===false && rg.err==='offline' && tip){ tip.style.color='#ffd34d'; tip.textContent='云端没连上：账号先存这台设备，下次登录自动同步'; }
   }
   if(tip) tip.textContent='';
   lsSet('cs_nick', n);
@@ -3987,6 +4049,7 @@ document.getElementById('btnEnter').addEventListener('click', async ()=>{
   }
   loginScreen.classList.add('hidden'); menuScreen.classList.remove('hidden'); renderRankBar();
   fwInit().then(()=>{ fwPublishCard(); fwRenderList(); });
+  accCloudSync();
   updateBestRecord();
   updateDailyTask();
   const p1=state.players.find(p=>p.isHuman); if(p1) p1.name=n;
@@ -4006,6 +4069,8 @@ function runSelfCheck(){
     ok('账号记录结构合法', !a || (typeof a.name==='string' && a.name.length>=2 && typeof a.salt==='string' && a.salt.length>=8 && typeof a.hash==='string' && a.hash.length>=16),
       a? ('账号「'+a.name+'」') : '尚未创建（首次登录时设置）');
     ok('账号密码已设置', !a || (typeof a.hash==='string' && a.hash.length>=16), a? '已设置' : '未设置');
+    ok('云端账号接口已配置', !!(CLOUD && String(CLOUD.url).indexOf('https://')===0 && String(CLOUD.key).length>20), String(CLOUD.url).replace('https://',''));
+    ok('云端账号函数可用', typeof cloudRpc==='function' && typeof accCloudSync==='function', 'Supabase RPC');
   })();
 
   // 2. 关键函数齐全（缺一个就说明打包漏了代码）
@@ -5284,7 +5349,7 @@ function maintApply(){
     btn.disabled=on;
     btn.style.opacity=on?'0.45':'';
     btn.style.cursor=on?'not-allowed':'';
-    btn.textContent=on?'维护中，暂停进入':'进入战场';
+    btn.textContent=on?'维护中，暂停进入':(btn.dataset.base||'进入战场');
   }
   const mb=document.getElementById('maintBar'); if(mb) mb.classList.toggle('hidden', !on);
   if(window.__ADMIN_PAGE) return;   // 终端自己不被跳转，只更新状态显示
@@ -7129,7 +7194,7 @@ bindBtn('btnMenu', backToMenu);
 bindBtn('btnQuit', backToMenu);
 bindBtn('btnResume', togglePause);
 const FEEDBACK_MAIL='liuweijun520@qq.com';
-/* 修改密码：只改本机账号的密码，昵称/战绩/好友都不动 */
+/* 修改密码：本机校验旧密码 → 云端同步新密码，昵称/战绩/好友都不动 */
 bindBtn('btnPwd', ()=>{
   sClick();
   const acc=accLoad();
@@ -7160,9 +7225,14 @@ bindBtn('btnPwdSave', async ()=>{
   const told=await accHash(oldP, acc.salt);
   if(told!==acc.hash){ tip.style.color='#ff9f9f'; tip.textContent='当前密码不对'; return; }
   const salt=accRandSalt(), h=await accHash(n1, salt);
-  accSave({name:acc.name, salt, hash:h, ts:Date.now()});
+  tip.style.color='#9fb2d0'; tip.textContent='正在同步到云端…';
+  const cp=await cloudRpc('acc_changepwd',{p_name:acc.name, p_old:told, p_salt:salt, p_hash:h});
+  if(cp && cp.ok===false && cp.err==='no_account'){
+    await cloudRpc('acc_register',{p_name:acc.name, p_salt:salt, p_hash:h, p_uid:ensureUid()});
+  }
+  accSave({name:acc.name, salt, hash:h, ts:Date.now(), cloud:true});
   ACC_FAIL.n=0;
-  tip.style.color='#33e08a'; tip.textContent='密码已修改';
+  tip.style.color='#33e08a'; tip.textContent='密码已修改' + ((cp && cp.ok)?'（已同步云端）':'（云端未同步，下次联网自动补）');
   toastMsg('密码已修改，下次登录用新密码');
   setTimeout(()=>{
     document.getElementById('pwdScreen').classList.add('hidden');
@@ -7282,7 +7352,9 @@ function buildHelp(){
     +'· <b>档案号</b>（10 位纯数字，形如 4829137560）是你的身份凭证，改名不影响战绩归属；别人搜你时输名字或档案号都可以。<br>'
     +'· <b>改名次数</b>：每个自然月 3 次免费；用完后花 '+CARD_COST+' 荣誉在「我的明信片」里换一张改名卡，再用卡改名。<br>'
     +'· <b>名字是永久的</b>：你改用别的名字后，旧名字仍归你，别人拿不走，你也随时能改回来。<br>'
-    +'· 断网时查不了重名，会直接放行；清掉浏览器缓存换设备，档案号会变，原来的名字可能被别人抢注。</div>'
+    +'· <b>账号在云端</b>：代号+密码存在服务器上，换手机、清缓存后用同一组代号密码就能登回来，档案号、好友、明信片、战绩都跟着走。<br>'
+    +'· <b>一个代号只能有一个账号</b>：先注册先得；断网建号会先存本机，下次联网自动补传到云端。<br>'
+    +'· 忘记密码暂时找不回（没有绑定邮箱），请自己记牢；可在「我的主页 → 修改密码」随时改。</div>'
     +'<h5>七、手机与电脑</h5>'
     +'<div>· 同一个网址，浏览器自动判断：有触屏按手机模式，没触屏按电脑模式。<br>'
     +'· <b>两端联机互不相通</b>：电脑只能连电脑，手机只能连手机；房间码格式一样，但交叉输入进不去。<br>'
