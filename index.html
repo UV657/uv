@@ -166,6 +166,11 @@ body.is-touch.in-game.paused-fight #btnExitFight{display:none !important}
 .helpBody .mapLine{font-size:11.5px;color:#c7d6ee;line-height:1.7}
 .helpBody .tblWrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
 .helpBody .tblWrap table{min-width:560px}
+.helpBody .helpRoleCard{display:block;width:100%;box-sizing:border-box;background:rgba(20,40,70,.6);border:1px solid rgba(120,180,255,.22);border-radius:10px;padding:10px 12px;margin:8px 0}
+.helpBody .hrHead{font-size:13px;font-weight:800;color:#a5f3fc;margin-bottom:6px}
+.helpBody .hrStats{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:6px}
+.helpBody .hrStats span{font-size:11px;color:#dbe8f8;background:rgba(120,180,255,.14);border:1px solid rgba(120,180,255,.22);border-radius:6px;padding:2px 7px}
+.helpBody .hrSkill{font-size:11.5px;color:#c7d6ee;line-height:1.65}
 .helpBody table{width:100%;border-collapse:collapse;margin:6px 0}
 .helpBody th,.helpBody td{border:1px solid rgba(120,180,255,.2);padding:4px 8px;text-align:left;font-size:12px}
 .helpBody th{background:rgba(60,120,200,.28);color:#e0f2fe}
@@ -708,8 +713,8 @@ body.is-touch .nhTime{display:none !important}
         style="width:min(80vw,320px);padding:12px 16px;border-radius:10px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.06);color:#e8eefc;font-size:16px;text-align:center;outline:none">
       <input id="pwdInput" type="password" maxlength="12" autocomplete="current-password" placeholder="输入密码（4-12 位）"
         style="width:min(80vw,320px);padding:12px 16px;border-radius:10px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.06);color:#e8eefc;font-size:16px;text-align:center;margin-top:10px;outline:none">
-      <div id="nickTip" style="font-size:13px;color:#ff9f9f;min-height:18px;margin-top:6px"></div>
-      <button class="btn primary" id="btnEnter" style="margin-top:2px">进入战场</button>
+      <div id="nickTip" style="font-size:13px;color:#ff9f9f;min-height:18px;margin-top:10px;line-height:1.5"></div>
+      <button class="btn primary" id="btnEnter" style="margin-top:10px">进入战场</button>
       <button id="btnLoginBack" style="display:none;margin-top:10px;background:none;border:none;color:#8fa1bf;font-size:13px;cursor:pointer;text-decoration:underline">返回主菜单</button>
     </div>
 
@@ -1074,8 +1079,8 @@ body.is-touch .nhTime{display:none !important}
         style="width:min(80vw,320px);padding:12px 16px;border-radius:10px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.06);color:#e8eefc;font-size:16px;text-align:center;margin-top:9px;outline:none">
       <input id="pwdNew2" type="password" maxlength="12" placeholder="再输一次新密码" autocomplete="new-password"
         style="width:min(80vw,320px);padding:12px 16px;border-radius:10px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.06);color:#e8eefc;font-size:16px;text-align:center;margin-top:9px;outline:none">
-      <div id="pwdTip" style="font-size:13px;color:#ff9f9f;min-height:18px;margin-top:6px"></div>
-      <div class="rowBtns" style="margin-top:2px"><button class="btn ghost" id="btnPwdCancel">取消</button><button class="btn primary" id="btnPwdSave">保存</button></div>
+      <div id="pwdTip" style="font-size:13px;color:#ff9f9f;min-height:18px;margin-top:12px;line-height:1.5"></div>
+      <div class="rowBtns" style="margin-top:12px"><button class="btn ghost" id="btnPwdCancel">取消</button><button class="btn primary" id="btnPwdSave">保存</button></div>
     </div>
 
     <!-- 选人 -->
@@ -1248,7 +1253,7 @@ body.is-touch .nhTime{display:none !important}
       </div>
     </div>
     <div class="overlay hidden" id="settingsScreen">
-      <div class="title">自定义设置 <span id="verTag" style="font-size:11px;color:#7d8aa8;font-weight:400;display:block;margin-top:2px">v2.9.2</span></div>
+      <div class="title">自定义设置 <span id="verTag" style="font-size:11px;color:#7d8aa8;font-weight:400;display:block;margin-top:2px">v2.9.3</span></div>
       <div id="settingsWrap" style="text-align:left;max-width:320px;line-height:2.2">
         <div>摇杆大小 <input type="range" id="setJoy" min="60" max="140" value="88" style="width:100%"></div>
         <div>开火键大小 <input type="range" id="setFire" min="50" max="120" value="74" style="width:100%"></div>
@@ -1292,6 +1297,7 @@ body.is-touch .nhTime{display:none !important}
         <div id="historyBox" style="display:none;margin-top:10px;border-top:1px solid rgba(255,255,255,.1);padding-top:10px">
           <div style="font-size:13px;font-weight:800;color:#67e8f9;margin-bottom:6px">修改历史</div>
           <div style="line-height:1.8">
+            <div><b style="color:#ffd34d">v2.9.3</b>　玩法说明改版：角色参数从挤在一起的表格改成一角色一张卡（手机上不再被切掉半边）；登录页、改密码页的输入框和按钮重新排版；修复启动页一直卡在 0% 进不去的问题
             <div><b style="color:#ffd34d">v2.9.2</b>　账号上云：代号和密码存到云端服务器，换手机、清缓存后用同一个代号+密码就能登回来（档案号、好友、明信片、战绩都跟着走）；改密码自动同步云端；一个代号只对应一个账号；断网建号先存本机，联网自动补传</div>
             <div><b style="color:#ffd34d">v2.9.1</b>　关注/互关修好：别人关注你，即使当时你不在线，下次打开也会在好友页「粉丝」里看到（首页好友按钮会亮人数）；双方互关后两人那边都显示「互关」并能拉联机；取关后对方会从你的粉丝里消失</div>
             <div><b style="color:#ffd34d">v2.9.0</b>　账号密码登录：第一次进入要给代号设一个 4-12 位密码，之后每次打开都要输对密码才进战场；密码只在本机保存（加盐哈希，看不到明文），个人主页可以改密码</div>
@@ -4071,6 +4077,8 @@ function runSelfCheck(){
     ok('账号密码已设置', !a || (typeof a.hash==='string' && a.hash.length>=16), a? '已设置' : '未设置');
     ok('云端账号接口已配置', !!(CLOUD && String(CLOUD.url).indexOf('https://')===0 && String(CLOUD.key).length>20), String(CLOUD.url).replace('https://',''));
     ok('云端账号函数可用', typeof cloudRpc==='function' && typeof accCloudSync==='function', 'Supabase RPC');
+    ok('终端配置云端接口已配置', !!(CLOUD && typeof cfgToken==='function'), 'cfg_get / cfg_set');
+    ok('云端配置拉取可用', typeof cfgPull==='function', '45 秒轮询 + 中转触发');
   })();
 
   // 2. 关键函数齐全（缺一个就说明打包漏了代码）
@@ -5459,6 +5467,7 @@ function ptuneApplyRaw(o){
 }
 function ptunePublish(){
   ptuneSave();
+  cfgSet('ptune', {list: PTUNE.list, ts: Date.now()}).then(r=>{ try{ admLog(r&&r.ok?'云端参数已同步':'云端参数同步失败'); }catch(e){} });
   const payload=JSON.stringify({list:PTUNE.list, ts:Date.now()});
   if(NT.cli && NT.cli.connected){
     try{ NT.cli.publish(PTUNE_TOPIC, payload, {qos:1, retain:true}); return true; }catch(e){ return false; }
@@ -5492,6 +5501,50 @@ const NOTICE_TOPIC='gunfight9/notice';
 const NOTICE_STATUS_TOPIC='gunfight9/status';
 const NOTICE={fromList:false, cur:null, list:[], conn:false, tried:false, maint:false};
 const NT={cli:null};
+/* ===== 终端配置上云：公告 / 封禁 / 调参以云端为准，MQTT 只负责即时提醒 ===== */
+function cfgToken(){ return ADM_TOKEN||''; }   // 只有终端登录成功后才有值
+let cfgLast=0;
+async function cfgGet(key){
+  try{
+    const r=await fetch(CLOUD.url+'/rest/v1/rpc/cfg_get',{method:'POST',cache:'no-store',
+      headers:{'apikey':CLOUD.key,'Authorization':'Bearer '+CLOUD.key,'Content-Type':'application/json'},
+      body:JSON.stringify({p_key:key})});
+    if(!r.ok) return {ok:false, err:'http_'+r.status};
+    const j=await r.json();
+    return {ok:true, val:(j==null?null:j)};
+  }catch(e){ return {ok:false, err:'offline'}; }
+}
+async function cfgSet(key, val){
+  try{
+    const r=await fetch(CLOUD.url+'/rest/v1/rpc/cfg_set',{method:'POST',
+      headers:{'apikey':CLOUD.key,'Authorization':'Bearer '+CLOUD.key,'Content-Type':'application/json'},
+      body:JSON.stringify({p_key:key, p_val:val, p_token:cfgToken()})});
+    if(!r.ok) return {ok:false, err:'http_'+r.status};
+    return await r.json();
+  }catch(e){ return {ok:false, err:'offline'}; }
+}
+async function cfgPull(force){
+  const now=Date.now();
+  if(!force && now-cfgLast<5000) return; cfgLast=now;
+  const [n,b,p]=await Promise.all([cfgGet('notice'), cfgGet('ban'), cfgGet('ptune')]);
+  let changed=false;
+  if(n && n.ok && n.val){
+    try{
+      if(Array.isArray(n.val.list)){
+        NOTICE.list=n.val.list.map(noticeSanitize).filter(Boolean).slice(0,10);
+        noticeSave(); noticeRender(); changed=true;
+      }
+      if(typeof n.val.maint==='boolean' && NOTICE.maint!==n.val.maint){
+        NOTICE.maint=n.val.maint; noticeRender(); maintApply(); changed=true;
+      }
+    }catch(e){}
+  }
+  if(b && b.ok && b.val && Array.isArray(b.val.list)){ try{ banApplyRaw(b.val); changed=true; }catch(e){} }
+  if(p && p.ok && p.val && Array.isArray(p.val.list)){ try{ ptuneApplyRaw(p.val); changed=true; }catch(e){} }
+  return changed;
+}
+setTimeout(()=>{ try{ cfgPull(true); }catch(e){} }, 2000);
+setInterval(()=>{ if(!document.hidden){ try{ cfgPull(true); }catch(e){} } }, 45000);
 function noticeLoad(){
   try{ const c=lsGet('gunNoticeList',[]); if(Array.isArray(c)) NOTICE.list=c; }catch(e){}
 }
@@ -5674,6 +5727,7 @@ function ntBind(cli){
       tuneApplyRaw(o);
       try{ if(ADMIN.open) adminTuneFill(); }catch(e){}
     }
+    try{ cfgPull(); }catch(e){}
   });
   cli.on('error',()=>{});
   return cli;
@@ -5803,13 +5857,34 @@ async function ntPublishAll(topic, payload){
   }
   return ok ? '' : '两个中转都发不出去（网络问题，稍后再试）';
 }
-function noticePublish(obj){ return ntPublishAll(NOTICE_TOPIC, JSON.stringify(obj)); }
-function noticeClearRemote(){ return ntPublishAll(NOTICE_TOPIC, ''); }
-function maintPublish(on){ return ntPublish(NOTICE_STATUS_TOPIC, JSON.stringify({mt:on?1:0, ts:Date.now()})); }
+function noticePublish(obj){
+  cfgSet('notice', {list: NOTICE.list, maint: !!NOTICE.maint, ts: Date.now()}).then(r=>{
+    try{ admLog(r&&r.ok?'云端公告已同步':'云端公告同步失败：'+((r&&r.err)||'未知')); }catch(e){}
+  });
+  return ntPublishAll(NOTICE_TOPIC, JSON.stringify(obj));
+}
+function noticeClearRemote(){
+  cfgSet('notice', {list: [], maint: false, ts: Date.now()});
+  return ntPublishAll(NOTICE_TOPIC, '');
+}
+function maintPublish(on){
+  cfgSet('notice', {list: NOTICE.list, maint: !!on, ts: Date.now()});
+  return ntPublish(NOTICE_STATUS_TOPIC, JSON.stringify({mt:on?1:0, ts:Date.now()}));
+}
 /* ================= 管理终端（?admin=1） ================= */
 
 const VER_PROBE='https://uv657.github.io/uv/version.json';
-const ADMIN_PASS='liuweijun2026';     // 想改口令就改这一行
+/* 管理口令不写死在源码里：输入后算哈希，交给云端校验；本页只保留哈希（会话级） */
+let ADM_TOKEN='';
+async function admHash(pw){
+  try{
+    if(window.crypto && crypto.subtle && crypto.subtle.digest){
+      const d=await crypto.subtle.digest('SHA-256', new TextEncoder().encode('gfadm-2026|'+pw));
+      return Array.from(new Uint8Array(d)).map(b=>b.toString(16).padStart(2,'0')).join('');
+    }
+  }catch(e){}
+  return '';
+}
 const ADMIN={open:false, names:{}};
 function admGateMode(on){
   const scr=document.getElementById('adminScreen');
@@ -5932,7 +6007,7 @@ function adminNoticeFill(){
     document.getElementById('btnAdmMaint').textContent = NOTICE.maint?'关闭维护模式':'开启维护模式';
   }catch(e){}
 }
-document.getElementById('btnAdminLogin').addEventListener('click', ()=>{
+document.getElementById('btnAdminLogin').addEventListener('click', async ()=>{
   const inp=document.getElementById('adminPass');
   const err=document.getElementById('adminErr');
   const st=admFailState();
@@ -5941,15 +6016,23 @@ document.getElementById('btnAdminLogin').addEventListener('click', ()=>{
     return;
   }
   const v=inp.value.trim();
-  if(v!==ADMIN_PASS){
+  if(!v){ err.textContent='先输入管理口令'; return; }
+  err.style.color='#9fb2d0'; err.textContent='正在校验口令…';
+  const h=await admHash(v);
+  if(!h){ err.style.color='#ff8fa0'; err.textContent='当前浏览器不支持安全校验，请换手机自带浏览器打开'; return; }
+  const r=await cloudRpc('adm_verify',{p_token:h});
+  if(!r || !r.ok){
     const nf={n:(st.n||0)+1, ts:Date.now()};
     lsSet(ADM_LOCK.failKey, nf);
-    err.textContent='口令不对'+(nf.n>=ADM_LOCK.max?'（已锁定 60 秒）':'（还可试 '+(ADM_LOCK.max-nf.n)+' 次）');
+    err.style.color='#ff8fa0';
+    err.textContent=(r && r.err==='bad_token') ? ('口令不对'+(nf.n>=ADM_LOCK.max?'（已锁定 60 秒）':'（还可试 '+(ADM_LOCK.max-nf.n)+' 次）'))
+      : ((r && String(r.err||'').indexOf('http_404')===0) ? '云端还没建口令校验函数：先跑 setup 页第③段' : '云端连不上：终端需要联网校验口令');
     inp.value='';
     return;
   }
+  ADM_TOKEN=h;
   lsSet(ADM_LOCK.failKey,{n:0,ts:0});
-  try{ sessionStorage.setItem('gfAdm','1'); }catch(e){}
+  try{ sessionStorage.setItem('gfAdm', h); }catch(e){}
   err.textContent='';
   inp.value='';
   admEnterBody();
@@ -6105,10 +6188,9 @@ function adminBoot(){
   document.querySelectorAll('.overlay,.splash,#splashScreen').forEach(e=>{ e.classList.add('hidden'); if(e.id==='splashScreen') e.style.display='none'; });
   adminShow(true);
   // 同一标签页内已登录过就直接进面板，免去反复输口令
-  let authed=false;
-  try{ authed = sessionStorage.getItem('gfAdm')==='1'; }catch(e){}
-  if(authed){ document.getElementById('adminGate').style.display='none'; admEnterBody(); }
-  else { admGateMode(true); }
+  try{ ADM_TOKEN = sessionStorage.getItem('gfAdm')||''; }catch(e){ ADM_TOKEN=''; }
+  if(/^[0-9a-f]{64}$/.test(ADM_TOKEN)){ document.getElementById('adminGate').style.display='none'; admEnterBody(); }
+  else { ADM_TOKEN=''; admGateMode(true); }
 }
 /* ---- 改名额度：每月 3 次，用光要靠改名卡 ---- */
 const RENAME_FREE=3, CARD_COST=500;
@@ -6911,6 +6993,7 @@ function admBanRender(){
   });
 }
 async function banPublish(){
+  cfgSet('ban', {list: BAN.list, ts: Date.now()}).then(r=>{ try{ admLog(r&&r.ok?'云端封禁名单已同步':'云端封禁同步失败：'+((r&&r.err)||'')); }catch(e){} });
   return new Promise(async (resolve)=>{
     const ready=await noticeReady(9000);
     if(!ready) return resolve('中转连接超时');
@@ -7309,6 +7392,12 @@ function buildHelp(){
   const rows=ROLE_IDS.map(r=>{const o=ROLES[r];
     return '<tr><td>'+o.icon+' '+o.name+'</td><td>'+o.speed+'</td><td>'+o.dmg+'</td><td>'+(1/o.fireCD).toFixed(1)+'/s</td><td>'+o.skill.name+'（'+o.skill.cd+'s）</td><td>'+o.skill.desc+'</td></tr>';
   }).join('');
+  // 手机屏放不下的六列表格，改成一角色一块的卡片
+  const roleCards=ROLE_IDS.map(r=>{const o=ROLES[r];
+    return '<div class="helpRoleCard"><div class="hrHead">'+o.icon+' '+o.name+'</div>'
+      +'<div class="hrStats"><span>移速 '+o.speed+'</span><span>单发 '+o.dmg+'</span><span>射速 '+(1/o.fireCD).toFixed(1)+'/s</span></div>'
+      +'<div class="hrSkill">技能：'+o.skill.name+'（'+o.skill.cd+'s）· '+o.skill.desc+'</div></div>';
+  }).join('');
   const mapRows = [
     ['5V5','经典巷战','中路开阔，两翼零散矮墙','正面压制推进，两翼绕后夹击，别在中路站桩'],
     ['5V5','横排走廊','上下两道长墙 + 中央竖掩体','沿走廊对枪、卡墙角探头，从侧门切后排'],
@@ -7333,15 +7422,15 @@ function buildHelp(){
     '<div><b>5V5 团队战</b>：红蓝各 5 人，你带 4 名 AI 队友对战 5 名 AI 敌人，先到 30 杀，或 3 分钟结束击杀多者胜；角色随机分配，只需选择难度与地图。</div>'+
     '<div><b>1V1 真人决斗</b>：同一台电脑本地双人对战，先到 5 杀，或 2 分钟结束击杀多者胜；全键盘操作，直接开战。</div>'+
     '<h4>二、角色与技能</h4>'+
-    '<div class="tblWrap"><table><tr><th>角色</th><th>移速</th><th>单发伤害</th><th>射速</th><th>技能（冷却）</th><th>说明</th></tr>'+rows+'</table></div>'+
+    (window.innerWidth<=620 ? roleCards : '<div class="tblWrap"><table><tr><th>角色</th><th>移速</th><th>单发伤害</th><th>射速</th><th>技能（冷却）</th><th>说明</th></tr>'+rows+'</table></div>')+
     '<h4>三、战场地图</h4>'+
     '<div>单机在选择页选图；1V1 联机由房主在准备室定图，双方都看得到。每张图障碍布局不同，打法也不一样。</div>'+
     mapRows+
     '<h4>四、操作键位</h4>'+
-    '<table><tr><th>模式</th><th>移动</th><th>射击</th><th>技能</th><th>转身瞄准</th></tr>'+
+    '<div class="tblWrap"><table><tr><th>模式</th><th>移动</th><th>射击</th><th>技能</th><th>转身瞄准</th></tr>'+
     '<tr><td>5V5</td><td>W A S D</td><td>鼠标瞄准 · 左键 / 空格</td><td>E</td><td>鼠标</td></tr>'+
     '<tr><td>1V1 · P1</td><td>W A S D</td><td>J / 空格</td><td>E</td><td>Z 左转 · X 右转</td></tr>'+
-    '<tr><td>1V1 · P2</td><td>方向键</td><td>回车 Enter</td><td>数字 1</td><td>，左转 · 。右转</td></tr></table>'+
+    '<tr><td>1V1 · P2</td><td>方向键</td><td>回车 Enter</td><td>数字 1</td><td>，左转 · 。右转</td></tr></table></div>'+
     '<div>通用：P 暂停菜单 · Esc 中途退出对局 · M 静音 · 结算后 R 再来一局。<br>1V1 转身键可让枪口 360 度停在任意角度，移动不再锁死朝向。</div>'+
     '<h5>五、规则说明</h5>'+
     '<div>· 每人 100 点血量，死亡后 3 秒复活，复活后短暂无敌。<br>'+
