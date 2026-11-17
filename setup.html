@@ -1,19 +1,23 @@
 <!DOCTYPE html>
 <html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>枪战 · Supabase 建表脚本</title>
+<title>枪战 · 云端配置脚本</title>
 <style>
 *{box-sizing:border-box}body{margin:0;background:#0a0f18;color:#e8eefc;font-family:-apple-system,"PingFang SC",sans-serif;padding:18px}
-h1{font-size:19px;margin:6px 0 4px}p{font-size:13px;color:#8fa3c4;line-height:1.7;margin:6px 0}
-#copy{display:block;width:100%;padding:14px;margin:12px 0;border:none;border-radius:12px;background:#2be0b7;color:#03221c;font-size:16px;font-weight:700}
-#copy.ok{background:#7ef0c4}
-pre{background:#111a29;border:1px solid rgba(90,140,200,.22);border-radius:12px;padding:12px;font-size:11px;line-height:1.55;overflow-x:auto;white-space:pre;color:#b8cbe6}
+h1{font-size:19px;margin:4px 0 10px}h2{font-size:14px;margin:20px 0 6px;color:#2be0b7}p{font-size:13px;color:#8fa3c4;line-height:1.7;margin:6px 0}
+.btn{display:block;width:100%;padding:14px;margin:10px 0;border:none;border-radius:12px;background:#2be0b7;color:#03221c;font-size:16px;font-weight:700}
+.btn.ok{background:#7ef0c4}
+pre{background:#111a29;border:1px solid rgba(90,140,200,.22);border-radius:12px;padding:12px;font-size:11px;line-height:1.55;overflow-x:auto;white-space:pre;color:#b8cbe6;max-height:320px}
 </style></head><body>
-<h1>枪战 · 云端账号建表脚本</h1>
-<p>1. 点下面按钮复制全部代码<br>2. 到 Supabase 的 SQL Editor 里粘贴<br>3. 点 Run，看到 Success 就好</p>
-<button id="copy">复制全部代码</button>
-<pre id="code"></pre>
+<h1>枪战 · 云端配置脚本</h1>
+<p>两段分开跑，各复制各的。打开 Supabase → SQL Editor → New query → 粘贴 → Run，看到 Success 就好（跑过一次再点也不会出错）。</p>
+<h2>① 账号表（已经跑过可跳过）</h2>
+<button class="btn" id="c1">复制账号表 SQL</button>
+<pre id="p1"></pre>
+<h2>② 终端配置上云（这次要跑的）</h2>
+<button class="btn" id="c2">复制终端配置 SQL</button>
+<pre id="p2"></pre>
 <script>
-const SQL = `-- 枪战：云端账号表 + 只暴露校验函数（匿名角色不能直接读表）
+const S1 = `-- 枪战：云端账号表 + 只暴露校验函数（匿名角色不能直接读表）
 create table if not exists public.accounts(
   name_key text primary key,
   name text not null,
@@ -61,10 +65,40 @@ grant execute on function public.acc_salt(text) to anon;
 grant execute on function public.acc_login(text,text) to anon;
 grant execute on function public.acc_changepwd(text,text,text,text) to anon;
 `;
-document.getElementById('code').textContent = SQL;
-document.getElementById('copy').addEventListener('click', async () => {
-  const b = document.getElementById('copy');
-  try { await navigator.clipboard.writeText(SQL); b.textContent='✓ 已复制，去 SQL Editor 粘贴'; b.classList.add('ok'); }
-  catch(e) { b.textContent='复制失败，请长按下面代码手动选中'; }
-});
+const S2 = `-- 终端配置上云：公告 / 封禁 / 对局参数（只有带口令的调用能写）
+create table if not exists public.admin_cfg(
+  k text primary key,
+  v jsonb not null,
+  updated_at timestamptz not null default now()
+);
+alter table public.admin_cfg enable row level security;
+
+create table if not exists public.admin_secret(t text primary key);
+alter table public.admin_secret enable row level security;
+insert into public.admin_secret(t) values ('liuweijun2026') on conflict do nothing;
+
+create or replace function public.cfg_get(p_key text) returns jsonb
+language sql security definer set search_path = public as $$
+  select v from admin_cfg where k = p_key;
+$$;
+
+create or replace function public.cfg_set(p_key text, p_val jsonb, p_token text) returns jsonb
+language plpgsql security definer set search_path = public as $$
+begin
+  if p_key not in ('notice','ban','ptune') then return jsonb_build_object('ok', false, 'err', 'bad_key'); end if;
+  if not exists(select 1 from admin_secret where t = p_token) then return jsonb_build_object('ok', false, 'err', 'bad_token'); end if;
+  insert into admin_cfg(k, v, updated_at) values (p_key, p_val, now())
+    on conflict (k) do update set v = excluded.v, updated_at = now();
+  return jsonb_build_object('ok', true);
+end $$;
+
+grant execute on function public.cfg_get(text) to anon;
+grant execute on function public.cfg_set(text, jsonb, text) to anon;
+`;
+document.getElementById('p1').textContent = S1;
+document.getElementById('p2').textContent = S2;
+function hook(id, sql){ document.getElementById(id).addEventListener('click', async (e) => {
+  const b=e.currentTarget; try{ await navigator.clipboard.writeText(sql); b.textContent='✓ 已复制，去 SQL Editor 粘贴'; b.classList.add('ok'); }
+  catch(err){ b.textContent='复制失败，请长按下面代码手动选中'; } }); }
+hook('c1', S1); hook('c2', S2);
 </script></body></html>
