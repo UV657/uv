@@ -707,8 +707,7 @@ body.is-touch .nhTime{display:none !important}
       <div id="rankHero" style="display:flex;align-items:center;gap:10px;margin:10px 0 2px;padding:11px 13px;border-radius:12px;cursor:pointer;background:linear-gradient(90deg,rgba(255,211,77,.14),rgba(34,211,238,.10));border:1px solid rgba(255,211,77,.34)">
         <span style="flex:none;width:26px;height:26px;border-radius:8px;background:rgba(255,211,77,.2);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:900;color:#ffd75e">1</span>
         <span style="flex:1;min-width:0;text-align:left">
-          <span style="display:block;font-size:13.5px;font-weight:800;color:#ffe9a8;letter-spacing:.5px">排行榜</span>
-          <span style="display:block;font-size:10.5px;color:#9fb2d0;margin-top:2px">击杀 · 胜场 · 段位 · 点赞 实时更新，点谁看谁的明信片</span>
+          <span style="display:block;font-size:14px;font-weight:800;color:#ffe9a8;letter-spacing:.5px">排行榜</span>
         </span>
         <span style="flex:none;font-size:11px;color:#67e8f9;border:1px solid rgba(103,232,249,.4);border-radius:999px;padding:2px 8px">查看</span>
       </div>
@@ -743,7 +742,7 @@ body.is-touch .nhTime{display:none !important}
           <input id="fwQuery" maxlength="20" placeholder="输名字或档案号 搜索" style="flex:1;padding:11px;border-radius:10px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.06);color:#e8eefc;font-size:14px;outline:none">
           <button class="btn" id="fwSearchBtn" style="padding:0 18px;font-size:14px">搜索</button>
         </div>
-        <div id="fwHint" style="font-size:11.5px;color:#7d8aa8;margin-top:8px;line-height:1.6">搜到的人会显示他的明信片，关注后就能看到他是否在线、一键拉进房间。</div>
+        <div id="fwHint" style="font-size:11.5px;color:#7d8aa8;margin-top:8px;line-height:1.6"></div>
         <div id="fwResult" style="margin-top:10px"></div>
         <div id="fwCand" style="margin-top:8px"></div>
         <div style="display:flex;align-items:center;justify-content:space-between;margin-top:16px;border-top:1px solid rgba(255,255,255,.1);padding-top:12px">
@@ -1197,12 +1196,12 @@ body.is-touch .nhTime{display:none !important}
         </div>
         <div id="rankDims" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px"></div>
         <div id="rankList" style="max-height:56vh;overflow-y:auto"></div>
-        <div style="font-size:11px;color:#7d8aa8;margin-top:10px;line-height:1.7">榜单取全服玩家自己发布的明信片数据，有人更新会自动刷新；点任意一行可以看他的明信片。<br>「今日」两个榜只算当天的战绩，每天 0 点自动换榜归零。</div>
+
         <div class="rowBtns" style="margin-top:12px"><button class="btn" id="rankBack">返 回</button></div>
       </div>
     </div>
     <div class="overlay hidden" id="settingsScreen">
-      <div class="title">自定义设置 <span id="verTag" style="font-size:11px;color:#7d8aa8;font-weight:400;display:block;margin-top:2px">v2.8.10</span></div>
+      <div class="title">自定义设置 <span id="verTag" style="font-size:11px;color:#7d8aa8;font-weight:400;display:block;margin-top:2px">v2.8.11</span></div>
       <div id="settingsWrap" style="text-align:left;max-width:320px;line-height:2.2">
         <div>摇杆大小 <input type="range" id="setJoy" min="60" max="140" value="88" style="width:100%"></div>
         <div>开火键大小 <input type="range" id="setFire" min="50" max="120" value="74" style="width:100%"></div>
@@ -1246,6 +1245,7 @@ body.is-touch .nhTime{display:none !important}
         <div id="historyBox" style="display:none;margin-top:10px;border-top:1px solid rgba(255,255,255,.1);padding-top:10px">
           <div style="font-size:13px;font-weight:800;color:#67e8f9;margin-bottom:6px">修改历史</div>
           <div style="line-height:1.8">
+            <div><b style="color:#ffd34d">v2.8.11</b>　界面上的解释性小字去掉（首页排行榜卡第二行、榜单页底部说明、好友页搜索框说明、自检面板说明），这些说明统一收进玩法说明书新增的「九、排行榜与每日榜」「十、自检与检查更新」两章</div>
             <div><b style="color:#ffd34d">v2.8.10</b>　修排行榜里点开明信片、一关就跳到好友页的问题（现在从哪进的卡就回哪：榜单回榜单、个人主页回个人主页）；明信片卡片限高可滚动、点空白处也能关；打开排行榜时首页自动收起，画面不再层层叠满</div>
             <div><b style="color:#ffd34d">v2.8.9</b>　排行榜新增「今日击杀 / 今日胜场」，只算当天战绩、每天 0 点自动换榜归零；自检新增本地数据健康检查，发现问题在面板顶部一键修复后自动重新检查</div>
             <div><b style="color:#ffd34d">v2.8.8</b>　玩法说明书每张地图加了俯视示意图（障碍与红蓝出生点都画出来）；首页顶部新增排行榜入口卡（击杀 / 胜场 / 段位 / 点赞 实时更新，点谁看谁的明信片）；公告同步改为双中转各发一份并逐台回读确认</div>
@@ -4047,7 +4047,7 @@ function showSelfCheck(){
       console.log('[自检]', pass+'/'+list.length, list.filter(x=>!x.ok));
       const fixable=list.filter(x=>!x.ok && typeof x.fix==='function');
       if(fixable.length && sm){
-        sm.insertAdjacentHTML('afterend','<div id="scFixBar" style="margin:6px 0 8px;text-align:left"><button class="btn" id="btnSelfFix" style="width:100%;padding:10px;font-size:13px">一键修复 '+fixable.length+' 项并重新检查</button><div style="font-size:11px;color:#7d8aa8;margin-top:6px;line-height:1.7">能自动修的是本地数据类问题（档案、卡面、昵称、每日统计）；代码或渲染类问题修不了，会继续标红等你反馈。</div></div>');
+        sm.insertAdjacentHTML('afterend','<div id="scFixBar" style="margin:6px 0 8px;text-align:left"><button class="btn" id="btnSelfFix" style="width:100%;padding:10px;font-size:13px">一键修复 '+fixable.length+' 项并重新检查</button></div>');
         const b=document.getElementById('btnSelfFix');
         if(b) b.addEventListener('click', ()=>{
           let n=0;
@@ -5999,7 +5999,7 @@ function fwShowCard(uid){
   if(own){
     const loc=fwCardLocal();
     el.innerHTML=fwCardHtml(card,{actions:'<div style="margin-top:14px">'
-      +'<div style="font-size:11px;color:#8fa1bf;margin-bottom:6px">我的签名（最多 40 字，别人搜到你就能看到）</div>'
+      +'<div style="font-size:11px;color:#8fa1bf;margin-bottom:6px">我的签名（40 字）</div>'
       +'<input id="cardSig" maxlength="40" value="'+esc(loc.sig)+'" placeholder="写一句想对来客说的话" style="width:100%;padding:10px;border-radius:9px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.06);color:#e8eefc;font-size:13px;outline:none;box-sizing:border-box">'
       +'<div style="display:flex;gap:8px;margin-top:10px;align-items:center"><span style="font-size:11px;color:#8fa1bf">卡面</span>'
       +Object.keys(CARD_THEMES).map(k=>'<button data-theme="'+k+'" title="'+CARD_THEMES[k].t+'" style="width:28px;height:28px;border-radius:50%;border:2px solid '+(loc.color===k?'#fff':'rgba(255,255,255,.25)')+';background:linear-gradient(135deg,'+CARD_THEMES[k].a+','+CARD_THEMES[k].b+');cursor:pointer;box-shadow:'+(loc.color===k?'0 0 0 2px rgba(255,255,255,.15)':'none')+'"></button>').join('')
@@ -6939,9 +6939,21 @@ function buildHelp(){
     +'· 竖屏可以玩，横屏视野更广。</div>'
     +'<h5>八、好友与明信片</h5>'
     +'<div>· 主菜单「好友」里输名字或档案号就能搜人，搜到直接看到对方的明信片（签名、段位、击杀、胜率）。<br>'
+    +'· 关注不等于能联机：对方回关（互关）才算好友，只有互关的人才能拉进房；他关注了你但你没回关，算粉丝。<br>'
     +'· 关注后好友列表会显示在线/离线：两分钟没心跳算离线。<br>'
     +'· 你先创建房间，再点好友那一行的「邀请」，对方会弹出房间码，点接受直接进房，不用手输码。<br>'
-    +'· 「我的明信片」里可以写 40 字签名、换卡面配色，保存后全网可见。</div>';
+    +'· 「我的明信片」里可以写 40 字签名、换卡面配色，保存后全网可见。</div>'
+    +'<h5>九、排行榜与每日榜</h5>'
+    +'<div>· 入口在首页顶部的排行榜条，点开就是全服榜；主菜单和个人主页也有排行榜按钮。<br>'
+    +'· 一共 6 个榜：击杀、今日击杀、胜场、今日胜场、段位分、点赞，点上方按钮切换。<br>'
+    +'· 数据来自全服玩家自己发布的明信片，谁的战绩变了榜单会跟着刷新，不用手动更新。<br>'
+    +'· 「今日」两个榜只算当天战绩，每天 0 点自动换榜归零，昨天的成绩只留在累计榜里。<br>'
+    +'· 点任意一行能看到这个人的明信片；自己那一行会高亮，前三名有金银铜标记；榜只显示前 60 名，超出时会提示你当前排第几。</div>'
+    +'<h5>十、自检与检查更新</h5>'
+    +'<div>· 设置在「关于我们」里的「检查更新 + 自检（一键）」：点一次先跑完自检，再比对线上版本号，有新版本会直接给按钮。<br>'
+    +'· 自检逐项扫描 90 多项，覆盖画布、核心函数、公告与终端、联机、地图、榜单、本地数据健康等。<br>'
+    +'· 查到问题会自动标红。属于本地数据（战绩档案、卡面配色、昵称、每日统计）的问题，面板顶部会出现「一键修复」按钮，点一下当场修好并自动重新检查。<br>'
+    +'· 代码或渲染类问题不能自动修，会继续标红，把它反馈给作者处理。</div>';
 }
 
 /* ---- 初始化 ---- */
