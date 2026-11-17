@@ -1024,6 +1024,7 @@ body.is-touch .nhTime{display:none !important}
           <div class="profInfo">
             <div class="profNick" id="profNick">玩家</div>
             <div class="profSub" id="profSub"></div>
+            <div id="profTitle" style="display:none;margin-top:5px;font-size:11.5px;font-weight:800;color:#ffd75e;background:rgba(255,215,94,.12);border:1px solid rgba(255,215,94,.4);border-radius:999px;padding:2px 9px;display:inline-block"></div>
             <div class="profSub" id="profUidLine" style="font-size:11px;color:#67e8f9;letter-spacing:.5px;margin-top:2px;cursor:pointer"></div>
           </div>
           <button class="profRename" id="btnRename">改名</button>
@@ -1199,6 +1200,7 @@ body.is-touch .nhTime{display:none !important}
           </div>
           <button id="rankClose" style="width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);color:#cdd9f0;font-size:16px;cursor:pointer">✕</button>
         </div>
+        <div id="rankChamp" style="display:none;margin-bottom:8px;padding:7px 10px;border-radius:9px;background:rgba(255,215,94,.1);border:1px solid rgba(255,215,94,.32);font-size:11.5px;color:#ffe9a8;line-height:1.6"></div>
         <div id="rankDims" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px"></div>
         <div id="rankList" style="max-height:56vh;overflow-y:auto"></div>
 
@@ -1206,7 +1208,7 @@ body.is-touch .nhTime{display:none !important}
       </div>
     </div>
     <div class="overlay hidden" id="settingsScreen">
-      <div class="title">自定义设置 <span id="verTag" style="font-size:11px;color:#7d8aa8;font-weight:400;display:block;margin-top:2px">v2.8.12</span></div>
+      <div class="title">自定义设置 <span id="verTag" style="font-size:11px;color:#7d8aa8;font-weight:400;display:block;margin-top:2px">v2.8.13</span></div>
       <div id="settingsWrap" style="text-align:left;max-width:320px;line-height:2.2">
         <div>摇杆大小 <input type="range" id="setJoy" min="60" max="140" value="88" style="width:100%"></div>
         <div>开火键大小 <input type="range" id="setFire" min="50" max="120" value="74" style="width:100%"></div>
@@ -1250,6 +1252,7 @@ body.is-touch .nhTime{display:none !important}
         <div id="historyBox" style="display:none;margin-top:10px;border-top:1px solid rgba(255,255,255,.1);padding-top:10px">
           <div style="font-size:13px;font-weight:800;color:#67e8f9;margin-bottom:6px">修改历史</div>
           <div style="line-height:1.8">
+            <div><b style="color:#ffd34d">v2.8.13</b>　排行榜新增「本周击杀」，按自然周统计；每周一 0 点自动结算上一周，击杀前三名分别获得「周榜冠军 / 亚军 / 季军」称号，称号挂在个人主页名字下方，榜单顶部也会列出上周前三</div>
             <div><b style="color:#ffd34d">v2.8.12</b>　1V1 建房后直接进准备室（不用先干等房间码）：房主一进去就能选地图、选角色武器，房里还能「邀请好友」和「复制房间码」；准备状态改成每秒自动同步，双方准备完 3 秒开局；公告发布改成两台同时发 + 失败补发 + 长连接兜底，通常 1～2 秒出结果</div>
             <div><b style="color:#ffd34d">v2.8.11</b>　界面上的解释性小字去掉（首页排行榜卡第二行、榜单页底部说明、好友页搜索框说明、自检面板说明），这些说明统一收进玩法说明书新增的「九、排行榜与每日榜」「十、自检与检查更新」两章</div>
             <div><b style="color:#ffd34d">v2.8.10</b>　修排行榜里点开明信片、一关就跳到好友页的问题（现在从哪进的卡就回哪：榜单回榜单、个人主页回个人主页）；明信片卡片限高可滚动、点空白处也能关；打开排行榜时首页自动收起，画面不再层层叠满</div>
@@ -1773,6 +1776,47 @@ function dailyAdd(k, win){
   lsSet('gunDaily', v);
   return v;
 }
+/* 每周榜：以周一为界，每周一 0 点结算，上周击杀前三得称号 */
+function fmtDay(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+function weekKeyOf(ts){ const d=new Date(ts||Date.now()); d.setHours(0,0,0,0); const off=(d.getDay()+6)%7; d.setDate(d.getDate()-off); return fmtDay(d); }
+function curWeek(){ return weekKeyOf(Date.now()); }
+function prevWeek(){ return weekKeyOf(Date.now()-7*86400000); }
+function weeklyLoad(){
+  let v=lsGet('gunWeekly', null);
+  const cw=curWeek();
+  if(!v || typeof v!=='object'){
+    v={week:cw, kills:0, wins:0, prevWeek:'', prevKills:0, prevWins:0};
+  } else if(v.week!==cw){
+    v={week:cw, kills:0, wins:0, prevWeek:v.week||'', prevKills:+(v.kills||0), prevWins:+(v.wins||0)};
+    lsSet('gunWeekly', v);
+  }
+  return v;
+}
+function weeklyAdd(k, win){
+  const v=weeklyLoad();
+  v.kills+=(+k||0); if(win) v.wins++;
+  lsSet('gunWeekly', v);
+  return v;
+}
+const WEEK_TITLE=['冠军','亚军','季军'];
+function weeklyTop(){
+  const pw=prevWeek(), arr=[];
+  const cs=(FW && FW.cards) ? FW.cards : {};
+  Object.keys(cs).forEach(k=>{
+    const c=cs[k]; if(!c || !c.uid) return;
+    const kills=(c.prevWeek===pw) ? +(c.prevKills||0) : ((c.week===pw) ? +(c.weekKills||0) : 0);
+    if(kills>0) arr.push({uid:c.uid, name:(c.name||'').trim()||'玩家', kills});
+  });
+  arr.sort((a,b)=>b.kills-a.kills);
+  return arr.slice(0,3);
+}
+function myWeeklyTitle(){
+  const top=weeklyTop();
+  const i=top.findIndex(x=>x.uid===ensureUid());
+  if(i<0) return '';
+  const pw=prevWeek(), st=new Date(pw.replace(/-/g,'/')), en=new Date(st.getTime()+6*86400000);
+  return '上周击杀榜 '+WEEK_TITLE[i]+' · '+(st.getMonth()+1)+'/'+st.getDate()+'–'+(en.getMonth()+1)+'/'+en.getDate();
+}
 function profLoad(){
   const uid=ensureUid();
   const v=lsGet('gunProfile',null);
@@ -1790,6 +1834,7 @@ function profRecord(win,k,d,dmg,grade){
   v.recent=v.recent.slice(0,10);
   profSave(v);
   try{ dailyAdd(k, win); }catch(e){}
+  try{ weeklyAdd(k, win); }catch(e){}
   try{ fwPublishCard(); }catch(e){}   // 战绩变了立刻更新全服明信片，排行榜随之刷新
 }
 
@@ -4794,6 +4839,8 @@ function fwMyCard(){
     rank: ri.name, pts: ri.pts,
     kills: p.kills||0, wins: p.wins||0, matches: p.matches||0, best: p.best||0,
     day: dailyLoad().day, dayKills: dailyLoad().kills, dayWins: dailyLoad().wins,
+    week: weeklyLoad().week, weekKills: weeklyLoad().kills, weekWins: weeklyLoad().wins,
+    prevWeek: weeklyLoad().prevWeek, prevKills: weeklyLoad().prevKills, prevWins: weeklyLoad().prevWins,
     ts: Date.now()
   };
 }
@@ -6037,7 +6084,7 @@ function fwShowCard(uid){
 
 /* ===== 排行榜：全服明信片数据实时聚合，点一行看明信片 ===== */
 const RANK={cards:{},likes:{},dim:'kills',timer:null};
-const RANK_DIMS=[['kills','击杀'],['dayKills','今日击杀'],['wins','胜场'],['dayWins','今日胜场'],['pts','段位分'],['likes','点赞']];
+const RANK_DIMS=[['kills','击杀'],['dayKills','今日击杀'],['weekKills','本周击杀'],['wins','胜场'],['dayWins','今日胜场'],['pts','段位分'],['likes','点赞']];
 function rankTouch(){ if(RANK.timer) return; RANK.timer=setTimeout(()=>{ RANK.timer=null; rankRender(); },500); }
 function rankData(){
   const map={};
@@ -6048,6 +6095,7 @@ function rankData(){
     map[k]={ uid:c.uid, name:(c.name||prev.name||'').trim(), kills:+(c.kills||0), wins:+(c.wins||0),
       pts:+(c.pts||0), matches:+(c.matches||0), rank:c.rank||prev.rank||'青铜',
       dayKills: today?+(c.dayKills||0):0, dayWins: today?+(c.dayWins||0):0,
+      weekKills: (c.week===curWeek())?+(c.weekKills||0):0,
       likes:RANK.likes[k]||0, own:!!own };
   };
   Object.keys(RANK.cards).forEach(k=>put(RANK.cards[k]));
@@ -6057,6 +6105,14 @@ function rankData(){
 }
 function rankRender(){
   const list=document.getElementById('rankList'); if(!list) return;
+  const champEl=document.getElementById('rankChamp');
+  if(champEl){
+    const top=weeklyTop();
+    if(top.length){
+      champEl.style.display='block';
+      champEl.innerHTML='上周击杀榜已结算　'+top.map((t,i)=>WEEK_TITLE[i]+' '+t.name+'（'+t.kills+' 杀）').join(' · ');
+    } else champEl.style.display='none';
+  }
   const dimsEl=document.getElementById('rankDims');
   if(dimsEl && !dimsEl.dataset.built){
     dimsEl.dataset.built='1';
@@ -6067,7 +6123,7 @@ function rankRender(){
   if(dimsEl) [].forEach.call(dimsEl.children, b=>b.classList.toggle('on', b.dataset.dim===RANK.dim));
   const all=rankData().sort((a,b)=>(b[RANK.dim]||0)-(a[RANK.dim]||0) || (b.kills-a.kills));
   const rows=all.slice(0,60);
-  const unit={kills:'杀',dayKills:'杀',wins:'胜',dayWins:'胜',pts:'分',likes:'赞'}[RANK.dim];
+  const unit={kills:'杀',dayKills:'杀',weekKills:'杀',wins:'胜',dayWins:'胜',pts:'分',likes:'赞'}[RANK.dim];
   const cnt=document.getElementById('rankCount'); if(cnt) cnt.textContent=all.length?all.length+' 人上榜':'';
   const me=all.findIndex(r=>r.own);
   if(!rows.length){ list.innerHTML='<div style="font-size:12px;color:#7d8aa8;padding:14px 2px">还没有收到别人的战绩，等几个玩家进过游戏就会出现在这里</div>'; return; }
@@ -6152,6 +6208,8 @@ function renderProfile(){
   if(rnBtn) rnBtn.textContent = '改名';
   const uidEl=document.getElementById('profUidLine');
   if(uidEl){ uidEl.textContent='档案号 '+ensureUid()+' · 点击复制'; }
+  const tEl=document.getElementById('profTitle');
+  if(tEl){ const t=myWeeklyTitle(); if(t){ tEl.textContent=t; tEl.style.display='inline-block'; } else { tEl.style.display='none'; tEl.textContent=''; } }
   const subEl=document.getElementById('profSub');
   if(subEl) subEl.textContent = '';   // 名字规则、改名额度都收进说明书，主页不再挂说明
   const wr = v.matches ? Math.round(v.wins/v.matches*100) : 0;
@@ -6973,7 +7031,8 @@ function buildHelp(){
     +'· 一共 6 个榜：击杀、今日击杀、胜场、今日胜场、段位分、点赞，点上方按钮切换。<br>'
     +'· 数据来自全服玩家自己发布的明信片，谁的战绩变了榜单会跟着刷新，不用手动更新。<br>'
     +'· 「今日」两个榜只算当天战绩，每天 0 点自动换榜归零，昨天的成绩只留在累计榜里。<br>'
-    +'· 点任意一行能看到这个人的明信片；自己那一行会高亮，前三名有金银铜标记；榜只显示前 60 名，超出时会提示你当前排第几。</div>'
+    +'· 点任意一行能看到这个人的明信片；自己那一行会高亮，前三名有金银铜标记；榜只显示前 60 名，超出时会提示你当前排第几。<br>'
+    +'· 周榜按自然周算（周一 0 点到周日 24 点），每周一 0 点自动结算上一周。上周击杀前三名分别拿到「周榜冠军 / 亚军 / 季军」称号，称号会挂在个人主页名字下面。</div>'
     +'<h5>十、自检与检查更新</h5>'
     +'<div>· 设置在「关于我们」里的「检查更新 + 自检（一键）」：点一次先跑完自检，再比对线上版本号，有新版本会直接给按钮。<br>'
     +'· 自检逐项扫描 90 多项，覆盖画布、核心函数、公告与终端、联机、地图、榜单、本地数据健康等。<br>'
