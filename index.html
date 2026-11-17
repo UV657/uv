@@ -333,6 +333,27 @@ body.is-touch .ppSub{display:none}
   .modeGrid{flex-direction:column;gap:12px;width:100%}
 }
 /* 横屏手机：游戏画面铺满，优化操作区 */
+/* 横屏（手机横过来、高度只剩 300~400px）：内容一律可滚 + 压紧，不许裁标题 */
+@media (orientation:landscape) and (max-height:520px){
+  body .overlay{overflow-y:auto !important;-webkit-overflow-scrolling:touch;justify-content:flex-start !important;align-items:flex-start !important;padding:10px 14px 16px !important;gap:8px !important}
+  body .overlay > *{max-width:760px;margin-left:auto;margin-right:auto}
+  body #menuScreen{overflow-y:auto !important;justify-content:flex-start !important;padding-top:8px !important;gap:6px !important}
+  body.is-touch #menuScreen .modeGrid{flex-direction:row !important;width:100% !important;max-width:700px !important;gap:10px !important}
+  body.is-touch #menuScreen .modeCard{flex:1 1 0 !important;width:auto !important;min-width:0 !important;padding:9px 12px !important}
+  body.is-touch #menuScreen .mcDesc{font-size:10px !important;line-height:1.35 !important;white-space:normal !important;overflow:visible !important;text-overflow:clip !important}
+  body.is-touch #menuScreen .mcName{font-size:15px !important}
+  body #dailyTask:empty{display:none !important}
+  body #dailyTask{max-width:700px !important;white-space:nowrap !important;overflow:hidden !important;text-overflow:ellipsis !important;font-size:10.5px !important;padding:4px 10px !important}
+  body #rankHero{max-width:560px !important;width:calc(100% - 8px) !important;padding:8px 12px !important;margin:6px auto !important}
+  body .rankDim{flex:1 1 22% !important;min-width:66px !important;padding:6px !important;font-size:11.5px !important}
+  body .rankRow{padding:7px 10px !important}
+  body .rankName{font-size:12.5px !important}
+  body .diffChip{padding:6px 12px !important;font-size:12px !important}
+  body #prepScreen{padding:8px 12px 16px !important}
+  body #rankScreen{padding:8px 12px 16px !important}
+  body .overlay .title{font-size:20px !important;margin-bottom:0 !important}
+  body #menuScreen .sub{display:none !important}
+}
 @media (orientation:landscape) and (max-height:500px){
   .stage{width:100vw !important;height:100vh !important;aspect-ratio:auto !important;border-radius:0;box-shadow:none}
   .overlay{justify-content:center !important;padding:20px !important;gap:10px !important}
@@ -1208,7 +1229,7 @@ body.is-touch .nhTime{display:none !important}
       </div>
     </div>
     <div class="overlay hidden" id="settingsScreen">
-      <div class="title">自定义设置 <span id="verTag" style="font-size:11px;color:#7d8aa8;font-weight:400;display:block;margin-top:2px">v2.8.13</span></div>
+      <div class="title">自定义设置 <span id="verTag" style="font-size:11px;color:#7d8aa8;font-weight:400;display:block;margin-top:2px">v2.8.14</span></div>
       <div id="settingsWrap" style="text-align:left;max-width:320px;line-height:2.2">
         <div>摇杆大小 <input type="range" id="setJoy" min="60" max="140" value="88" style="width:100%"></div>
         <div>开火键大小 <input type="range" id="setFire" min="50" max="120" value="74" style="width:100%"></div>
@@ -1252,6 +1273,7 @@ body.is-touch .nhTime{display:none !important}
         <div id="historyBox" style="display:none;margin-top:10px;border-top:1px solid rgba(255,255,255,.1);padding-top:10px">
           <div style="font-size:13px;font-weight:800;color:#67e8f9;margin-bottom:6px">修改历史</div>
           <div style="line-height:1.8">
+            <div><b style="color:#ffd34d">v2.8.14</b>　横屏（手机横过来）布局重排：所有弹层改成顶部对齐 + 可上下滑动，标题不再被裁掉；首页模式卡并排铺开、排行榜入口居中、每日任务压成一行；榜单维度横屏排 4 列、准备室密度收紧，一屏能看全</div>
             <div><b style="color:#ffd34d">v2.8.13</b>　排行榜新增「本周击杀」，按自然周统计；每周一 0 点自动结算上一周，击杀前三名分别获得「周榜冠军 / 亚军 / 季军」称号，称号挂在个人主页名字下方，榜单顶部也会列出上周前三</div>
             <div><b style="color:#ffd34d">v2.8.12</b>　1V1 建房后直接进准备室（不用先干等房间码）：房主一进去就能选地图、选角色武器，房里还能「邀请好友」和「复制房间码」；准备状态改成每秒自动同步，双方准备完 3 秒开局；公告发布改成两台同时发 + 失败补发 + 长连接兜底，通常 1～2 秒出结果</div>
             <div><b style="color:#ffd34d">v2.8.11</b>　界面上的解释性小字去掉（首页排行榜卡第二行、榜单页底部说明、好友页搜索框说明、自检面板说明），这些说明统一收进玩法说明书新增的「九、排行榜与每日榜」「十、自检与检查更新」两章</div>
@@ -3487,6 +3509,16 @@ function renderDaily(){
   if(!el) return;
   const done = d.tasks.filter(t=>t.done).length;
   const allDone = d.tasks.every(t=>t.done);
+  const compact = window.innerHeight<=520 && window.matchMedia('(orientation:landscape)').matches;
+  if(compact){
+    el.innerHTML='<div style="display:flex;align-items:center;gap:10px;font-size:11.5px;color:#9fb2d0">'
+      +'<span>每日任务 '+done+'/'+d.tasks.length+'</span>'
+      +'<span style="color:#8fa1bf">荣誉 '+lsGet('gunHonor',0)+'</span>'
+      +(allDone?'<button class="btn" data-daily-reroll="1" style="padding:3px 10px;font-size:11px">刷新</button>'
+               :'<button class="btn ghost" data-daily-locked="1" style="padding:3px 10px;font-size:11px;opacity:.55">刷新</button>')
+      +'</div>';
+    return;
+  }
   el.innerHTML = '<div style="font-size:12px;color:#9fb2d0;margin-bottom:5px">每日任务 第'+(d.batch||1)+'批 '+done+'/'+d.tasks.length+' · 荣誉 '+lsGet('gunHonor',0)+'</div>'
     + d.tasks.map(t=>{
       const pct = Math.min(100, Math.round(t.cur/t.target*100));
@@ -6948,6 +6980,7 @@ bindBtn('fbCopy', ()=>{
 });
 bindBtn('btnRank', ()=>{ menuScreen.classList.add('hidden'); rankOpen(); });
 (function(){ const h=document.getElementById('rankHero'); if(h) h.addEventListener('click', ()=>{ sClick(); menuScreen.classList.add('hidden'); rankOpen(); }); })();
+try{ updateDailyTask(); }catch(e){}
 bindBtn('btnRank2', ()=>{ document.getElementById('profileScreen').classList.add('hidden'); rankOpen(); });
 bindBtn('btnHelp', ()=>{ buildHelp(); menuScreen.classList.add('hidden'); helpScreen.classList.remove('hidden'); });
 bindBtn('btnHelpBack', ()=>{ helpScreen.classList.add('hidden'); menuScreen.classList.remove('hidden'); renderRankBar(); });
