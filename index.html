@@ -726,7 +726,6 @@ body.is-touch .nhTime{display:none !important}
         <div class="nhMain" id="nhMain"></div>
       </div>
       <div id="rankHero" style="display:flex;align-items:center;gap:10px;margin:10px 0 2px;padding:11px 13px;border-radius:12px;cursor:pointer;background:linear-gradient(90deg,rgba(255,211,77,.14),rgba(34,211,238,.10));border:1px solid rgba(255,211,77,.34)">
-        <span style="flex:none;width:26px;height:26px;border-radius:8px;background:rgba(255,211,77,.2);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:900;color:#ffd75e">1</span>
         <span style="flex:1;min-width:0;text-align:left">
           <span style="display:block;font-size:14px;font-weight:800;color:#ffe9a8;letter-spacing:.5px">排行榜</span>
         </span>
@@ -1229,7 +1228,7 @@ body.is-touch .nhTime{display:none !important}
       </div>
     </div>
     <div class="overlay hidden" id="settingsScreen">
-      <div class="title">自定义设置 <span id="verTag" style="font-size:11px;color:#7d8aa8;font-weight:400;display:block;margin-top:2px">v2.8.14</span></div>
+      <div class="title">自定义设置 <span id="verTag" style="font-size:11px;color:#7d8aa8;font-weight:400;display:block;margin-top:2px">v2.8.15</span></div>
       <div id="settingsWrap" style="text-align:left;max-width:320px;line-height:2.2">
         <div>摇杆大小 <input type="range" id="setJoy" min="60" max="140" value="88" style="width:100%"></div>
         <div>开火键大小 <input type="range" id="setFire" min="50" max="120" value="74" style="width:100%"></div>
@@ -1273,6 +1272,7 @@ body.is-touch .nhTime{display:none !important}
         <div id="historyBox" style="display:none;margin-top:10px;border-top:1px solid rgba(255,255,255,.1);padding-top:10px">
           <div style="font-size:13px;font-weight:800;color:#67e8f9;margin-bottom:6px">修改历史</div>
           <div style="line-height:1.8">
+            <div><b style="color:#ffd34d">v2.8.15</b>　准备室把对手的选择做成卡片：角色、武器、准备状态各自成一块，对手一改房主这边立刻跟着变；首页排行榜卡去掉前面那个「1」</div>
             <div><b style="color:#ffd34d">v2.8.14</b>　横屏（手机横过来）布局重排：所有弹层改成顶部对齐 + 可上下滑动，标题不再被裁掉；首页模式卡并排铺开、排行榜入口居中、每日任务压成一行；榜单维度横屏排 4 列、准备室密度收紧，一屏能看全</div>
             <div><b style="color:#ffd34d">v2.8.13</b>　排行榜新增「本周击杀」，按自然周统计；每周一 0 点自动结算上一周，击杀前三名分别获得「周榜冠军 / 亚军 / 季军」称号，称号挂在个人主页名字下方，榜单顶部也会列出上周前三</div>
             <div><b style="color:#ffd34d">v2.8.12</b>　1V1 建房后直接进准备室（不用先干等房间码）：房主一进去就能选地图、选角色武器，房里还能「邀请好友」和「复制房间码」；准备状态改成每秒自动同步，双方准备完 3 秒开局；公告发布改成两台同时发 + 失败补发 + 长连接兜底，通常 1～2 秒出结果</div>
@@ -4372,10 +4372,14 @@ function prepRender(){
       foe.innerHTML='<span style="color:#7d8aa8">等待对手进入房间…</span>';
     } else {
       const fr=ROLES[PREP.foeRole], fw=WEAPONS[PREP.foeWeapon];
-      foe.innerHTML='对手 <b style="color:#ffd34d">'+(esc?esc(PREP.foeName||NET.foeName||'对手'):(PREP.foeName||'对手'))+'</b>'
-        +'　角色：'+(fr?fr.name:'待选')
-        +'　武器：'+(fw?fw.name:'待选')
-        +'　<span style="color:'+(PREP.foeReady?'#33e08a':'#7d8aa8')+'">'+(PREP.foeReady?'已准备':'未准备')+'</span>';
+      const chip=(t,c)=>'<span style="display:inline-block;padding:3px 9px;border-radius:999px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.14);font-size:11.5px;color:'+c+'">'+t+'</span>';
+      foe.innerHTML='<div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:7px;padding:9px 12px;border-radius:11px;'
+        +'background:rgba(255,255,255,.05);border:1px solid '+(PREP.foeReady?'rgba(51,224,138,.45)':'rgba(255,255,255,.12)')+'">'
+        +'<b style="color:#ffd34d;font-size:12.5px">对手 '+(esc?esc(PREP.foeName||NET.foeName||'对手'):(PREP.foeName||'对手'))+'</b>'
+        +chip('角色 '+(fr?fr.name:'待选'), fr?'#c8d4ea':'#7d8aa8')
+        +chip('武器 '+(fw?fw.name:'待选'), fw?'#c8d4ea':'#7d8aa8')
+        +chip(PREP.foeReady?'已准备':'未准备', PREP.foeReady?'#33e08a':'#8fa1bf')
+        +'</div>';
     }
   }
   const btn=prepEl('btnPrepReady');
