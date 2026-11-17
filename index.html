@@ -1248,7 +1248,7 @@ body.is-touch .nhTime{display:none !important}
       </div>
     </div>
     <div class="overlay hidden" id="settingsScreen">
-      <div class="title">自定义设置 <span id="verTag" style="font-size:11px;color:#7d8aa8;font-weight:400;display:block;margin-top:2px">v2.9.0</span></div>
+      <div class="title">自定义设置 <span id="verTag" style="font-size:11px;color:#7d8aa8;font-weight:400;display:block;margin-top:2px">v2.9.1</span></div>
       <div id="settingsWrap" style="text-align:left;max-width:320px;line-height:2.2">
         <div>摇杆大小 <input type="range" id="setJoy" min="60" max="140" value="88" style="width:100%"></div>
         <div>开火键大小 <input type="range" id="setFire" min="50" max="120" value="74" style="width:100%"></div>
@@ -1292,6 +1292,7 @@ body.is-touch .nhTime{display:none !important}
         <div id="historyBox" style="display:none;margin-top:10px;border-top:1px solid rgba(255,255,255,.1);padding-top:10px">
           <div style="font-size:13px;font-weight:800;color:#67e8f9;margin-bottom:6px">修改历史</div>
           <div style="line-height:1.8">
+            <div><b style="color:#ffd34d">v2.9.1</b>　关注/互关修好：别人关注你，即使当时你不在线，下次打开也会在好友页「粉丝」里看到（首页好友按钮会亮人数）；双方互关后两人那边都显示「互关」并能拉联机；取关后对方会从你的粉丝里消失</div>
             <div><b style="color:#ffd34d">v2.9.0</b>　账号密码登录：第一次进入要给代号设一个 4-12 位密码，之后每次打开都要输对密码才进战场；密码只在本机保存（加盐哈希，看不到明文），个人主页可以改密码</div>
             <div><b style="color:#ffd34d">v2.8.15</b>　准备室把对手的选择做成卡片：角色、武器、准备状态各自成一块，对手一改房主这边立刻跟着变；首页排行榜卡去掉前面那个「1」</div>
             <div><b style="color:#ffd34d">v2.8.14</b>　横屏（手机横过来）布局重排：所有弹层改成顶部对齐 + 可上下滑动，标题不再被裁掉；首页模式卡并排铺开、排行榜入口居中、每日任务压成一行；榜单维度横屏排 4 列、准备室密度收紧，一屏能看全</div>
@@ -4988,6 +4989,9 @@ const FW = {
    清洗后的值同时作为本地缓存与比对的 key，避免「主题里没#、本地有#」对不上。 */
 function fwKey(u){ return String(u||'').replace(/^#/,'').replace(/[\/+#]/g,''); }
 function fwTopic(kind,id){ return 'gunfight9/'+kind+'/'+fwKey(id); }
+/* 关注关系单独用保留消息：gunfight9/follow/<被关注的人>/<关注的人>
+   这样对方离线时点的关注，等他上线订阅就能收到，不会丢 */
+function fwFollowTopic(target, from){ return 'gunfight9/follow/'+fwKey(target)+'/'+fwKey(from); }
 function esc(t){ return String(t==null?'':t).replace(/[<>&"']/g, c=>({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;',"'":'&#39;'}[c])); }
 function fwFriends(){ return lsGet('gunFriends', []); }
 function fwFollowers(){ return lsGet('gunFollowers', []); }
@@ -5069,10 +5073,35 @@ function fwOnMsg(topic, payload){
   try{
     const parts=topic.split('/'); const kind=parts[1], id=parts[2];
     if(!kind || !id) return;
-    const m=JSON.parse(payload.toString());
+    const raw=(payload===undefined||payload===null)?'':payload.toString();
+    /* 保留消息被清空 = 对方取关了：把他从粉丝里摘掉 */
+    if(raw==='' || raw==='0'){
+      if(kind==='follow' && parts[3] && fwKey(parts[2])===fwKey(FW.uid)){
+        const from=fwKey(parts[3]);
+        const fl=fwFollowers(); const left=fl.filter(f=>fwKey(f.uid)!==from);
+        if(left.length!==fl.length){ fwSaveFollowers(left); const lst=fwFriends(); const t=lst.find(f=>fwKey(f.uid)===from); if(t&&t.mutual){ t.mutual=false; fwSaveFriends(lst); } fwRenderList(); }
+      }
+      return;
+    }
+    const m=JSON.parse(raw);
     if(kind==='online'){ FW.online[id]=m; fwRenderList(); }
     else if(kind==='card'){ FW.cards[id]=m; RANK.cards[id]=m; fwRenderList(); rankTouch(); }
     else if(kind==='invite' && id===fwKey(FW.uid)){ fwShowInvite(m); }
+    else if(parts[0]==='gunfight9' && parts[1]==='follow' && parts.length>=4){
+      const target=fwKey(parts[2]), from=fwKey(parts[3]);
+      if(target!==fwKey(FW.uid) || !from) return;
+      if(!m || !m.from){ return; }          // 空载荷 = 对方取关了，忽略
+      const fl=fwFollowers();
+      const had=fl.some(f=>fwKey(f.uid)===from);
+      if(!had){ fl.push({uid:from, name:m.name||'对方', ts:m.ts||Date.now()}); fwSaveFollowers(fl.slice(-200)); }
+      const lst=fwFriends(); const t=lst.find(f=>fwKey(f.uid)===from);
+      let becameMutual=false;
+      if(t && !t.mutual){ t.mutual=true; fwSaveFriends(lst); becameMutual=true; }
+      if(!had){ toastMsg((t?'「'+(m.name||'对方')+'」也关注了你，你们已互关，可以拉联机了':'「'+(m.name||'对方')+'」关注了你，回关后就能拉联机')); }
+      else if(becameMutual){ toastMsg('你和「'+(m.name||'对方')+'」已互相关注'); }
+      clearTimeout(fwOnMsg._t); fwOnMsg._t=setTimeout(()=>{ try{ fwRenderList(); }catch(e){} }, 60);
+      return;
+    }
     else if(kind==='notice' && id===fwKey(FW.uid)){
       // 有人关注了你。记进“粉丝”，我再回关就是互关
       const fl=fwFollowers();
@@ -5098,12 +5127,16 @@ function fwInit(){
     c.on('connect', ()=>{
       FW.ready=true;
       c.subscribe(fwTopic('invite',FW.uid), {qos:1});
-      c.subscribe(fwTopic('notice',FW.uid), {qos:1});   // 别人关注我时的提醒
+      c.subscribe(fwTopic('notice',FW.uid), {qos:1});   // 别人关注我时的提醒（旧版兼容）
+      c.subscribe('gunfight9/follow/'+fwKey(FW.uid)+'/+', {qos:1});   // 所有关注我的人（保留消息，离线补发）
       c.subscribe(fwTopic('card',FW.uid), {qos:1});
       c.subscribe('gunfight9/like/'+fwKey(FW.uid), {qos:1});   // 自己收到的赞
       c.subscribe('gunfight9/card/+', {qos:1});                 // 全服明信片（排行榜数据源）
       c.subscribe('gunfight9/like/+', {qos:1});                 // 全服点赞数
       fwPublishCard(); fwBeat(); fwWatchFriends(); fwRenderList();
+      try{ const q=FW.pendingFollow||[]; FW.pendingFollow=[];
+        for(const it of q){ FW.cli.publish(fwFollowTopic(it.targetUid, it.fromUid), JSON.stringify({from:it.fromUid, name:it.name, ts:Date.now()}), {qos:1, retain:true}); }
+      }catch(e){}
     });
     c.on('message', fwOnMsg);
     c.on('error', (e)=>{ FW.log=(FW.log||[]).concat('err:'+(e&&e.message||e)); });
@@ -5152,10 +5185,33 @@ function fwLookup(q){
   });
 }
 
+/* 把「我关注了他」发到中转：没连上就排队，连上后自动补发 */
+function fwFollowRemote(targetUid, fromUid, name){
+  const payload=JSON.stringify({from:fromUid, name:name, ts:Date.now()});
+  const fire=()=>{
+    try{
+      if(!FW.cli || !FW.cli.connected) return false;
+      FW.cli.publish(fwTopic('notice', targetUid), payload, {qos:1});
+      FW.cli.publish(fwFollowTopic(targetUid, fromUid), payload, {qos:1, retain:true}, (err)=>{ if(err) toastMsg('关注没发出去，检查网络'); });
+      return true;
+    }catch(e){ return false; }
+  };
+  if(fire()) return;
+  FW.pendingFollow=(FW.pendingFollow||[]).concat([{targetUid, fromUid, name}]).slice(-50);
+  fwInit().then(()=>{
+    if(!FW.cli || !FW.cli.connected) return;
+    const q=FW.pendingFollow||[]; FW.pendingFollow=[];
+    for(const it of q){ try{
+      FW.cli.publish(fwTopic('notice', it.targetUid), JSON.stringify({from:it.fromUid, name:it.name, ts:Date.now()}), {qos:1});
+      FW.cli.publish(fwFollowTopic(it.targetUid, it.fromUid), JSON.stringify({from:it.fromUid, name:it.name, ts:Date.now()}), {qos:1, retain:true});
+    }catch(e){} }
+  }).catch(()=>{});
+}
 /* 关注 / 取关 */
 function fwFollow(card){
+  if(fwKey(card.uid)===fwKey(ensureUid())){ toastMsg('不能关注自己'); return; }
   const list=fwFriends();
-  if(list.some(f=>f.uid===card.uid)){ toastMsg('已经在好友里了'); return; }
+  if(list.some(f=>fwKey(f.uid)===fwKey(card.uid))){ toastMsg('已经在好友里了'); return; }
   const mutual=fwFollowers().some(f=>fwKey(f.uid)===fwKey(card.uid));
   list.push({uid:card.uid, name:card.name, addedAt:Date.now(), mutual});
   fwSaveFriends(list);
@@ -5163,14 +5219,14 @@ function fwFollow(card){
     FW.cli.subscribe(fwTopic('online',card.uid),{qos:1});
     FW.cli.subscribe(fwTopic('card',card.uid),{qos:1});
   }
-  // 告诉对方一声，否则被关注的人完全不知道，互关也就无从谈起
-  try{ if(FW.cli && FW.cli.connected) FW.cli.publish(fwTopic('notice', card.uid),
-        JSON.stringify({from: FW.uid||ensureUid(), name: currentNick(), ts: Date.now()}), {qos:1}); }catch(e){}
+  // 告诉对方一声（顺便用保留消息记下这层关系，对方离线也能在下次上线时收到）
+  fwFollowRemote(card.uid, FW.uid||ensureUid(), currentNick());
   toastMsg(mutual ? ('你和 '+card.name+' 已互相关注，可以拉他联机了') : ('已关注 '+card.name+'，等他回关就能拉联机'));
   fwRenderList(); if(card && card.matches!==undefined) fwRenderResult(card, true);
 }
 function fwUnfollow(uid){
-  fwSaveFriends(fwFriends().filter(f=>f.uid!==uid));
+  fwSaveFriends(fwFriends().filter(f=>fwKey(f.uid)!==fwKey(uid)));
+  try{ if(FW.cli && FW.cli.connected) FW.cli.publish(fwFollowTopic(uid, FW.uid||ensureUid()), '', {qos:1, retain:true}); }catch(e){}
   toastMsg('已取消关注');
   fwRenderList();
 }
@@ -6103,7 +6159,11 @@ function fwRenderList(){
   const fans=fol.filter(f=>!list.some(x=>fwKey(x.uid)===fwKey(f.uid)));
   const cnt=document.getElementById('fwCount'); if(cnt) cnt.textContent=mut.length+'/'+list.length;
   const badge=document.getElementById('fwBadge');
-  if(badge){ const on=mut.filter(f=>fwOnline(f.uid)).length; badge.textContent = on? '('+on+')' : ''; }
+  if(badge){
+    const newFans=fans.length;
+    if(newFans){ badge.textContent='('+newFans+')'; badge.style.color='#c4b5fd'; }
+    else { const on=mut.filter(f=>fwOnline(f.uid)).length; badge.textContent = on? '('+on+')' : ''; badge.style.color='#5eead4'; }
+  }
   if(!list.length && !fans.length){
     el.innerHTML='<div style="font-size:12px;color:#7d8aa8;text-align:center;padding:18px 0">还没有好友，上面搜个名字关注一个</div>';
     return;
