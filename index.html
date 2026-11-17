@@ -1073,7 +1073,7 @@ body.is-touch .nhTime{display:none !important}
     </div>
 
     <!-- 联机准备室：房主选图、双方各自选角色与武器、双方准备后开局 -->
-    <div class="overlay hidden" id="prepScreen">
+    <div class="overlay hidden" id="prepScreen" style="overflow-y:auto;align-items:flex-start;padding:16px 0 28px">
       <div class="title">准备室</div>
       <div class="sub" id="prepRoomCode">房间码 ——</div>
       <div id="prepMapBox">
@@ -1085,6 +1085,11 @@ body.is-touch .nhTime{display:none !important}
       <div class="roleRowLabel">你的武器</div>
       <div class="roleRow" id="prepWeaponRow"></div>
       <div id="prepFoe" style="font-size:12px;color:#9fb2d0;margin-top:10px;line-height:1.7">等待对手进入…</div>
+      <div style="display:flex;gap:8px;justify-content:center;margin-top:10px;max-width:340px">
+        <button class="btn ghost" id="btnPrepInvite" style="padding:8px 16px;font-size:13px">邀请好友</button>
+        <button class="btn ghost" id="btnPrepCopy" style="padding:8px 16px;font-size:13px">复制房间码</button>
+      </div>
+      <div id="prepFriendBox" class="hidden" style="width:100%;max-width:340px;margin-top:10px;text-align:left"></div>
       <div class="rowBtns">
         <button class="btn" id="btnPrepReady">准 备</button>
         <button class="btn ghost" id="btnPrepLeave">离开房间</button>
@@ -1201,7 +1206,7 @@ body.is-touch .nhTime{display:none !important}
       </div>
     </div>
     <div class="overlay hidden" id="settingsScreen">
-      <div class="title">自定义设置 <span id="verTag" style="font-size:11px;color:#7d8aa8;font-weight:400;display:block;margin-top:2px">v2.8.11</span></div>
+      <div class="title">自定义设置 <span id="verTag" style="font-size:11px;color:#7d8aa8;font-weight:400;display:block;margin-top:2px">v2.8.12</span></div>
       <div id="settingsWrap" style="text-align:left;max-width:320px;line-height:2.2">
         <div>摇杆大小 <input type="range" id="setJoy" min="60" max="140" value="88" style="width:100%"></div>
         <div>开火键大小 <input type="range" id="setFire" min="50" max="120" value="74" style="width:100%"></div>
@@ -1245,6 +1250,7 @@ body.is-touch .nhTime{display:none !important}
         <div id="historyBox" style="display:none;margin-top:10px;border-top:1px solid rgba(255,255,255,.1);padding-top:10px">
           <div style="font-size:13px;font-weight:800;color:#67e8f9;margin-bottom:6px">修改历史</div>
           <div style="line-height:1.8">
+            <div><b style="color:#ffd34d">v2.8.12</b>　1V1 建房后直接进准备室（不用先干等房间码）：房主一进去就能选地图、选角色武器，房里还能「邀请好友」和「复制房间码」；准备状态改成每秒自动同步，双方准备完 3 秒开局；公告发布改成两台同时发 + 失败补发 + 长连接兜底，通常 1～2 秒出结果</div>
             <div><b style="color:#ffd34d">v2.8.11</b>　界面上的解释性小字去掉（首页排行榜卡第二行、榜单页底部说明、好友页搜索框说明、自检面板说明），这些说明统一收进玩法说明书新增的「九、排行榜与每日榜」「十、自检与检查更新」两章</div>
             <div><b style="color:#ffd34d">v2.8.10</b>　修排行榜里点开明信片、一关就跳到好友页的问题（现在从哪进的卡就回哪：榜单回榜单、个人主页回个人主页）；明信片卡片限高可滚动、点空白处也能关；打开排行榜时首页自动收起，画面不再层层叠满</div>
             <div><b style="color:#ffd34d">v2.8.9</b>　排行榜新增「今日击杀 / 今日胜场」，只算当天战绩、每天 0 点自动换榜归零；自检新增本地数据健康检查，发现问题在面板顶部一键修复后自动重新检查</div>
@@ -4235,6 +4241,7 @@ const PREP={map:0, myRole:'assault', myWeapon:'rifle', ready:false,
   foeRole:'', foeWeapon:'', foeReady:false, foeName:'', started:false, inited:false};
 function prepEl(id){ return document.getElementById(id); }
 function prepMaxHp(p){ return (p && p.maxHp) || CFG.maxHp; }
+let PREP_TIMER=null;
 function prepOpen(){
   NET.prepEntered=true;
   PREP.started=false;
@@ -4248,6 +4255,13 @@ function prepOpen(){
   document.querySelectorAll('.overlay').forEach(e=>e.classList.add('hidden'));
   if(scr) scr.classList.remove('hidden');
   prepRender();
+  if(PREP_TIMER) clearInterval(PREP_TIMER);
+  PREP_TIMER=setInterval(()=>{
+    if(PREP.started) return;
+    if(!NET.prepEntered) return;
+    if(NET.client && NET.client.connected) prepSend();
+    else if(NET.ws && NET.ws.readyState===1) prepSend();
+  }, 1200);
 }
 function prepSend(){
   netSend({t:'prep', map:PREP.map, role:PREP.myRole, weapon:PREP.myWeapon,
@@ -4293,6 +4307,7 @@ function prepRender(){
 function prepGo(){
   if(PREP.started) return;
   PREP.started=true;
+  if(PREP_TIMER){ clearInterval(PREP_TIMER); PREP_TIMER=null; }
   // 房主宣布开局：把最终地图一起发给加入方，两边同时倒计时
   if(NET.role==='a'){ PREP.map=(PREP.map|0); netSend({t:'go', map:PREP.map}, 1); }
   const sec=(TUNE.prepSec||3);
@@ -4323,6 +4338,7 @@ document.addEventListener('click',(e)=>{
     sClick();
     try{ netSend({t:'bye'},1); }catch(e){}
     PREP.ready=false; PREP.started=false; NET.prepEntered=false;
+    if(PREP_TIMER){ clearInterval(PREP_TIMER); PREP_TIMER=null; }
     try{ lobbyClear(); }catch(e){}
     document.getElementById('prepScreen').classList.add('hidden');
     document.getElementById('netScreen').classList.remove('hidden');
@@ -4336,7 +4352,7 @@ function netOnMsg(m){
     else if(m.t==='joined'){
       NET.code=m.code; NET.role='b';
       netStatus('已进房，进准备室选角色和武器','#5eead4');
-      PREP.foeName=NET.foeName||'房主'; PREP.foeRole=''; PREP.foeWeapon=''; PREP.foeReady=false;
+      PREP.foeName=NET.foeName||'房主'; PREP.ready=false;   // 自己重新准备，对手信息保留（房主可能已经先发过 prep）
       prepOpen(); prepSend();
     }
     else if(m.t==='peer'){
@@ -4527,8 +4543,8 @@ function netQuickMatch(){
     resolve(true);
   });
 }
-function netRenderInviteList(){
-  const box=document.getElementById('netFriendBox');
+function netRenderInviteList(targetId){
+  const box=document.getElementById(targetId||'netFriendBox');
   if(!box) return;
   box.classList.remove('hidden');
   const list=fwFriends().filter(f=>fwIsMutual(f.uid));
@@ -5431,21 +5447,21 @@ function ntPubOne(url, topic, payload){
     };
     c.once('connect', ()=>done(true));
     c.once('error', ()=>done(false));
-    setTimeout(()=>done(false), 7000);
+    setTimeout(()=>done(false), 4500);
   });
 }
 async function ntPublishAll(topic, payload){
-  // 串行发 + 失败重试：公共中转偶尔限流，并发建连更容易被拒
-  let okCount=0;
-  for(const u of NT_BROKERS){
-    let done=false;
-    for(let i=0;i<3 && !done;i++){
-      if(i) await new Promise(r=>setTimeout(r,1400));
-      done = await ntPubOne(u, topic, payload);
-    }
-    if(done) okCount++;
+  const first=await Promise.all(NT_BROKERS.map(u=>ntPubOne(u, topic, payload)));
+  if(first.some(Boolean) && first.every(Boolean)) return '';
+  // 没发成功的那台补一次
+  const again=await Promise.all(NT_BROKERS.map((u,i)=> first[i] ? Promise.resolve(true) : ntPubOne(u, topic, payload)));
+  if(again.some(Boolean)) return '';
+  // 最后兜底：页面里已经在线的长连接直接发（公共中转对频繁建连有限流）
+  let ok=false;
+  for(const c of [NT.cli, FW.cli, NET.client]){
+    try{ if(c && c.connected){ c.publish(topic, payload, {qos:1, retain:true}); ok=true; } }catch(e){}
   }
-  return okCount ? '' : '两个中转都发不出去（网络问题，稍后再试）';
+  return ok ? '' : '两个中转都发不出去（网络问题，稍后再试）';
 }
 function noticePublish(obj){ return ntPublishAll(NOTICE_TOPIC, JSON.stringify(obj)); }
 function noticeClearRemote(){ return ntPublishAll(NOTICE_TOPIC, ''); }
@@ -6195,6 +6211,7 @@ document.getElementById('btnNetHost').addEventListener('click', async ()=>{
     NET.role='a'; NET.code=genRoomCode();
     NET.client.subscribe(netTopic(NET.code,'a'), {qos:1});
     netShowCode(NET.code, '把房间码发给好友，等他进来');
+    prepOpen();       // 房主建完房直接进准备室：先选图、选角色，边等对手边配
     return;
   }
   if(!NET.ws){ if(!await netOpen()) return; }
@@ -6223,6 +6240,14 @@ document.getElementById('btnNetJoin').addEventListener('click', async ()=>{
   }
   if(!NET.ws){ if(!await netOpen()) return; }
   netSend({t:'join', code});
+});
+document.getElementById('btnPrepInvite').addEventListener('click', ()=>{ sClick(); netRenderInviteList('prepFriendBox'); });
+document.getElementById('btnPrepCopy').addEventListener('click', ()=>{ sClick();
+  const c=NET.code||'';
+  if(!c){ toastMsg('还没有房间码'); return; }
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(c).then(()=>toastMsg('房间码已复制：'+c)).catch(()=>toastMsg('房间码：'+c));
+  } else toastMsg('房间码：'+c);
 });
 document.getElementById('btnNetBack').addEventListener('click', ()=>{
   sClick();
