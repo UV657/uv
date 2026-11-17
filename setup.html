@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>枪战 · Supabase 建表脚本</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#0a0f18;color:#e8eefc;font-family:-apple-system,"PingFang SC",sans-serif;padding:18px}
+h1{font-size:19px;margin:6px 0 4px}p{font-size:13px;color:#8fa3c4;line-height:1.7;margin:6px 0}
+#copy{display:block;width:100%;padding:14px;margin:12px 0;border:none;border-radius:12px;background:#2be0b7;color:#03221c;font-size:16px;font-weight:700}
+#copy.ok{background:#7ef0c4}
+pre{background:#111a29;border:1px solid rgba(90,140,200,.22);border-radius:12px;padding:12px;font-size:11px;line-height:1.55;overflow-x:auto;white-space:pre;color:#b8cbe6}
+</style></head><body>
+<h1>枪战 · 云端账号建表脚本</h1>
+<p>1. 点下面按钮复制全部代码<br>2. 到 Supabase 的 SQL Editor 里粘贴<br>3. 点 Run，看到 Success 就好</p>
+<button id="copy">复制全部代码</button>
+<pre id="code"></pre>
+<script>
+const SQL = `-- 枪战：云端账号表 + 只暴露校验函数（匿名角色不能直接读表）
+create table if not exists public.accounts(
+  name_key text primary key,
+  name text not null,
+  salt text not null,
+  hash text not null,
+  uid text not null,
+  updated_at timestamptz not null default now()
+);
+alter table public.accounts enable row level security;
+
+create or replace function public.acc_register(p_name text, p_salt text, p_hash text, p_uid text)
+returns jsonb language plpgsql security definer set search_path = public as $$
+declare k text := lower(trim(p_name));
+begin
+  if length(k) < 2 or length(k) > 10 then return jsonb_build_object('ok', false, 'err', 'bad_name'); end if;
+  if length(p_salt) < 8 or length(p_hash) < 16 then return jsonb_build_object('ok', false, 'err', 'bad_hash'); end if;
+  if exists(select 1 from accounts where name_key = k) then return jsonb_build_object('ok', false, 'err', 'name_taken'); end if;
+  insert into accounts(name_key, name, salt, hash, uid) values (k, trim(p_name), p_salt, p_hash, p_uid);
+  return jsonb_build_object('ok', true);
+exception when unique_violation then return jsonb_build_object('ok', false, 'err', 'name_taken');
+end $$;
+
+create or replace function public.acc_salt(p_name text)
+returns jsonb language plpgsql security definer set search_path = public as $$
+begin
+  return coalesce((select jsonb_build_object('ok', true, 'salt', salt) from accounts where name_key = lower(trim(p_name))), jsonb_build_object('ok', false, 'err', 'no_account'));
+end $$;
+
+create or replace function public.acc_login(p_name text, p_hash text)
+returns jsonb language plpgsql security definer set search_path = public as $$
+begin
+  return coalesce((select jsonb_build_object('ok', true, 'uid', uid, 'name', name) from accounts where name_key = lower(trim(p_name)) and hash = p_hash), jsonb_build_object('ok', false, 'err', 'bad_pwd'));
+end $$;
+
+create or replace function public.acc_changepwd(p_name text, p_old text, p_salt text, p_hash text)
+returns jsonb language plpgsql security definer set search_path = public as $$
+begin
+  if not exists(select 1 from accounts where name_key = lower(trim(p_name)) and hash = p_old) then return jsonb_build_object('ok', false, 'err', 'bad_pwd'); end if;
+  update accounts set salt = p_salt, hash = p_hash, updated_at = now() where name_key = lower(trim(p_name));
+  return jsonb_build_object('ok', true);
+end $$;
+
+grant execute on function public.acc_register(text,text,text,text) to anon;
+grant execute on function public.acc_salt(text) to anon;
+grant execute on function public.acc_login(text,text) to anon;
+grant execute on function public.acc_changepwd(text,text,text,text) to anon;
+`;
+document.getElementById('code').textContent = SQL;
+document.getElementById('copy').addEventListener('click', async () => {
+  const b = document.getElementById('copy');
+  try { await navigator.clipboard.writeText(SQL); b.textContent='✓ 已复制，去 SQL Editor 粘贴'; b.classList.add('ok'); }
+  catch(e) { b.textContent='复制失败，请长按下面代码手动选中'; }
+});
+</script></body></html>
