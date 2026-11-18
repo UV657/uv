@@ -1253,8 +1253,14 @@ body.is-touch .nhTime{display:none !important}
       </div>
     </div>
     <div class="overlay hidden" id="settingsScreen">
-      <div class="title">自定义设置 <span id="verTag" style="font-size:11px;color:#7d8aa8;font-weight:400;display:block;margin-top:2px">v2.9.4</span></div>
+      <div class="title">自定义设置 <span id="verTag" style="font-size:11px;color:#7d8aa8;font-weight:400;display:block;margin-top:2px">v2.9.5</span></div>
       <div id="settingsWrap" style="text-align:left;max-width:320px;line-height:2.2">
+        <div id="kbBlock" style="display:none;border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:10px 12px;margin-bottom:12px;background:rgba(255,255,255,.04);line-height:1.5">
+          <div style="font-size:13px;font-weight:800;color:#67e8f9;margin-bottom:6px">电脑键位</div>
+          <div id="kbRows"></div>
+          <div id="kbHint" style="font-size:11.5px;color:#9fb2d0;margin-top:6px">点「改」后按一下你想用的键</div>
+          <button class="btn ghost" id="btnKbReset" style="width:100%;margin-top:8px;padding:6px;font-size:12px">恢复默认键位</button>
+        </div>
         <div>摇杆大小 <input type="range" id="setJoy" min="60" max="140" value="88" style="width:100%"></div>
         <div>开火键大小 <input type="range" id="setFire" min="50" max="120" value="74" style="width:100%"></div>
         <div>UI透明度 <input type="range" id="setAlpha" min="20" max="100" value="60" style="width:100%"></div>
@@ -1297,6 +1303,7 @@ body.is-touch .nhTime{display:none !important}
         <div id="historyBox" style="display:none;margin-top:10px;border-top:1px solid rgba(255,255,255,.1);padding-top:10px">
           <div style="font-size:13px;font-weight:800;color:#67e8f9;margin-bottom:6px">修改历史</div>
           <div style="line-height:1.8">
+            <div><b style="color:#ffd34d">v2.9.5</b>　电脑端新增键位自定义：设置页里能改前进/后退/左移/右移/射击/技能/暂停/静音 8 个键，点「改」再按一下新键就生效，保存在本机，可一键恢复默认（手机端不显示这一块）
             <div><b style="color:#ffd34d">v2.9.4</b>　1V1 改成单人打 AI：去掉本地 P2 双人，操作和 5V5 一样（鼠标瞄准、左键/空格开火、E 技能）；选人页只选自己这边的角色与地图，对手由 AI 扮演
             <div><b style="color:#ffd34d">v2.9.3</b>　玩法说明改版：角色参数从挤在一起的表格改成一角色一张卡（手机上不再被切掉半边）；登录页、改密码页的输入框和按钮重新排版；修复启动页一直卡在 0% 进不去的问题
             <div><b style="color:#ffd34d">v2.9.2</b>　账号上云：代号和密码存到云端服务器，换手机、清缓存后用同一个代号+密码就能登回来（档案号、好友、明信片、战绩都跟着走）；改密码自动同步云端；一个代号只对应一个账号；断网建号先存本机，联网自动补传</div>
@@ -2282,9 +2289,22 @@ btnFire.addEventListener('mouseup', ()=>{ state.fireDown=false; btnFire.classLis
 btnFire.addEventListener('mouseleave', ()=>{ state.fireDown=false; btnFire.classList.remove('on'); });
 
 window.addEventListener('keydown', e=>{
+  if(KB_CATCH){
+    e.preventDefault();
+    const h=document.getElementById('kbHint');
+    if(e.code==='Escape'){ KB_CATCH=null; if(h) h.textContent='已取消，点「改」重新设置'; return; }
+    const k=KB_CATCH;
+    const dup=Object.keys(KB).find(x=>x!==k && KB[x]===e.code);
+    if(dup){ if(h) h.textContent='这个键已经绑给「'+KB_LABEL[dup]+'」，换一个'; return; }
+    KB[k]=e.code;
+    try{ lsSet('gunKeys',KB); }catch(err){}
+    KB_CATCH=null; kbRender();
+    if(h) h.textContent='已保存：'+KB_LABEL[k]+' → '+kbName(e.code);
+    return;
+  }
   if(e.code==='Escape' && state.running && !state.ended && !state.paused){ backToMenu(); return; } // Esc：中途退出对局
-  if(e.code==='KeyP'){ togglePause(); return; }
-  if(e.code==='KeyM'){ state.muted=!state.muted; return; }
+  if(e.code===KB.pause){ togglePause(); return; }
+  if(e.code===KB.mute){ state.muted=!state.muted; return; }
   if(e.code==='Enter' && !state.running && !state.ended){
     if(!menuScreen.classList.contains('hidden')) return; // 主菜单用鼠标
     if(selectScreen.classList.contains('hidden')) startGame(); else return;
@@ -2293,7 +2313,7 @@ window.addEventListener('keydown', e=>{
   if(!e.repeat) state.keys[e.code]=true;
   // 技能键：P1=E；P2=数字键 1（主键盘或小键盘）
   if(!e.repeat && state.running && !state.paused){
-    if(e.code==='KeyE'){ const h=localP(); if(h && h.isHuman) castSkill(h); }
+    if(e.code===KB.skill){ const h=localP(); if(h && h.isHuman) castSkill(h); }
     if(e.code==='Digit1'||e.code==='Numpad1'){ const p2=state.players.find(p=>p.team==='blue'&&p.isHuman); if(p2) castSkill(p2); }
   }
 });
@@ -2634,18 +2654,18 @@ function update(dt, rawDt){
           }
           if((state.fireDown || state.fireBurst>0 || state.autoFire) && p.cooldown<=0) shoot(p);
         } else {
-          if(state.keys['KeyW']) my-=1; if(state.keys['KeyS']) my+=1;
-          if(state.keys['KeyA']) mx-=1; if(state.keys['KeyD']) mx+=1;
+          if(state.keys[KB.up]) my-=1; if(state.keys[KB.down]) my+=1;
+          if(state.keys[KB.left]) mx-=1; if(state.keys[KB.right]) mx+=1;
           movePlayer(p,mx,my,dt);
           const localDuel = state.mode==='1v1' && state.players.some(o=>o.team==='blue' && o.isHuman && !o.isRemote);
           if(state.mode==='1v1' && localDuel){
             // 本地双人：瞄准靠 Z 左转 / X 右转，可 360 度停在任意角度
             if(state.keys['KeyZ']) p.aim -= ROT_SPEED*dt;
             if(state.keys['KeyX']) p.aim += ROT_SPEED*dt;
-            if((state.keys['KeyJ']||state.keys['Space']) && p.cooldown<=0) shoot(p);
+            if(state.keys[KB.fire] && p.cooldown<=0) shoot(p);
           } else {
             p.aim=Math.atan2(state.mouse.y-p.y,state.mouse.x-p.x);
-            if((state.mouse.down||state.keys['Space']) && p.cooldown<=0) shoot(p);
+            if((state.mouse.down||state.keys[KB.fire]) && p.cooldown<=0) shoot(p);
           }
         }
       } else {
@@ -2727,6 +2747,29 @@ function lsSet(key, obj){
   try{ localStorage.setItem(key, typeof obj==='string'?obj:JSON.stringify(obj)); }catch(e){}
 }
 function lsGetRaw(key){ try{ return localStorage.getItem(key)||''; }catch(e){ return ''; } }
+
+/* ---- 电脑键位：可在自定义设置里改，存本机 ---- */
+const KB_DEF={up:'KeyW',down:'KeyS',left:'KeyA',right:'KeyD',fire:'Space',skill:'KeyE',pause:'KeyP',mute:'KeyM'};
+const KB_LABEL={up:'前进',down:'后退',left:'左移',right:'右移',fire:'射击',skill:'技能',pause:'暂停',mute:'静音'};
+let KB=(function(){ try{ const o=lsGet('gunKeys',{}); return Object.assign({},KB_DEF,(o&&typeof o==='object')?o:{}); }catch(e){ return Object.assign({},KB_DEF); } })();
+let KB_CATCH=null;
+function kbName(code){
+  const m={Space:'空格',Enter:'回车',Escape:'Esc',ArrowUp:'↑',ArrowDown:'↓',ArrowLeft:'←',ArrowRight:'→',Comma:'，',Period:'。',Tab:'Tab'};
+  if(m[code]) return m[code];
+  return String(code||'').replace(/^Key/,'').replace(/^Digit/,'').replace(/^Numpad/,'小键盘 ');
+}
+function kbRender(){
+  const box=document.getElementById('kbRows'); if(!box) return;
+  box.innerHTML=Object.keys(KB_LABEL).map(k=>'<div style="display:flex;align-items:center;gap:8px;line-height:1.4;margin:3px 0"><span style="flex:0 0 44px;font-size:12.5px">'+KB_LABEL[k]+'</span><span style="flex:1;font-weight:800;font-size:12.5px;color:#7dd3fc">'+kbName(KB[k])+'</span><button class="btn ghost" data-kb="'+k+'" style="flex:0 0 auto;padding:3px 12px;font-size:12px">改</button></div>').join('');
+  box.querySelectorAll('button[data-kb]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{ KB_CATCH=btn.dataset.kb; const h=document.getElementById('kbHint'); if(h) h.textContent='按下要绑给「'+KB_LABEL[KB_CATCH]+'」的键（Esc 取消）'; });
+  });
+}
+function kbShow(){
+  const blk=document.getElementById('kbBlock'); if(!blk) return;
+  blk.style.display = isTouch ? 'none' : 'block';
+  if(!isTouch) kbRender();
+}
 
 /* ================= 11. 渲染 ================= */
 /* 雷达小地图：实时显示所有人位置（借鉴同类作品，解决混战里“敌人在哪”的信息焦虑） */
@@ -6783,7 +6826,8 @@ bindBtn('btnShare', ()=>{
   }
 });
 /* 设置面板 */
-bindBtn('btnSettings', ()=>{ menuScreen.classList.add('hidden'); settingsScreen.classList.remove('hidden'); });
+bindBtn('btnSettings', ()=>{ menuScreen.classList.add('hidden'); settingsScreen.classList.remove('hidden'); try{ kbShow(); }catch(e){} });
+bindBtn('btnKbReset', ()=>{ KB=Object.assign({},KB_DEF); try{ lsSet('gunKeys',KB); }catch(e){}; kbRender(); const h=document.getElementById('kbHint'); if(h) h.textContent='已恢复默认键位'; });
 
 /* ---- 2.4 好友面板 / 明信片事件 ---- */
 bindBtn('btnFriends', ()=>{ initAudio(); sClick(); fwOpen(); });
