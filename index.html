@@ -1279,6 +1279,7 @@ body.is-touch .nhTime{display:none !important}
         <div>技能键位置 <select id="setSkillPos" style="width:100%;padding:6px;border-radius:6px;background:#1a2340;color:#fff;border:1px solid rgba(255,255,255,.2)"><option value="left">开火键旁边</option><option value="right">对角位置</option><option value="joy">贴着摇杆那一侧</option><option value="free">自定义（自己拖）</option></select></div>
         <div><button class="btn ghost" id="btnLayout" style="width:100%">调整技能键位置</button></div>
         <div>自动开火 <select id="setAutoFire" style="width:100%;padding:6px;border-radius:6px;background:#1a2340;color:#fff;border:1px solid rgba(255,255,255,.2)"><option value="off">手动开火</option><option value="on">自动开火</option></select></div>
+        <div>长按开火（电脑） <select id="setHoldFire" style="width:100%;padding:6px;border-radius:6px;background:#1a2340;color:#fff;border:1px solid rgba(255,255,255,.2)"><option value="on">开启（按住连发）</option><option value="off">关闭（单发，松开再按）</option></select></div>
         <div>自动瞄准 <select id="setAutoAim" style="width:100%;padding:6px;border-radius:6px;background:#1a2340;color:#fff;border:1px solid rgba(255,255,255,.2)"><option value="on">开启</option><option value="off">关闭（手动瞄准）</option></select></div>
         <div>小地图雷达 <select id="setRadarShow" style="width:100%;padding:6px;border-radius:6px;background:#1a2340;color:#fff;border:1px solid rgba(255,255,255,.2)"><option value="on">显示</option><option value="off">关闭</option></select></div>
         <div>雷达大小 <input type="range" id="setRadarSize" min="70" max="180" value="112" style="width:100%"></div>
@@ -1292,8 +1293,6 @@ body.is-touch .nhTime{display:none !important}
       </div>
       <div style="max-width:320px;margin:14px auto 0;text-align:left;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:12px 14px;font-size:12px;line-height:1.9;color:#9fb2d0">
         <div style="font-size:13px;font-weight:800;color:#67e8f9;margin-bottom:6px">关于我们</div>
-        <div><b style="color:#e8eefc">制作人</b>　刘伟骏</div>
-        <div style="margin-top:6px">独立开发者。一个人从零写的网页枪战游戏，纯 HTML 单文件，没用任何游戏引擎。从画第一个圆点开始，一步一步改到现在。</div>
         <div style="margin-top:6px"><b style="color:#e8eefc">技术</b>　Canvas 2D · 原生 JS · MQTT 公网联机 · PWA 可装到桌面</div>
         <button class="btn ghost" id="btnCheckUpdate" style="width:100%;margin-top:10px;padding:7px;font-size:12px">检查更新 + 自检（一键）</button>
         <div id="updHint" style="font-size:11.5px;color:#9fb2d0;margin-top:6px;line-height:1.7"></div>
@@ -1595,6 +1594,7 @@ const state = {
   lastT:0, shake:0,
   replay:false, replayFrame:0, replayBuffer:[],
   keys:{}, keys2:{}, mouse:{x:0,y:0,down:false}, muted:false,
+  holdFire:true, pcFireHeld:false, pcFireBuffer:0, // 电脑端长按开火开关 + 单发模式边沿检测
 };
 function mulberry32(a){ return function(){ a|=0; a=a+0x6D2B79F5|0; let t=Math.imul(a^a>>>15,1|a); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; }; }
 let rng = mulberry32(CFG.seed);
@@ -2185,7 +2185,10 @@ const ctx2d=canvas.getContext('2d');
 let SCALE_X=1, SCALE_Y=1;
 /* 视口：竖屏时旋转 90° 显示整张地图，避免拉伸变形 */
 let VIEW={rot:false, scale:1, ox:0, oy:0};
-function worldPos(e){ const r=canvas.getBoundingClientRect(), dpr=window.devicePixelRatio||1;
+/* DPR 封顶：电脑最高 2，手机最高 1.5，避免高 DPR 屏把画布撑大导致掉帧。
+   注意鼠标坐标换算必须用同一个 DPR，否则点击位置会偏。 */
+function effDpr(){ const cap=isTouch?1.5:2; return Math.min(cap, Math.max(1, window.devicePixelRatio||1)); }
+function worldPos(e){ const r=canvas.getBoundingClientRect(), dpr=effDpr();
   const px=(e.clientX-r.left)*dpr, py=(e.clientY-r.top)*dpr;
   if(VIEW.rot){
     const cx=VIEW.ox+(state.world.H*VIEW.scale)/2, cy=VIEW.oy+(state.world.W*VIEW.scale)/2;
@@ -2288,6 +2291,16 @@ btnFire.addEventListener('mousedown', e=>{ e.preventDefault(); state.fireDown=tr
 btnFire.addEventListener('mouseup', ()=>{ state.fireDown=false; btnFire.classList.remove('on'); });
 btnFire.addEventListener('mouseleave', ()=>{ state.fireDown=false; btnFire.classList.remove('on'); });
 
+/* 电脑端开火模式：长按连发（默认）/ 单发（按一下打一发，松开再按才下一发）。
+   手机摇杆与 btnFire、P2 的 Enter 开火都不走这里，保持原逻辑。 */
+state.pcFireHeld=false; state.pcFireBuffer=0;
+function pcFireWant(pressed, dt){
+  if(state.holdFire){ state.pcFireBuffer=0; state.pcFireHeld=pressed; return pressed; }
+  if(pressed && !state.pcFireHeld) state.pcFireBuffer=0.18; // 短按缓冲，冷却刚好没好时也能打出一发
+  if(state.pcFireBuffer>0) state.pcFireBuffer-=Math.max(0,dt);
+  state.pcFireHeld=pressed;
+  return state.pcFireBuffer>0;
+}
 window.addEventListener('keydown', e=>{
   if(KB_CATCH){
     e.preventDefault();
@@ -2305,10 +2318,8 @@ window.addEventListener('keydown', e=>{
   if(e.code==='Escape' && state.running && !state.ended && !state.paused){ backToMenu(); return; } // Esc：中途退出对局
   if(e.code===KB.pause){ togglePause(); return; }
   if(e.code===KB.mute){ state.muted=!state.muted; return; }
-  if(e.code==='Enter' && !state.running && !state.ended){
-    if(!menuScreen.classList.contains('hidden')) return; // 主菜单用鼠标
-    if(selectScreen.classList.contains('hidden')) startGame(); else return;
-  }
+  // 回车不再触发开局：登录页/启动页/主菜单必须点按钮进入，避免界面外“后台开局”
+  // （P2 本地双人的 Enter 射击仍由下面的 state.keys[e.code] 处理，不受影响）
   if(e.code==='KeyR' && state.ended){ restartGame(); return; }
   if(!e.repeat) state.keys[e.code]=true;
   // 技能键：P1=E；P2=数字键 1（主键盘或小键盘）
@@ -2340,7 +2351,7 @@ function resize(){
   const r=stage.getBoundingClientRect();
   let w=r.width, h=r.height;
   if(w<10||h<10){ w=window.innerWidth; h=window.innerHeight; } // 兜底：stage尺寸异常时用窗口尺寸
-  const dpr=window.devicePixelRatio||1;
+  const dpr=effDpr(); // 统一封顶，缩小高 DPR 设备的画布像素量
   canvas.width=Math.max(1,Math.round(w*dpr)); canvas.height=Math.max(1,Math.round(h*dpr));
   const cw=canvas.width, ch=canvas.height, W=state.world.W, H=state.world.H;
   // 竖屏不再把画面旋转 90°（字要歪头看，体感很差），改成「镜头跟随」：
@@ -2566,14 +2577,19 @@ function checkWin(){
 }
 
 /* ================= 9. 粒子与浮字 ================= */
+/* 粒子/浮字数量封顶：激烈对局时避免数组无限增长拖慢渲染 */
+const MAX_PARTICLES=240, MAX_FLOATERS=60;
 function spawnParticle(x,y,vx,vy,color,life,size){
+  if(state.particles.length>=MAX_PARTICLES) state.particles.shift();
   state.particles.push({x,y,vx,vy,color,life,maxLife:life,size});
 }
 /* 冲击波圆环粒子：由内向外扩散（命中 / 死亡 / 复活） */
 function spawnRing(x,y,color,size){
+  if(state.particles.length>=MAX_PARTICLES) state.particles.shift();
   state.particles.push({x,y,vx:0,vy:0,color,life:0.35,maxLife:0.35,size,ring:true});
 }
 function addFloater(x,y,text,color){
+  if(state.floaters.length>=MAX_FLOATERS) state.floaters.shift();
   state.floaters.push({x,y,text,color,life:0.9,maxLife:0.9});
 }
 
@@ -2662,10 +2678,10 @@ function update(dt, rawDt){
             // 本地双人：瞄准靠 Z 左转 / X 右转，可 360 度停在任意角度
             if(state.keys['KeyZ']) p.aim -= ROT_SPEED*dt;
             if(state.keys['KeyX']) p.aim += ROT_SPEED*dt;
-            if(state.keys[KB.fire] && p.cooldown<=0) shoot(p);
+            if(pcFireWant(!!state.keys[KB.fire],dt) && p.cooldown<=0){ shoot(p); state.pcFireBuffer=0; }
           } else {
             p.aim=Math.atan2(state.mouse.y-p.y,state.mouse.x-p.x);
-            if((state.mouse.down||state.keys[KB.fire]) && p.cooldown<=0) shoot(p);
+            if(pcFireWant(!!(state.mouse.down||state.keys[KB.fire]),dt) && p.cooldown<=0){ shoot(p); state.pcFireBuffer=0; }
           }
         }
       } else {
@@ -2852,7 +2868,7 @@ function render(){
     ctx2d.scale(VIEW.scale, VIEW.scale);
   }
   if(state.shake>0) ctx2d.translate((rng()-0.5)*state.shake,(rng()-0.5)*state.shake);
-  drawFloor(); drawObstacles(); drawMines(); drawBombs(); drawSupplies(); drawPlayers(); drawFrontArcs(); drawBullets(); drawParticles(); drawFloaters();
+  drawStaticBackground(); drawMines(); drawBombs(); drawSupplies(); drawPlayers(); drawFrontArcs(); drawBullets(); drawParticles(); drawFloaters();
   drawDanger();
   drawRadar();
 }
@@ -2873,40 +2889,56 @@ function drawDanger(){
   ctx2d.fillStyle=rg;
   ctx2d.fillRect(0,0,W,H);
 }
-function drawFloor(){
-  const g=ctx2d.createLinearGradient(0,0,0,state.world.H);
+function drawFloor(c=ctx2d){
+  const g=c.createLinearGradient(0,0,0,state.world.H);
   g.addColorStop(0,'#0a1122'); g.addColorStop(.5,'#0b1226'); g.addColorStop(1,'#091021');
-  ctx2d.fillStyle=g; ctx2d.fillRect(0,0,state.world.W,state.world.H);
-  ctx2d.strokeStyle='rgba(120,160,255,.05)'; ctx2d.lineWidth=1; ctx2d.beginPath();
-  for(let x=80;x<state.world.W;x+=80){ ctx2d.moveTo(x,0); ctx2d.lineTo(x,state.world.H); }
-  for(let y=80;y<state.world.H;y+=80){ ctx2d.moveTo(0,y); ctx2d.lineTo(state.world.W,y); }
-  ctx2d.stroke();
-  ctx2d.strokeStyle='rgba(140,180,255,.18)'; ctx2d.setLineDash([10,10]); ctx2d.lineWidth=2;
-  ctx2d.beginPath(); ctx2d.moveTo(state.world.W/2,0); ctx2d.lineTo(state.world.W/2,state.world.H); ctx2d.stroke();
-  ctx2d.setLineDash([]);
-  drawZone(30,80,state.world.W/2-60,state.world.H-160,'#ff5b6e');
-  drawZone(state.world.W/2+30,80,state.world.W/2-60,state.world.H-160,'#4dc3ff');
-  ctx2d.strokeStyle='rgba(120,180,255,.25)'; ctx2d.lineWidth=3; ctx2d.strokeRect(0,0,state.world.W,state.world.H);
+  c.fillStyle=g; c.fillRect(0,0,state.world.W,state.world.H);
+  c.strokeStyle='rgba(120,160,255,.05)'; c.lineWidth=1; c.beginPath();
+  for(let x=80;x<state.world.W;x+=80){ c.moveTo(x,0); c.lineTo(x,state.world.H); }
+  for(let y=80;y<state.world.H;y+=80){ c.moveTo(0,y); c.lineTo(state.world.W,y); }
+  c.stroke();
+  c.strokeStyle='rgba(140,180,255,.18)'; c.setLineDash([10,10]); c.lineWidth=2;
+  c.beginPath(); c.moveTo(state.world.W/2,0); c.lineTo(state.world.W/2,state.world.H); c.stroke();
+  c.setLineDash([]);
+  drawZone(30,80,state.world.W/2-60,state.world.H-160,'#ff5b6e',c);
+  drawZone(state.world.W/2+30,80,state.world.W/2-60,state.world.H-160,'#4dc3ff',c);
+  c.strokeStyle='rgba(120,180,255,.25)'; c.lineWidth=3; c.strokeRect(0,0,state.world.W,state.world.H);
 }
-function drawZone(x,y,w,h,color){
-  ctx2d.fillStyle=color+'14'; ctx2d.fillRect(x,y,w,h);
-  ctx2d.strokeStyle=color+'40'; ctx2d.setLineDash([8,6]); ctx2d.lineWidth=2;
-  ctx2d.strokeRect(x,y,w,h); ctx2d.setLineDash([]);
+function drawZone(x,y,w,h,color,c=ctx2d){
+  c.fillStyle=color+'14'; c.fillRect(x,y,w,h);
+  c.strokeStyle=color+'40'; c.setLineDash([8,6]); c.lineWidth=2;
+  c.strokeRect(x,y,w,h); c.setLineDash([]);
 }
-function drawObstacles(){
+function drawObstacles(c=ctx2d){
   for(const o of state.world.obs){
-    const g=ctx2d.createLinearGradient(o.x,o.y,o.x,o.y+o.h);
+    const g=c.createLinearGradient(o.x,o.y,o.x,o.y+o.h);
     g.addColorStop(0,'#22324f'); g.addColorStop(1,'#131e36');
-    ctx2d.fillStyle=g; ctx2d.strokeStyle='rgba(120,180,255,.35)'; ctx2d.lineWidth=2;
-    roundRect(o.x,o.y,o.w,o.h,8); ctx2d.fill(); ctx2d.stroke();
-    ctx2d.fillStyle='rgba(255,255,255,.05)';
-    roundRect(o.x+4,o.y+4,o.w-8,10,5); ctx2d.fill();
+    c.fillStyle=g; c.strokeStyle='rgba(120,180,255,.35)'; c.lineWidth=2;
+    roundRect(o.x,o.y,o.w,o.h,8,c); c.fill(); c.stroke();
+    c.fillStyle='rgba(255,255,255,.05)';
+    roundRect(o.x+4,o.y+4,o.w-8,10,5,c); c.fill();
   }
 }
-function roundRect(x,y,w,h,r){
-  ctx2d.beginPath();
-  ctx2d.moveTo(x+r,y); ctx2d.arcTo(x+w,y,x+w,y+h,r); ctx2d.arcTo(x+w,y+h,x,y+h,r);
-  ctx2d.arcTo(x,y+h,x,y,r); ctx2d.arcTo(x,y,x+w,y,r); ctx2d.closePath();
+function roundRect(x,y,w,h,r,c=ctx2d){
+  c.beginPath();
+  c.moveTo(x+r,y); c.arcTo(x+w,y,x+w,y+h,r); c.arcTo(x+w,y+h,x,y+h,r);
+  c.arcTo(x,y+h,x,y,r); c.arcTo(x,y,x+w,y,r); c.closePath();
+}
+/* 静态地图层缓存：地板网格 + 障碍物的渐变每帧重建太贵，按地图/DPR 缓存一次 */
+let STATIC_BG=null, STATIC_BG_KEY='', STATIC_BG_OBS=null;
+function drawStaticBackground(){
+  const W=state.world.W, H=state.world.H, obs=state.world.obs||[];
+  const s=Math.min(2,Math.max(1,effDpr()));
+  const key=state.mode+'/'+state.mapIdx+'/'+W+'x'+H+'@'+s;
+  if(!STATIC_BG || STATIC_BG_KEY!==key || STATIC_BG_OBS!==obs){
+    const cv=document.createElement('canvas');
+    cv.width=Math.round(W*s); cv.height=Math.round(H*s);
+    const c=cv.getContext('2d');
+    c.setTransform(s,0,0,s,0,0);
+    drawFloor(c); drawObstacles(c);
+    STATIC_BG=cv; STATIC_BG_KEY=key; STATIC_BG_OBS=obs;
+  }
+  ctx2d.drawImage(STATIC_BG,0,0,W,H);
 }
 /* 地雷：埋雷方本地判定，远端只画不判（避免两边各扣一次） */
 /* ---- 炮锤：遥控炸药包（再按一次引爆，倒计时到也会炸） ---- */
@@ -3413,25 +3445,46 @@ function blip(freq,dur,type,vol,slide){
   g.gain.exponentialRampToValueAtTime(0.0001,AC.currentTime+dur);
   o.connect(g); g.connect(master); o.start(); o.stop(AC.currentTime+dur+0.02);
 }
-function sShoot(){ blip(480+Math.random()*160,.07,'square',.045,-260); }
-function sHit(){ blip(320,.05,'triangle',.07,-140); }
-function sKill(){ blip(660,.09,'square',.07,-120); setTimeout(()=>blip(880,.12,'square',.06,-160),80); }
-function sDie(){ blip(220,.3,'sawtooth',.08,-140); }
-function sDash(){ blip(700,.12,'sawtooth',.05,-500); }
+/* 对局音效：不在对局中（含暂停/结算）一律不响，避免误开局或切界面后还在响 */
+function gameplaySfxOn(){ return state.running && !state.paused && !state.ended; }
+function sShoot(){ if(!gameplaySfxOn()) return; blip(480+Math.random()*160,.07,'square',.045,-260); }
+function sHit(){ if(!gameplaySfxOn()) return; blip(320,.05,'triangle',.07,-140); }
+function sKill(){ if(!gameplaySfxOn()) return; blip(660,.09,'square',.07,-120); setTimeout(()=>{ if(gameplaySfxOn()) blip(880,.12,'square',.06,-160); },80); }
+function sDie(){ if(!gameplaySfxOn()) return; blip(220,.3,'sawtooth',.08,-140); }
+function sDash(){ if(!gameplaySfxOn()) return; blip(700,.12,'sawtooth',.05,-500); }
 function sShield(){ blip(340,.18,'sine',.08,180); }
-function sSnipe(){ blip(1200,.22,'sine',.06,-700); }
-function sHeal(){ blip(520,.12,'sine',.07,260); setTimeout(()=>blip(660,.12,'sine',.06,260),90); }
+function sSnipe(){ if(!gameplaySfxOn()) return; blip(1200,.22,'sine',.06,-700); }
+function sHeal(){ if(!gameplaySfxOn()) return; blip(520,.12,'sine',.07,260); setTimeout(()=>{ if(gameplaySfxOn()) blip(660,.12,'sine',.06,260); },90); }
 function sClick(){ blip(540,.05,'sine',.05,140); } // UI 点击反馈
 function sWin(){ [523,659,784,1047].forEach((f,i)=>setTimeout(()=>blip(f,.14,'triangle',.08),i*120)); }
 function sLose(){ [392,330,262,196].forEach((f,i)=>setTimeout(()=>blip(f,.16,'sawtooth',.07),i*130)); }
 
 /* ================= 14. 流程：主菜单 / 选人 / 开局 ================= */
 function startGame(){
+  // 防御：玩家还停在对局外的界面（登录/启动/设置/准备室）时，绝不偷偷开局
+  if(!/(autostart|debug)=/.test(location.search)){
+    const blockers=['loginScreen','splashScreen','settingsScreen','prepScreen','adminGate'];
+    const visibleInUI=el=>{
+      if(!el) return false; // 元素已移除（例如启动画面淡出后）不算阻挡
+      for(let n=el;n && n!==document.body;n=n.parentElement){
+        const st=getComputedStyle(n);
+        if(n.classList.contains('hidden') || st.display==='none' || st.visibility==='hidden') return false;
+      }
+      return true;
+    };
+    for(const id of blockers){
+      if(visibleInUI(document.getElementById(id))){
+        console.warn('[startGame] 已阻止后台开局，仍停留在界面：'+id);
+        return false;
+      }
+    }
+  }
   initAudio();
   // 重置所有触摸输入：否则上一局残留的摇杆/开火状态会让新局一开场角色自己乱跑
   state.touchMove={active:false,id:null,ox:0,oy:0,dx:0,dy:0};
   state.touchAim={active:false,id:null,ox:0,oy:0,dx:0,dy:0};
   state.fireDown=false; state.fireBurst=0;
+  state.pcFireHeld=false; state.pcFireBuffer=0; // 上一局残留的按键状态不能带进新局
   if(typeof joyMove!=='undefined'){ joyMove.classList.remove('show'); joyAim.classList.remove('show'); }
   // 应用 5V5 难度（1V1 无 AI，难度不影响对战）
   const d = DIFFS[state.difficulty] || DIFFS.normal;
@@ -4329,7 +4382,7 @@ function runSelfCheck(){
   ok('本地存储可读写', lsOk);
 
   // 6. 设置项齐全
-  const sets=['setJoy','setFire','setAlpha','setSens','setJoyPos','setFirePos','setSkillPos','setAutoFire','setAutoAim','setRadarShow','setRadarSize','setRadarAlpha','setRadarPos','setGap'];
+  const sets=['setJoy','setFire','setAlpha','setSens','setJoyPos','setFirePos','setSkillPos','setAutoFire','setHoldFire','setAutoAim','setRadarShow','setRadarSize','setRadarAlpha','setRadarPos','setGap'];
   const setMiss=sets.filter(id=>!document.getElementById(id));
   ok('设置项 DOM 齐全（'+sets.length+' 项）', setMiss.length===0, setMiss.length?'缺失: '+setMiss.join(','):'');
 
@@ -7221,6 +7274,8 @@ function applySettings(){
   document.documentElement.style.setProperty('--skx', (Math.round(skxy.x*1000)/10)+'%');
   document.documentElement.style.setProperty('--sky', (Math.round(skxy.y*1000)/10)+'%');
   if(s.autoFire==='on'){ state.autoFire=true; } else { state.autoFire=false; }
+  state.holdFire = s.holdFire!=='off';   // 默认长按连发；关闭后电脑端改为单发
+  const holdEl=document.getElementById('setHoldFire'); if(holdEl) holdEl.value = s.holdFire||'on';
   if(s.autoAim==='off'){ state.autoAim=false; } else { state.autoAim=true; }
   state.aimStick = (s.aimStick==='fire') ? 'fire' : 'aim';   // 右摇杆：只瞄准 / 推开即开火
   document.getElementById('setJoy').value = s.joy||88;
@@ -7257,6 +7312,7 @@ function saveSettings(){
     firePos: document.getElementById('setFirePos').value,
     skillPos: document.getElementById('setSkillPos').value,
     autoFire: document.getElementById('setAutoFire').value,
+    holdFire: document.getElementById('setHoldFire').value,
     autoAim: document.getElementById('setAutoAim').value,
     aimStick: document.getElementById('setAimStick').value,
     radarShow: document.getElementById('setRadarShow').value,
@@ -7275,7 +7331,7 @@ function saveSettings(){
   }
   applySettings();
 }
-['setJoy','setFire','setAlpha','setSens','setJoyPos','setFirePos','setSkillPos','setAutoFire','setAutoAim','setRadarShow','setRadarSize','setRadarAlpha','setRadarPos','setSkin','setAimStick','setGap','setSkillDir'].forEach(id=>{
+['setJoy','setFire','setAlpha','setSens','setJoyPos','setFirePos','setSkillPos','setAutoFire','setHoldFire','setAutoAim','setRadarShow','setRadarSize','setRadarAlpha','setRadarPos','setSkin','setAimStick','setGap','setSkillDir'].forEach(id=>{
   document.getElementById(id).addEventListener('input', ()=>{ saveSettings(); applySettings(); });
 });
 applySettings();
@@ -7510,7 +7566,7 @@ function buildHelp(){
     +'<div>· 设置在「关于我们」里的「检查更新 + 自检（一键）」：点一次先跑完自检，再比对线上版本号，有新版本会直接给按钮。<br>'
     +'· 自检逐项扫描 90 多项，覆盖画布、核心函数、公告与终端、联机、地图、榜单、本地数据健康等。<br>'
     +'· 查到问题会自动标红。属于本地数据（战绩档案、卡面配色、昵称、每日统计）的问题，面板顶部会出现「一键修复」按钮，点一下当场修好并自动重新检查。<br>'
-    +'· 代码或渲染类问题不能自动修，会继续标红，把它反馈给作者处理。</div>';
+    +'· 代码或渲染类问题不能自动修，会把问题反馈给我们处理。</div>';
 }
 
 /* ---- 初始化 ---- */
