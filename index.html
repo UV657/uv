@@ -1253,7 +1253,11 @@ body.is-touch .nhTime{display:none !important}
       </div>
     </div>
     <div class="overlay hidden" id="settingsScreen">
-      <div class="title">自定义设置 <span id="verTag" style="font-size:11px;color:#7d8aa8;font-weight:400;display:block;margin-top:2px">v2.9.5</span></div>
+      <div class="title">自定义设置 <span id="verTag" style="font-size:11px;color:#7d8aa8;font-weight:400;display:block;margin-top:2px">v2.9.6</span></div>
+      <div class="rowBtns" style="justify-content:center;flex-wrap:wrap;margin:2px auto 8px;max-width:320px;width:100%">
+        <button class="btn" id="btnSettingsDoneTop">完成</button>
+        <button class="btn ghost" id="btnSettingsExitTop">退出</button>
+      </div>
       <div id="settingsWrap" style="text-align:left;max-width:320px;line-height:2.2">
         <div id="kbBlock" style="display:none;border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:10px 12px;margin-bottom:12px;background:rgba(255,255,255,.04);line-height:1.5">
           <div style="font-size:13px;font-weight:800;color:#67e8f9;margin-bottom:6px">电脑键位</div>
@@ -1304,6 +1308,7 @@ body.is-touch .nhTime{display:none !important}
         <div id="historyBox" style="display:none;margin-top:10px;border-top:1px solid rgba(255,255,255,.1);padding-top:10px">
           <div style="font-size:13px;font-weight:800;color:#67e8f9;margin-bottom:6px">修改历史</div>
           <div style="line-height:1.8">
+            <div><b style="color:#ffd34d">v2.9.6</b>　设置页顶部新增固定「完成/退出」按钮；新增 3 个角色（鹰眼/守护者/捕兽人）与 6 张地图（双环回廊/四象限/锯齿通道/三柱阵/侧翼回环/窄口博弈）</div>
             <div><b style="color:#ffd34d">v2.9.5</b>　电脑端新增键位自定义：设置页里能改前进/后退/左移/右移/射击/技能/暂停/静音 8 个键，点「改」再按一下新键就生效，保存在本机，可一键恢复默认（手机端不显示这一块）
             <div><b style="color:#ffd34d">v2.9.4</b>　1V1 改成单人打 AI：去掉本地 P2 双人，操作和 5V5 一样（鼠标瞄准、左键/空格开火、E 技能）；选人页只选自己这边的角色与地图，对手由 AI 扮演
             <div><b style="color:#ffd34d">v2.9.3</b>　玩法说明改版：角色参数从挤在一起的表格改成一角色一张卡（手机上不再被切掉半边）；登录页、改密码页的输入框和按钮重新排版；修复启动页一直卡在 0% 进不去的问题
@@ -1471,6 +1476,24 @@ const MAPS = {
         {x:600,y:330,w:120,h:60},
         {x:250,y:600,w:120,h:80},{x:910,y:600,w:120,h:80},
       ]},
+    { name:'双环回廊', obs:[
+        {x:300,y:200,w:120,h:80},{x:860,y:200,w:120,h:80},
+        {x:300,y:520,w:120,h:80},{x:860,y:520,w:120,h:80},
+        {x:420,y:360,w:80,h:80},{x:780,y:360,w:80,h:80},
+        {x:600,y:370,w:80,h:60},
+      ]},
+    { name:'四象限', obs:[
+        {x:250,y:180,w:150,h:110},{x:880,y:180,w:150,h:110},
+        {x:250,y:510,w:150,h:110},{x:880,y:510,w:150,h:110},
+        {x:590,y:150,w:100,h:60},{x:590,y:590,w:100,h:60},
+        {x:590,y:370,w:100,h:60},
+      ]},
+    { name:'锯齿通道', obs:[
+        {x:380,y:120,w:90,h:140},{x:810,y:120,w:90,h:140},
+        {x:500,y:300,w:90,h:140},{x:690,y:300,w:90,h:140},
+        {x:380,y:540,w:90,h:140},{x:810,y:540,w:90,h:140},
+        {x:610,y:370,w:60,h:60},
+      ]},
   ],
   '1v1': [
     { name:'对称十字', obs:CFG.modes['1v1'].obs },
@@ -1489,6 +1512,22 @@ const MAPS = {
     { name:'长廊对峙', obs:[
         {x:200,y:110,w:560,h:60},{x:200,y:430,w:560,h:60},
         {x:450,y:270,w:60,h:60},
+      ]},
+    { name:'三柱阵', obs:[
+        {x:300,y:150,w:80,h:90},{x:580,y:150,w:80,h:90},
+        {x:440,y:270,w:80,h:60},
+        {x:300,y:390,w:80,h:90},{x:580,y:390,w:80,h:90},
+      ]},
+    { name:'侧翼回环', obs:[
+        {x:200,y:120,w:100,h:80},{x:660,y:120,w:100,h:80},
+        {x:200,y:400,w:100,h:80},{x:660,y:400,w:100,h:80},
+        {x:420,y:250,w:120,h:100},
+      ]},
+    { name:'窄口博弈', obs:[
+        {x:180,y:100,w:120,h:100},{x:660,y:100,w:120,h:100},
+        {x:180,y:400,w:120,h:100},{x:660,y:400,w:120,h:100},
+        {x:330,y:260,w:90,h:80},{x:540,y:260,w:90,h:80},
+        {x:450,y:285,w:60,h:30},
       ]},
   ],
 };
@@ -1545,6 +1584,21 @@ const ROLES = {
     skill:{name:'补给站', key:'E', cd:14, supR:120, supHeal:15, supCdCut:2, supDur:12,
       desc:'放一个补给站（12 秒）：队友站进去 3 秒，回 15 血、技能冷却 -2 秒', tag:'支援'},
     ai:{ supply:true } },
+  hunter: { id:'hunter', name:'鹰眼', icon:'🦅', color:'#ffb56b',
+    speed:255, dmg:17, fireCD:0.45, bulletSpeed:980, bulletLife:1.2,
+    skill:{name:'猎鹰之眼', key:'E', cd:7, dmg:52, life:2.0,
+      desc:'下一发子弹伤害 52、射程大幅提升，中距离一枪打残', tag:'爆发'},
+    ai:{ snipe:{dist:320} } },
+  guardian: { id:'guardian', name:'守护者', icon:'🔰', color:'#7fe7c4',
+    speed:232, dmg:13, fireCD:0.34, bulletSpeed:760, bulletLife:1.2,
+    skill:{name:'守护力场', key:'E', cd:10, shield:45, shieldDur:7,
+      desc:'获得 45 点护盾、持续 7 秒，比重装更持久', tag:'防御'},
+    ai:{ shield:{hp:70} } },
+  trapper: { id:'trapper', name:'捕兽人', icon:'🪤', color:'#d9a86c',
+    speed:252, dmg:11, fireCD:0.31, bulletSpeed:760, bulletLife:1.2,
+    skill:{name:'捕兽夹', key:'E', cd:7, mineDmg:38, mineR:58, mineLife:10, maxMines:4,
+      desc:'脚下布夹，范围更大、可同时放 4 个，敌人踩到吃 38 伤并减速', tag:'控制'},
+    ai:{ mine:true } },
 };
 const ROLE_IDS = Object.keys(ROLES);
 /* 角色出厂数值：终端删掉某角色的调参后能真正还原回默认 */
@@ -1957,7 +2011,7 @@ function shoot(p){
   const sx=p.x+Math.cos(ang)*(CFG.playerRadius+6), sy=p.y+Math.sin(ang)*(CFG.playerRadius+6);
   const wp = p.weapon || WEAPONS.rifle;
   let dmg=Math.round(p.role.dmg*wp.dmgMul*(p.dmgBonus||1)), life=p.role.bulletLife*wp.lifeMul, spd=p.role.bulletSpeed*wp.spdMul;
-  if(p.snipeReady){ dmg=ROLES.sniper.skill.dmg; life=ROLES.sniper.skill.life; spd=1300; p.snipeReady=false; }
+  if(p.snipeReady){ const sk=p.role.skill; dmg=sk.dmg||ROLES.sniper.skill.dmg; life=sk.life||ROLES.sniper.skill.life; spd=1300; p.snipeReady=false; }
   // 散射：每颗弹丸独立随机偏角，霰弹一枪撒 5 颗
   for(let i=0;i<(wp.pellets||1);i++){
     const a2 = ang + (rng()-0.5)*wp.spread*2;
@@ -2101,11 +2155,11 @@ function castSkill(p){
     state.mines=state.mines||[];
     state.mines=state.mines.filter(m=>!m.dead);
     const own=state.mines.filter(m=>m.owner===p).length;
-    if(own>=(TUNE.mineMax||s.maxMines||3)){
+    if(own>=(s.maxMines||3)){
       const oldest=state.mines.find(m=>m.owner===p && !m.dead); if(oldest) oldest.dead=true;
       state.mines=state.mines.filter(m=>!m.dead);
     }
-    const mine={x:p.x, y:p.y, team:p.team, dmg:(TUNE.mineDmg||s.mineDmg), r:(s.mineR||42),
+    const mine={x:p.x, y:p.y, team:p.team, dmg:(s.mineDmg||TUNE.mineDmg), r:(s.mineR||42),
       life:(s.mineLife||8), arm:0.6, owner:p};
     state.mines.push(mine);
     if(state.mines.length>10) state.mines.shift();   // 全场雷数兜底（5V5 全 AI 时也不会铺满地图）
@@ -3211,7 +3265,7 @@ function drawPlayers(){
     ctx2d.fillStyle='hsl('+(120*ratio)+',85%,55%)'; ctx2d.fillRect(bx,by,bw*ratio,bh);
     // 名字：5V5 混战用兵种单字，一眼分得清队友是什么职业
     ctx2d.font='bold 12px "Microsoft YaHei",sans-serif';
-    const shortRole={assault:'突',tank:'重',sniper:'神',medic:'医'}[p.role.id]||'';
+    const shortRole={assault:'突',tank:'重',sniper:'神',medic:'医',bulwark:'堡',engineer:'铁',jammer:'静',recon:'幽',demo:'炮',rivet:'铆',hunter:'鹰',guardian:'守',trapper:'捕'}[p.role.id]||'';
     const label=state.mode==='5v5'?(p.isHuman?(currentNick().slice(0,5)||'你'):shortRole):p.name;
     ctx2d.lineWidth=2.5; ctx2d.strokeStyle='rgba(0,0,0,.65)'; ctx2d.strokeText(label,px,by-6); // 深色描边保证压在掩体上也看得清
     ctx2d.fillStyle=p.isHuman?'#ffd34d':(p.team==='red'?'#ffb3bd':'#a9ddff');
@@ -4337,8 +4391,8 @@ function runSelfCheck(){
   // 3. 配置合法性
   ok('血量配置正常', CFG.maxHp>0 && CFG.respawnTime>0, 'HP'+CFG.maxHp+' 复活'+CFG.respawnTime+'s');
   ok('两种模式都注册', !!(CFG.modes['5v5'] && CFG.modes['1v1']));
-  ok('地图数据完整', !!(MAPS['5v5'] && MAPS['1v1'] && MAPS['5v5'].length>=5 && MAPS['1v1'].length>=5 && MAPS['5v5'].every(m=>Array.isArray(m.obs))));
-  ok('角色表 10 个且数值合法（含堡垒/铁匠/静默/幽灵/炮锤/铆钉）', ROLE_IDS.length===10 && ROLE_IDS.every(id=>ROLES[id].dmg>0 && ROLES[id].speed>0 && ROLES[id].fireCD>0), ROLE_IDS.join('/'));
+  ok('地图数据完整', !!(MAPS['5v5'] && MAPS['1v1'] && MAPS['5v5'].length>=8 && MAPS['1v1'].length>=8 && MAPS['5v5'].every(m=>Array.isArray(m.obs))));
+  ok('角色表 13 个且数值合法（含堡垒/铁匠/静默/幽灵/炮锤/铆钉/鹰眼/守护者/捕兽人）', ROLE_IDS.length===13 && ROLE_IDS.every(id=>ROLES[id].dmg>0 && ROLES[id].speed>0 && ROLES[id].fireCD>0), ROLE_IDS.join('/'));
 
   // 4. 命名与身份
   const n9=pickAINames(9,'测试名');
@@ -4362,6 +4416,7 @@ function runSelfCheck(){
   ok('新角色技能齐全（举盾/地雷/禁技）', !!(ROLES.bulwark.skill.front&&ROLES.engineer.skill.mineDmg&&ROLES.jammer.skill.jamRange&&typeof updateMines==='function'&&typeof drawMines==='function'));
   ok('对局参数含角色项', TUNE.frontReduce>0&&TUNE.mineDmg>0&&TUNE.jamDur>0&&TUNE.mineMax>0);
   ok('新角色技能链路齐全（潜行/炸药/补给）', !!(ROLES.recon.skill.ghostDur && ROLES.demo.skill.bombDmg && ROLES.rivet.skill.supR && typeof castBomb==='function' && typeof updateBombs==='function' && typeof updateSupplies==='function' && typeof drawBombs==='function' && typeof drawSupplies==='function'));
+  ok('新增三角色技能齐全（猎鹰之眼/守护力场/捕兽夹）', !!(ROLES.hunter&&ROLES.hunter.skill.dmg&&ROLES.guardian&&ROLES.guardian.skill.shield&&ROLES.trapper&&ROLES.trapper.skill.mineDmg));
   ok('新武器特性到位（栓狙/拖慢/爆破）', WEAPONS.falcon.dmgMul>=2.4 && WEAPONS.rivetgun.slowHit>0 && !!(WEAPONS.breaker.explode&&WEAPONS.breaker.explode.r>0) && typeof explodeBullet==='function');
   ok('准备室可锁定地图与角色武器', typeof prepSend==='function' && String(prepRender).indexOf('data-prep-map')>=0 && String(prepRender).indexOf('data-prep-role')>=0);
   ok('霰弹枪 5 弹丸', WEAPONS.shotgun.pellets===5);
@@ -7217,6 +7272,8 @@ bindBtn('btnHistory', ()=>{
   b.style.display = (b.style.display==='block') ? 'none' : 'block';
 });
 bindBtn('btnSettingsBack', ()=>{ settingsScreen.classList.add('hidden'); menuScreen.classList.remove('hidden'); renderRankBar(); saveSettings(); });
+bindBtn('btnSettingsDoneTop', ()=>{ settingsScreen.classList.add('hidden'); menuScreen.classList.remove('hidden'); renderRankBar(); saveSettings(); });
+bindBtn('btnSettingsExitTop', ()=>{ settingsScreen.classList.add('hidden'); menuScreen.classList.remove('hidden'); });
 bindBtn('btnForceReload', ()=>{ const u=new URL(location.href); u.searchParams.set('r', Date.now()); location.replace(u.toString()); });
 /* 全屏：安卓/桌面浏览器走 Fullscreen API；iOS Safari 不支持则给出替代方案 */
 (function(){
@@ -7511,6 +7568,12 @@ function buildHelp(){
     ['1V1','双塔对峙','两座竖塔 + 左右小掩体','卡塔侧视野打预瞄，用侧掩体换血再进'],
     ['1V1','中央回字','四块掩体围成回字，中间留空','绕圈走位，从缺口切进去贴脸'],
     ['1V1','长廊对峙','上下两道长墙，中央小掩体','远距离对枪消耗，靠中央掩体换角度'],
+    ['5V5','双环回廊','左右两个环形掩体群，中路一块小掩体','沿环绕行包抄，别在开阔中路久留'],
+    ['5V5','四象限','四个象限各一块大掩体，中路三块小掩体','借大掩体推进，抢中路小掩体的射击位'],
+    ['5V5','锯齿通道','交错竖墙形成锯齿状通道','贴墙走锯齿通道，拐角处预瞄伏击'],
+    ['1V1','三柱阵','五块掩体呈三柱分布，左右对称','绕柱换位，用柱子卡对手预瞄线'],
+    ['1V1','侧翼回环','四角掩体加中央大掩体形成回环','绕中央大掩体兜圈，从侧翼切进去'],
+    ['1V1','窄口博弈','两侧掩体夹出中央窄口','远距离卡窄口对枪，绕侧翼打破僵局'],
   ].map(r=>{
     const mode = r[0]==='5V5' ? '5v5' : '1v1';
     const conf = CFG.modes[mode];
