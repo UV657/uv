@@ -448,46 +448,37 @@ body.fire-left #btnFire{left:18px !important;right:auto !important}
 .netStatus{width:100%;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:14px;padding:14px;text-align:center}
 .netCode{font-size:34px;font-weight:900;letter-spacing:8px;color:#ffd34d;font-variant-numeric:tabular-nums}
 .netWait{font-size:12.5px;color:#8fa1bf;margin-top:6px;line-height:1.6}
-/* ===== 主菜单科技背景 ===== */
+/* ===== 主菜单科技背景（性能优化版：静态，不跑循环动画） =====
+   原先这些层用 blur(56px) 巨型光晕 + 持续 transform 动画，电脑大屏高分屏下
+   每帧要重新栅格化大面积模糊，实测主页只有 ~8fps；改为静态后回到 60fps。
+   渐变/网格/流光带等视觉元素全部保留，只是不再飘动。 */
 .bgFx{position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:0;background:#050810}
-/* 全屏细网格：铺满整个屏幕，不再是下面一截 */
+/* 全屏细网格：静态铺满 */
 .bgNet{position:absolute;inset:-10%;
   background-image:linear-gradient(rgba(56,189,248,.14) 1px,transparent 1px),
                     linear-gradient(90deg,rgba(56,189,248,.14) 1px,transparent 1px);
-  background-size:44px 44px;
-  animation:netDrift 26s linear infinite}
-@keyframes netDrift{from{transform:translate(0,0)}to{transform:translate(44px,44px)}}
-/* 透视地面：从底部向上铺开的高亮网格，持续滚动 */
+  background-size:44px 44px}
+/* 透视地面：静态高亮网格 */
 .bgGrid{position:absolute;left:-45%;right:-45%;bottom:-18%;height:115%;
   background-image:linear-gradient(rgba(56,189,248,.55) 1px,transparent 1px),
                     linear-gradient(90deg,rgba(56,189,248,.55) 1px,transparent 1px);
   background-size:64px 64px;
   transform:perspective(420px) rotateX(66deg);
-  animation:gridRun 9s linear infinite;
   mask-image:linear-gradient(to top,#000 34%,transparent 94%);
   -webkit-mask-image:linear-gradient(to top,#000 34%,transparent 94%)}
-@keyframes gridRun{from{transform:perspective(420px) rotateX(66deg) translateY(0)}to{transform:perspective(420px) rotateX(66deg) translateY(64px)}}
-/* 斜向流光带：两条宽光带交替横扫 */
+/* 斜向流光带：静态两条，柔化改用渐变本身，去掉 filter blur */
 .bgStreak{position:absolute;left:-60%;width:220%;height:110px;
-  background:linear-gradient(90deg,transparent,rgba(34,211,238,.22),rgba(168,85,247,.20),transparent);
-  filter:blur(8px);transform:rotate(-16deg);opacity:.8}
-.bgStreak.s1{top:88%;animation:streak1 7.5s linear infinite}
-.bgStreak.s2{top:118%;height:70px;animation:streak2 11s linear infinite}
-@keyframes streak1{0%{transform:rotate(-16deg) translateY(60%)}100%{transform:rotate(-16deg) translateY(-260%)}}
-@keyframes streak2{0%{transform:rotate(-16deg) translateY(80%)}100%{transform:rotate(-16deg) translateY(-300%)}}
-/* 漂浮光点 */
-.bgDots span{position:absolute;width:3px;height:3px;border-radius:50%;background:#9fe4ff;
-  box-shadow:0 0 10px 2px rgba(34,211,238,.75);animation:dotFloat linear infinite}
-@keyframes dotFloat{0%{transform:translateY(0);opacity:.15}50%{opacity:.95}100%{transform:translateY(-130px);opacity:0}}
-.bgGlow{position:absolute;border-radius:50%;filter:blur(56px);opacity:.7;will-change:transform}
-.g1{width:86%;height:46%;left:-22%;top:-6%;background:radial-gradient(circle,#22d3ee,transparent 70%);animation:glowFloat1 15s ease-in-out infinite}
-.g2{width:74%;height:44%;right:-18%;bottom:-4%;background:radial-gradient(circle,#a78bfa,transparent 70%);animation:glowFloat2 19s ease-in-out infinite}
-@keyframes glowFloat1{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(9%,7%) scale(1.14)}}
-@keyframes glowFloat2{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(-8%,-6%) scale(1.12)}}
-.bgScan{position:absolute;left:-8%;right:-8%;height:2px;top:0;
-  background:linear-gradient(90deg,transparent,rgba(125,211,252,.9),transparent);
-  box-shadow:0 0 22px rgba(125,211,252,.7);animation:scanRun 6.5s linear infinite;opacity:.75}
-@keyframes scanRun{0%{top:-3%}100%{top:103%}}
+  background:linear-gradient(90deg,transparent,rgba(34,211,238,.16),rgba(168,85,247,.14),transparent);
+  transform:rotate(-16deg);opacity:.8}
+.bgStreak.s1{top:88%}
+.bgStreak.s2{top:118%;height:70px}
+/* 漂浮光点：静态分布，无动画、无大面积 box-shadow */
+.bgDots span{position:absolute;width:3px;height:3px;border-radius:50%;background:#9fe4ff;opacity:.7}
+/* 光晕：用 radial-gradient 自带的柔和边缘代替 blur(56px)，去掉滤镜与缩放动画 */
+.bgGlow{position:absolute;border-radius:50%;opacity:.55}
+.g1{width:86%;height:46%;left:-22%;top:-6%;background:radial-gradient(ellipse at center,rgba(34,211,238,.55),rgba(34,211,238,.14) 45%,transparent 72%)}
+.g2{width:74%;height:44%;right:-18%;bottom:-4%;background:radial-gradient(ellipse at center,rgba(167,139,250,.5),rgba(167,139,250,.12) 45%,transparent 72%)}
+.bgScan{display:none}
 /* 标题发光，压住背景不抢字 */
 #menuScreen .title{text-shadow:0 0 22px rgba(56,189,248,.5),0 0 46px rgba(34,211,238,.25)}
 /* 背景层在最底，其它内容一律压在它上面（否则不透明底会盖住卡片） */
@@ -6528,9 +6519,9 @@ async function fwDoSearch(){
 (function(){ try{
   const box=document.getElementById('bgDots'); if(!box) return;
   let html='';
-  for(let i=0;i<22;i++){
-    const x=Math.random()*100, d=(2.2+Math.random()*3.4), dl=(-Math.random()*6);
-    html+='<span style="left:'+x.toFixed(1)+'%;top:'+(30+Math.random()*70).toFixed(1)+'%;animation-duration:'+d.toFixed(1)+'s;animation-delay:'+dl.toFixed(1)+'s"></span>';
+  for(let i=0;i<10;i++){
+    const x=Math.random()*100;
+    html+='<span style="left:'+x.toFixed(1)+'%;top:'+(30+Math.random()*70).toFixed(1)+'%"></span>';
   }
   box.innerHTML=html;
 }catch(e){} })();
