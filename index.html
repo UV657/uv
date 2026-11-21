@@ -1340,7 +1340,7 @@ body.layout-free #btnFire.on{transform:translate(-50%,-50%) scale(.94) !importan
       </div>
     </div>
     <div class="overlay hidden" id="settingsScreen">
-      <div class="title">自定义设置 <span id="verTag" style="font-size:11px;color:#7d8aa8;font-weight:400;display:block;margin-top:2px">v2.9.13</span></div>
+      <div class="title">自定义设置 <span id="verTag" style="font-size:11px;color:#7d8aa8;font-weight:400;display:block;margin-top:2px">v2.9.14</span></div>
       <div class="rowBtns" style="justify-content:center;flex-wrap:wrap;margin:2px auto 8px;max-width:320px;width:100%">
         <button class="btn" id="btnSettingsDoneTop">完成</button>
         <button class="btn ghost" id="btnSettingsExitTop">退出</button>
@@ -1396,6 +1396,7 @@ body.layout-free #btnFire.on{transform:translate(-50%,-50%) scale(.94) !importan
         <div id="historyBox" style="display:none;margin-top:10px;border-top:1px solid rgba(255,255,255,.1);padding-top:10px">
           <div style="font-size:13px;font-weight:800;color:#67e8f9;margin-bottom:6px">修改历史</div>
           <div style="line-height:1.8">
+            <div><b style="color:#ffd34d">v2.9.14</b>　修复两个问题：①恢复技能不再每次复活就刷新，死亡等待期间冷却照常走；②联机开局显示对方挂机/无法正常玩——开局重置掉线计时、掉线判胜放宽到 12 秒，客机漏收「开局」消息时收到对方状态会自动跟上，开局指令补发三次</div>
             <div><b style="color:#ffd34d">v2.9.13</b>　手机端控件全面可拖：设置页「调整按键 / 雷达位置」里，摇杆、开火、技能、恢复、雷达、退出键都能按住拖动，坐标存成百分比，横竖屏切换不跑位；雷达可摆到屏幕任意位置；摇杆新增「固定位置 / 跟随手指」模式</div>
             <div><b style="color:#ffd34d">v2.9.12</b>　新增<b>通用恢复技能</b>（独立按键 F / 手机绿色恢复键，全角色可用）：只给自己持续回血，每秒 10 点、累计最多回 50 点即停，冷却 35 秒；AI 开火攻速与角色移速改成与玩家完全一致（不再有 1.8 倍射速惩罚与 0.7 移速折扣）</div>
             <div><b style="color:#ffd34d">v2.9.11</b>　新增角色「战地医师」（💉 持续恢复：6 秒内每秒回 9 血、共 54 血，恢复期间照常移动射击），与医疗兵的瞬时回血互补；终端角色调参与玩法说明已自动接入</div>
@@ -3038,11 +3039,13 @@ function update(dt, rawDt){
       if(p.regenT<=0){ p.regenT=0; p.regenTick=0; }
     }
     if(!p.alive){
+      // 死亡等待期间恢复冷却照常流逝（复活不再白送一次恢复）
+      if(p.recoverCD>0) p.recoverCD=Math.max(0,p.recoverCD-dt);
       p.respawn-=realDt; // 复活等待按真实秒数算，手机端不再被拖成 3 秒多
       if(p.respawn<=0){ const s=(p.team==='red'?state.world.redSpawn:state.world.blueSpawn)[p.idx];
         p.x=s.x; p.y=s.y; p.hp=p.maxHp||CFG.maxHp; p.alive=true; p.invuln=CFG.spawnProtect; p.shield=0;
         p.regenT=0; p.regenTick=0; // 复活时打断上一次的持续恢复，避免刚出生就跳治疗数字
-        p.recoverLeft=0; p.recoverTick=0; p.recoverCD=0; // 复活重置通用恢复
+        p.recoverLeft=0; p.recoverTick=0; // 只清掉没用完的治疗量，冷却按原时间继续走（不刷新）
         p.respawnRing=1; spawnRing(p.x,p.y,p.team==='red'?'#ff5b6e':'#4dc3ff',64); } // 复活光环
       continue;
     }
@@ -4829,6 +4832,10 @@ function runSelfCheck(){
     && String(updateRecover).indexOf('RECOVER.rate')>=0, 'total='+RECOVER.total+' rate='+RECOVER.rate+' cd='+RECOVER.cd);
   ok('AI 开火攻速与移速与玩家一致（无 1.8 倍射速惩罚、无 0.7 移速折扣）', CFG.aiFireMul===1 && AI_SPEED_MUL===1
     && DIFFS.easy.fireMul===1 && DIFFS.normal.fireMul===1 && DIFFS.hard.fireMul===1, 'aiFireMul='+CFG.aiFireMul+' aiSpeedMul='+AI_SPEED_MUL);
+  ok('复活不刷新恢复冷却（死亡期间冷却照常走）', String(update).indexOf('p.recoverCD=0')<0
+    && String(update).indexOf('死亡等待期间恢复冷却照常流逝')>=0);
+  ok('联机掉线判定不误伤（开局重置时间戳/12 秒宽限/收包自愈）', String(startNetMatch).indexOf('NET.lastRcv=0')>=0
+    && String(netTick).indexOf('12000')>=0 && String(netOnMsg).indexOf('startNetMatch(); }catch(e){}')>=0);
   ok('狂战士血怒机制齐全', !!(ROLES.berserker&&ROLES.berserker.skill.rageDur>0&&ROLES.berserker.skill.rageDmgMul>1&&ROLES.berserker.skill.rageDr>0&&skillKind(ROLES.berserker.skill)==='rage'));
   ok('新武器特性到位（栓狙/拖慢/爆破）', WEAPONS.falcon.dmgMul>=2.4 && WEAPONS.rivetgun.slowHit>0 && !!(WEAPONS.breaker.explode&&WEAPONS.breaker.explode.r>0) && typeof explodeBullet==='function');
   ok('准备室可锁定地图与角色武器', typeof prepSend==='function' && String(prepRender).indexOf('data-prep-map')>=0 && String(prepRender).indexOf('data-prep-role')>=0);
@@ -5200,7 +5207,13 @@ function prepGo(){
   PREP.started=true;
   if(PREP_TIMER){ clearInterval(PREP_TIMER); PREP_TIMER=null; }
   // 房主宣布开局：把最终地图一起发给加入方，两边同时倒计时
-  if(prepIsHost()){ PREP.map=(PREP.map|0); netSend({t:'go', map:PREP.map}, 1); }
+  if(prepIsHost()){
+    PREP.map=(PREP.map|0);
+    netSend({t:'go', map:PREP.map}, 1);
+    // 公共中转偶尔丢包：补发两次。客机没收到 'go' 就会停在准备室，房主视角看起来像“对方挂机”
+    setTimeout(()=>{ try{ netSend({t:'go', map:PREP.map}, 1); }catch(e){} }, 500);
+    setTimeout(()=>{ try{ netSend({t:'go', map:PREP.map}, 1); }catch(e){} }, 1300);
+  }
   const sec=(TUNE.prepSec||3);
   toastMsg('双方已准备，'+sec+' 秒后开局');
   setTimeout(()=>{ try{ startNetMatch(); }catch(e){} }, sec*1000);
@@ -5266,7 +5279,14 @@ function netOnMsg(m){
       else { netStatus('对手已离开','#ff9f9f'); }
     }
     else if(m.t==='start'){ NET.foeUid=m.uid||NET.foeUid||null; NET.foeName=m.name||'对手'; netStatus('房主开局','#5eead4'); if(!state.netMode) startNetMatch(); }
-    else if(m.t==='state'){ netApplyState(m); }
+    else if(m.t==='state'){
+      // 对方已经在打了，本机却还停在准备室/菜单：多半是 'go' 丢包。直接跟上开局，
+      // 否则房里会出现“开局就看着对方挂机、5 秒后判掉线”的假象。
+      if(!state.netMode && !state.running && NET.code && (NET.prepEntered || PREP.ready)){
+        try{ startNetMatch(); }catch(e){}
+      }
+      netApplyState(m);
+    }
     else if(m.t==='dmg'){ netTakeHit(m.v, m.s); }
     else if(m.t==='died'){ netRemoteDied(); }
     else if(m.t==='shot'){ netGhostShot(m); }
@@ -5340,10 +5360,12 @@ function netOnMsg(m){
 }
 window.addEventListener('beforeunload', ()=>{ try{ lobbyClear(); }catch(e){} });
 setInterval(()=>{
-  if(!state.netMode || !NET.lastPeer) return;
+  // 只在真正对局中提示；准备室阶段本来就没有 state 包，不能拿旧时间戳喊“掉线/挂机”
+  if(!state.netMode || !state.running || state.ended) return;
+  if(!NET.lastPeer) return;                       // 还没收到过对手任何状态，先不判
   const gap=Date.now()-NET.lastPeer;
-  if(gap>3200 && !NET.peerWarn){ NET.peerWarn=true; toastMsg('对手掉线了，等他自己回来…'); }
-  else if(gap<900 && NET.peerWarn){ NET.peerWarn=false; toastMsg('对手回来了'); }
+  if(gap>6000 && !NET.peerWarn){ NET.peerWarn=true; toastMsg('对手网络不稳，正在等他回来…'); }
+  else if(gap<1200 && NET.peerWarn){ NET.peerWarn=false; toastMsg('对手回来了'); }
 }, 1600);
 /* 建房后直接列出好友，在线的点一下就邀请，不用回主菜单找 */
 /* ===== 快速匹配 =====
@@ -5522,6 +5544,9 @@ function startNetMatch(){
   if(foe){ foe.isRemote=true; foe.isHuman=false; foe.name='对手'; foe.alive=true; foe.hp=prepMaxHp(foe);
     foe.weapon = WEAPONS[PREP.foeWeapon] || WEAPONS.rifle; }
   state.running=true;
+  // 新一局清掉上一局的收发时间戳：否则开局瞬间会拿旧时间算 gap，立刻误报“对手掉线/挂机”
+  NET.lastPeer=0; NET.lastRcv=0; NET.peerWarn=false; NET.lastSend=0; window.__dropped=false;
+  NET.startedAt=performance.now();
   if(NET.role==='b') netSend({t:'hello', name:currentNick()});
 }
 /* 本地玩家：优先找 isHuman，联机加入方（蓝队）也能正确取到 */
@@ -5551,9 +5576,10 @@ function netSend(obj, qos){
 function netTick(dt){
   if(!state.netMode || (!NET.ws && !NET.client)) return;
   const me=netMe(); if(!me) return;
-  // 对手掉线判定：连续 4 秒收不到对方任何消息，直接判我方获胜
-  if(state.running && !state.ended && NET.lastRcv && !window.__dropped){
-    if(performance.now()-NET.lastRcv > 5000){
+  // 对手掉线判定：连续 12 秒收不到对方任何消息才判胜（公共中转抖动大，5 秒太容易误杀）
+  if(state.running && !state.ended && !window.__dropped){
+    const since = NET.lastRcv ? (performance.now()-NET.lastRcv) : (performance.now()-(NET.startedAt||performance.now()));
+    if(since > 12000){
       window.__dropped=true;
       toastMsg('对手掉线，本局判你获胜');
       endMatch(netMyTeam());
