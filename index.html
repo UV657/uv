@@ -2389,7 +2389,9 @@ function hasLOS(ax,ay,bx,by){
   }
   return true;
 }
+const AI_SPEED_MUL = 0.7; // 电脑端 AI 移速系数：原先电脑端 AI 用满速，手机端有全局 0.62 节奏缩放，导致电脑端 AI 明显偏快。只用于移动，不影响射速/技能计时。
 function updateAI(p,dt){
+  const aiMoveDt = isTouch ? dt : dt*AI_SPEED_MUL; // AI 移动专用 dt：手机端已有 0.62 全局缩放，不再叠加
   let best=null, bd=Infinity;
   for(const q of state.players){
     if(q.team===p.team || !q.alive) continue;
@@ -2399,7 +2401,7 @@ function updateAI(p,dt){
   if(!best){ // 漫游
     p.wanderT-=dt;
     if(p.wanderT<=0){ p.wanderT=1+rng()*1.5; p.aim=rng()*Math.PI*2; }
-    movePlayer(p, Math.cos(p.aim), Math.sin(p.aim), dt); // 朝 p.aim 稳定前进，避免原地抖动
+    movePlayer(p, Math.cos(p.aim), Math.sin(p.aim), aiMoveDt); // 朝 p.aim 稳定前进，避免原地抖动
     return;
   }
   const bdPx=Math.sqrt(bd);
@@ -2426,8 +2428,10 @@ function updateAI(p,dt){
     mx=Math.cos(perp); my=Math.sin(perp);
   }
   const beforeX=p.x, beforeY=p.y;
-  movePlayer(p,mx,my,dt);
-  if(Math.hypot(mx,my)>0.05 && Math.hypot(p.x-beforeX,p.y-beforeY)<1.0){
+  movePlayer(p,mx,my,aiMoveDt);
+  // 卡住阈值按本帧预期位移自适应：AI 降速后位移变小，固定 1.0 会误判成卡住而一直绕行
+  const stuckLimit=Math.max(0.25, p.role.speed*aiMoveDt*0.25);
+  if(Math.hypot(mx,my)>0.05 && Math.hypot(p.x-beforeX,p.y-beforeY)<stuckLimit){
     p.stuckT+=dt;
     if(p.stuckT>0.22){
       p.stuckT=0;
