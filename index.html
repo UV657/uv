@@ -1281,7 +1281,7 @@ body.is-touch .nhTime{display:none !important}
       </div>
     </div>
     <div class="overlay hidden" id="settingsScreen">
-      <div class="title">自定义设置 <span id="verTag" style="font-size:11px;color:#7d8aa8;font-weight:400;display:block;margin-top:2px">v2.9.9</span></div>
+      <div class="title">自定义设置 <span id="verTag" style="font-size:11px;color:#7d8aa8;font-weight:400;display:block;margin-top:2px">v2.9.10</span></div>
       <div class="rowBtns" style="justify-content:center;flex-wrap:wrap;margin:2px auto 8px;max-width:320px;width:100%">
         <button class="btn" id="btnSettingsDoneTop">完成</button>
         <button class="btn ghost" id="btnSettingsExitTop">退出</button>
@@ -1336,6 +1336,7 @@ body.is-touch .nhTime{display:none !important}
         <div id="historyBox" style="display:none;margin-top:10px;border-top:1px solid rgba(255,255,255,.1);padding-top:10px">
           <div style="font-size:13px;font-weight:800;color:#67e8f9;margin-bottom:6px">修改历史</div>
           <div style="line-height:1.8">
+            <div><b style="color:#ffd34d">v2.9.10</b>　修复“进入房间后无法正常对决”：对局开始后，迟到的准备消息会把准备室重新弹到画面上并重置状态；现已在对局中忽略准备消息，并冻结阵营与收发主题</div>
             <div><b style="color:#ffd34d">v2.9.9</b>　修复联机准备室：双方准备却不开局、房主选不了地图（房主身份改由本机稳定标记判定，收到 joined 不再被降级；两边各自触发开局）</div>
             <div><b style="color:#ffd34d">v2.9.8</b>　新增 3 把武器（火箭筒/火焰喷枪/连发狙击，终端可调冷却）；新增 1 张 5V5 地图「双桥夹击」</div>
             <div><b style="color:#ffd34d">v2.9.7</b>　新增角色「狂战士」（血怒：增伤+减伤）；新增 6 把武器（左轮/迷你冲锋/独头弹/十字弩/双持手枪/电弧枪，终端可调冷却）；新增 2 张地图（十字回廊/双环哨位）</div>
@@ -4544,6 +4545,8 @@ function runSelfCheck(){
   ok('房主身份用稳定 isHost 判定（不受网络消息改写）', typeof prepIsHost==='function' && String(prepRender).indexOf('prepIsHost()')>=0 && String(prepGo).indexOf('prepIsHost()')>=0 && 'isHost' in NET);
   ok('双方准备即可各自开局（不依赖单一房主触发）', String(netOnMsg).indexOf('if(PREP.ready && PREP.foeReady){ prepSend(); prepGo(); }')>=0);
   ok('joined 不会把房主降级成客机', String(netOnMsg).indexOf('if(NET.isHost){ prepSend(); return; }')>=0);
+  ok('对局开始后准备室不会被迟到的 prep 消息重新弹出', String(prepOpen).indexOf('if(state.running) return')>=0 && String(netOnMsg).indexOf('if(state.running || state.netMode) return')>=0 && String(startNetMatch).indexOf('NET.prepEntered=false')>=0);
+  ok('阵营与收发主题在开局冻结（不受 role 改写影响）', String(startNetMatch).indexOf('NET.myTeam = myTeam')>=0 && String(netMyTeam).indexOf('NET.myTeam')>=0 && String(netSend).indexOf('prepIsHost()')>=0);
   ok('重连只补订自己收件主题（不收到自己的回环消息）', !/role==='a'\?'b':'a'/.test(String(netOpen)));
   ok('霰弹枪 5 弹丸', WEAPONS.shotgun.pellets===5);
   ok('三把新武器弹道与调参齐全', ['carbine','railgun','scatter'].every(k=>!!TRACER_STYLE[k] && TUNE_LIM[k+'CdMul']) && WEAPONS.scatter.pellets===7);
@@ -4667,7 +4670,7 @@ window.__selfCheck = runSelfCheck;
  * 这样每颗子弹只结算一次，不会出现两边各扣一遍的双重伤害。
  */
 const NET = { foeUid:null, foeName:null,  ws:null, role:null, code:null, peer:null, peerOnline:false, lastSend:0, want:false,
-  isHost:false };   // isHost 只在“建房/匹配到房主以外的人”时由本机动作设定，收到任何网络消息都不会翻成 false
+  isHost:false, myTeam:null };   // isHost 只在“建房/匹配到房主以外的人”时由本机动作设定，收到任何网络消息都不会翻成 false
 /* 房主身份以本机动作设定的 isHost 为准，role 会被握手消息改写，不能作为房主判据 */
 function prepIsHost(){ return NET.isHost===true; }
 function netUrl(){ return ''; }   // 统一走公共中转，不再需要用户填服务器
@@ -4834,6 +4837,7 @@ function prepEl(id){ return document.getElementById(id); }
 function prepMaxHp(p){ return (p && p.maxHp) || CFG.maxHp; }
 let PREP_TIMER=null;
 function prepOpen(){
+  if(state.running) return;   // 对局进行中绝不重新弹出准备室（迟到的 prep 消息会走到这里）
   NET.prepEntered=true;
   PREP.started=false;
   PREP.ready=false;
@@ -4901,6 +4905,7 @@ function prepRender(){
 }
 function prepGo(){
   if(PREP.started) return;
+  if(state.running) return;   // 对局已开始：忽略重复的开局指令，避免对局被二次重置
   PREP.started=true;
   if(PREP_TIMER){ clearInterval(PREP_TIMER); PREP_TIMER=null; }
   // 房主宣布开局：把最终地图一起发给加入方，两边同时倒计时
@@ -5025,6 +5030,9 @@ function netOnMsg(m){
       netSend({t:'joined', code:NET.code, name:currentNick()}, 1);
     }
     else if(m.t==='prep'){
+      // 对局开始后仍在飞的 prep 消息必须忽略：否则会把已隐藏的准备室重新弹出来，
+      // 遮住对局画面并重置 PREP 状态，表现为“进入对局后无法正常玩”。
+      if(state.running || state.netMode) return;
       if(!NET.prepEntered || document.getElementById('prepScreen').classList.contains('hidden')) prepOpen();
       PREP.foeRole = ROLES[m.role] ? m.role : PREP.foeRole;
       PREP.foeWeapon = WEAPONS[m.weapon] ? m.weapon : PREP.foeWeapon;
@@ -5133,7 +5141,7 @@ function netQuickMatch(){
     try{ lobbyClear(); }catch(e){}
     try{ if(NET.client && NET.code) NET.client.unsubscribe(netTopic(NET.code,'a')); }catch(e){}
     if(NET.lobbyTimer){ clearInterval(NET.lobbyTimer); NET.lobbyTimer=null; }
-    NET.code=null; NET.role=null; NET.isHost=false;
+    NET.code=null; NET.role=null; NET.isHost=false; NET.myTeam=null;
     document.querySelectorAll('.overlay').forEach(e=>e.classList.add('hidden'));
     state.netMode=false; state.mode='1v1';
     toastMsg('没匹配到真人，先跟人机练一局');
@@ -5190,11 +5198,19 @@ function netShowCode(code, tip){
   setTimeout(netRenderInviteList, 60);
 }
 function startNetMatch(){
+  // 双方各自触发开局时，可能有一边稍晚再调一次；对局已在跑就直接忽略，避免重置分数/站位
+  if(state.netMode && state.running && !state.ended) return;
   try{ lobbyClear(); }catch(e){}
+  // 彻底关掉准备室和它的心跳：否则迟到的 prep 消息会把准备室重新弹回对局画面之上
+  NET.prepEntered=false;
+  PREP.started=true; PREP.ready=false;
+  if(PREP_TIMER){ clearInterval(PREP_TIMER); PREP_TIMER=null; }
   if(NET.soloTimer){ clearTimeout(NET.soloTimer); NET.soloTimer=null; }
   document.querySelectorAll('.overlay').forEach(e=>e.classList.add('hidden'));
   state.netMode=true;
   state.mode='1v1';
+  // 开局瞬间把收发角色钉死：以本机稳定标记 isHost 为准，避免握手消息改写 role 后阵营/消息主题错乱
+  NET.role = prepIsHost() ? 'a' : 'b';
   // 用准备室定下来的地图与双方角色（房主红、加入方蓝）
   const myRole = ROLES[PREP.myRole] ? PREP.myRole : 'assault';
   const foeR  = ROLES[PREP.foeRole] ? PREP.foeRole : myRole;
@@ -5203,6 +5219,7 @@ function startNetMatch(){
   else { state.roleP1=foeR; state.roleP2=myRole; }
   startGame();
   const myTeam = (NET.role==='b') ? 'blue' : 'red';   // 房主红、加入方蓝，避免双方复活到同一点
+  NET.myTeam = myTeam;   // 整局冻结，后面所有敌我判定都读这个，不再重复推导
   const foeTeam = (myTeam==='red') ? 'blue' : 'red';
   state.players.forEach(p=>{ p.isHuman=false; p.isRemote=false; });
   const me=state.players.find(p=>p.team===myTeam);
@@ -5222,14 +5239,18 @@ function selfIs(p){
   try{ return p===netMe() || (p.isHuman && p.team===netMyTeam()); }catch(e){ return !!p.isHuman; }
 }
 function localP(){ const ps=state.players||[]; return ps.find(p=>p.isHuman) || ps[0] || null; }
-function netMyTeam(){ return (state.netMode && NET.role==='b') ? 'blue' : 'red'; }
+function netMyTeam(){
+  // 阵营在开局瞬间冻结；即使后续握手消息改写了 role，也不会把敌我判反
+  if(state.netMode && (NET.myTeam==='red'||NET.myTeam==='blue')) return NET.myTeam;
+  return (state.netMode && NET.role==='b') ? 'blue' : 'red';
+}
 function netMe(){ return state.players && state.players.find(p=>p.team===netMyTeam()); }
 function netFoe(){ const ot = (netMyTeam()==='red') ? 'blue' : 'red';
   return state.players && state.players.find(p=>p.team===ot); }
 function netSend(obj, qos){
   const txt=JSON.stringify(obj);
   if(NET.client){
-    const to = (NET.role==='a') ? 'b' : 'a';
+    const to = prepIsHost() ? 'b' : 'a';   // 发往对方收件主题；用稳定房主标记，避免 role 被改写后发错人
     if(NET.code) NET.client.publish(netTopic(NET.code,to), txt, {qos: (qos===1)?1:0});
     return;
   }
@@ -5654,7 +5675,7 @@ function maintGoLogin(){
   try{ lobbyClear(); }catch(e){}
   try{ if(NET.ws){ NET.ws.send(JSON.stringify({t:'leave'})); } }catch(e){}
   try{ if(NET.client && NET.code) NET.client.unsubscribe(netTopic(NET.code,'a')); }catch(e){}
-  NET.code=null; NET.role=null; NET.isHost=false; NET.prepEntered=false;
+  NET.code=null; NET.role=null; NET.isHost=false; NET.myTeam=null; NET.prepEntered=false;
   try{ state.netMode=false; state.running=false; state.ended=false; state.paused=false; }catch(e){}
   document.body.classList.remove('in-game'); document.body.classList.remove('ended');
   document.querySelectorAll('.overlay').forEach(el=>el.classList.add('hidden'));
