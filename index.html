@@ -261,6 +261,7 @@ body.is-touch.in-game #btnFire{display:flex}
 body.is-touch.in-game #touchTip{display:block}
 @keyframes popScale{0%{transform:translateX(-50%) scale(.5);opacity:0}100%{transform:translateX(-50%) scale(1);opacity:1}}
 body.is-touch .pc-only{display:none !important}
+body:not(.is-touch) .mobile-only{display:none !important}
 #settingsScreen{justify-content:flex-start !important;overflow-y:auto !important;-webkit-overflow-scrolling:touch;padding:14px 0 40px !important}
 #pcTip{font-size:12px;color:#7f92b0;letter-spacing:.5px}
 body:not(.is-touch) #touchTip{display:none !important}
@@ -736,11 +737,11 @@ body.is-touch .nhTime{display:none !important}
       <div class="modeGrid">
         <div class="modeCard" id="mode5v5">
           <div class="mcName red">5V5 团队战</div>
-          <div class="mcDesc">红蓝各 5 人 · 每人 100 血<br>你 + 4 名 AI 队友 vs 5 名 AI 敌人<br>先 30 杀获胜（限时 3 分钟）· 角色随机分配<br><span class="pc-only">选难度与地图即可开战 · WASD+鼠标+E</span></div>
+          <div class="mcDesc">红蓝各 5 人 · 每人 100 血<br>你 + 4 名 AI 队友 vs 5 名 AI 敌人<br>先 30 杀获胜（限时 3 分钟）· 角色随机分配<br><span class="pc-only">选难度与地图即可开战 · WASD+鼠标+E</span><span class="mobile-only">选难度与地图即可开战 · 左摇杆+开火键+技能键</span></div>
         </div>
         <div class="modeCard" id="mode1v1">
           <div class="mcName blue">1V1 单挑</div>
-          <div class="mcDesc">单人对战 AI 对手<br>每人 100 血 · 先 5 杀获胜（限时 2 分钟）<br>可选角色与战场地图<br><span class="pc-only">P1：WASD+J+E+Z/X ｜ P2：方向键+回车+数字1</span></div>
+          <div class="mcDesc">单人对战 AI 对手<br>每人 100 血 · 先 5 杀获胜（限时 2 分钟）<br>可选角色与战场地图<br><span class="pc-only">WASD 移动 · 鼠标瞄准 · 左键开火 · E 技能</span><span class="mobile-only">左摇杆移动 · 右下开火键射击 · 技能键放技能</span></div>
         </div>
       </div>
       <div class="sub pc-only" style="font-size:12px">浏览器里双击打开即玩 · 5V5 团队战 · 1V1 单挑 · 结算含 MVP 动画</div>
@@ -1012,6 +1013,14 @@ body.is-touch .nhTime{display:none !important}
 .rankVal{flex:none;font-size:12.5px;font-weight:800;color:#a5f3fc}
 .rankDim{flex:1 1 30%;min-width:78px;padding:7px;border-radius:9px;font-size:12px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);color:#9fb2d0;cursor:pointer}
 .rankDim.on{background:rgba(34,211,238,.22);border-color:rgba(103,232,249,.6);color:#e8f7ff;font-weight:800}
+/* ===== ENG-FIX-0297：窄屏/宽屏统一水平居中（不改动横屏既有滚动规则） ===== */
+/* 这三页原本用 inline align-items:flex-start 贴左，改成水平居中；文本自身仍保持左对齐 */
+#noticeScreen,#noticeListScreen,#prepScreen{align-items:center !important}
+/* 固定宽度的内容块在窄屏 align-items:stretch 下不会自动居中，补 auto 边距 */
+#noticeScreen > div,#noticeListScreen > div,#inviteScreen > div,#settingsWrap,
+#nickInput,#pwdInput,#pwdOld,#pwdNew,#pwdNew2,#pauseAskTip{margin-left:auto;margin-right:auto}
+/* 布局编辑层是全屏舞台，不能被竖屏通用 padding 挤出去 */
+#layoutScreen{padding:0 !important}
 </style>
     <!-- 全服公告 -->
     <div class="overlay hidden" id="noticeScreen" style="align-items:flex-start;justify-content:center;overflow-y:auto;padding:26px 16px;z-index:70">
@@ -1250,37 +1259,37 @@ body.is-touch .nhTime{display:none !important}
         <button class="btn ghost" id="btnSettingsExitTop">退出</button>
       </div>
       <div id="settingsWrap" style="text-align:left;max-width:320px;line-height:2.2">
-        <div id="kbBlock" style="display:none;border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:10px 12px;margin-bottom:12px;background:rgba(255,255,255,.04);line-height:1.5">
+        <div id="kbBlock" class="pc-only" style="display:none;border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:10px 12px;margin-bottom:12px;background:rgba(255,255,255,.04);line-height:1.5">
           <div style="font-size:13px;font-weight:800;color:#67e8f9;margin-bottom:6px">电脑键位</div>
           <div id="kbRows"></div>
           <div id="kbHint" style="font-size:11.5px;color:#9fb2d0;margin-top:6px">点「改」后按一下你想用的键</div>
           <button class="btn ghost" id="btnKbReset" style="width:100%;margin-top:8px;padding:6px;font-size:12px">恢复默认键位</button>
         </div>
-        <div>摇杆大小 <input type="range" id="setJoy" min="60" max="140" value="88" style="width:100%"></div>
-        <div>开火键大小 <input type="range" id="setFire" min="50" max="120" value="74" style="width:100%"></div>
+        <div class="mobile-only">摇杆大小 <input type="range" id="setJoy" min="60" max="140" value="88" style="width:100%"></div>
+        <div class="mobile-only">开火键大小 <input type="range" id="setFire" min="50" max="120" value="74" style="width:100%"></div>
         <div>UI透明度 <input type="range" id="setAlpha" min="20" max="100" value="60" style="width:100%"></div>
         <div>界面边距 <input type="range" id="setGap" min="0" max="120" value="10" style="width:100%"></div>
-        <div>技能方向 <select id="setSkillDir" style="width:100%;padding:6px;border-radius:6px;background:#1a2340;color:#fff;border:1px solid rgba(255,255,255,.2)"><option value="aim">跟随摇杆方向</option><option value="foe">朝对手方向</option></select></div>
-        <div>移动灵敏度 <input type="range" id="setSens" min="30" max="150" value="80" style="width:100%"></div>
-        <div>摇杆位置 <select id="setJoyPos" style="width:100%;padding:6px;border-radius:6px;background:#1a2340;color:#fff;border:1px solid rgba(255,255,255,.2)"><option value="left">左下角</option><option value="right">右下角</option></select></div>
-        <div>开火键位置 <select id="setFirePos" style="width:100%;padding:6px;border-radius:6px;background:#1a2340;color:#fff;border:1px solid rgba(255,255,255,.2)"><option value="right">右下角</option><option value="left">左下角</option></select></div>
-        <div>角色皮肤 <select id="setSkin" style="width:100%;padding:6px;border-radius:6px;background:#1a2340;color:#fff;border:1px solid rgba(255,255,255,.2)">
+        <div class="mobile-only">技能方向 <select id="setSkillDir" style="width:100%;padding:6px;border-radius:6px;background:#1a2340;color:#fff;border:1px solid rgba(255,255,255,.2)"><option value="aim">跟随摇杆方向</option><option value="foe">朝对手方向</option></select></div>
+        <div class="mobile-only">移动灵敏度 <input type="range" id="setSens" min="30" max="150" value="80" style="width:100%"></div>
+        <div class="mobile-only">摇杆位置 <select id="setJoyPos" style="width:100%;padding:6px;border-radius:6px;background:#1a2340;color:#fff;border:1px solid rgba(255,255,255,.2)"><option value="left">左下角</option><option value="right">右下角</option></select></div>
+        <div class="mobile-only">开火键位置 <select id="setFirePos" style="width:100%;padding:6px;border-radius:6px;background:#1a2340;color:#fff;border:1px solid rgba(255,255,255,.2)"><option value="right">右下角</option><option value="left">左下角</option></select></div>
+        <div class="mobile-only">角色皮肤 <select id="setSkin" style="width:100%;padding:6px;border-radius:6px;background:#1a2340;color:#fff;border:1px solid rgba(255,255,255,.2)">
           <option value="default">战术红（默认）</option>
           <option value="sand">荒漠（200 荣誉）</option>
           <option value="night">暗夜紫（350 荣誉）</option>
           <option value="lava">熔岩（600 荣誉）</option>
           <option value="ice">极地（900 荣誉）</option>
         </select></div>
-        <div>技能键位置 <select id="setSkillPos" style="width:100%;padding:6px;border-radius:6px;background:#1a2340;color:#fff;border:1px solid rgba(255,255,255,.2)"><option value="left">开火键旁边</option><option value="right">对角位置</option><option value="joy">贴着摇杆那一侧</option><option value="free">自定义（自己拖）</option></select></div>
-        <div><button class="btn ghost" id="btnLayout" style="width:100%">调整技能键位置</button></div>
+        <div class="mobile-only">技能键位置 <select id="setSkillPos" style="width:100%;padding:6px;border-radius:6px;background:#1a2340;color:#fff;border:1px solid rgba(255,255,255,.2)"><option value="left">开火键旁边</option><option value="right">对角位置</option><option value="joy">贴着摇杆那一侧</option><option value="free">自定义（自己拖）</option></select></div>
+        <div class="mobile-only"><button class="btn ghost" id="btnLayout" style="width:100%">调整技能键位置</button></div>
         <div>自动开火 <select id="setAutoFire" style="width:100%;padding:6px;border-radius:6px;background:#1a2340;color:#fff;border:1px solid rgba(255,255,255,.2)"><option value="off">手动开火</option><option value="on">自动开火</option></select></div>
-        <div>长按开火（电脑） <select id="setHoldFire" style="width:100%;padding:6px;border-radius:6px;background:#1a2340;color:#fff;border:1px solid rgba(255,255,255,.2)"><option value="on">开启（按住连发）</option><option value="off">关闭（单发，松开再按）</option></select></div>
+        <div class="pc-only">长按开火（电脑） <select id="setHoldFire" style="width:100%;padding:6px;border-radius:6px;background:#1a2340;color:#fff;border:1px solid rgba(255,255,255,.2)"><option value="on">开启（按住连发）</option><option value="off">关闭（单发，松开再按）</option></select></div>
         <div>自动瞄准 <select id="setAutoAim" style="width:100%;padding:6px;border-radius:6px;background:#1a2340;color:#fff;border:1px solid rgba(255,255,255,.2)"><option value="on">开启</option><option value="off">关闭（手动瞄准）</option></select></div>
-        <div>小地图雷达 <select id="setRadarShow" style="width:100%;padding:6px;border-radius:6px;background:#1a2340;color:#fff;border:1px solid rgba(255,255,255,.2)"><option value="on">显示</option><option value="off">关闭</option></select></div>
-        <div>雷达大小 <input type="range" id="setRadarSize" min="70" max="180" value="112" style="width:100%"></div>
-        <div>雷达透明度 <input type="range" id="setRadarAlpha" min="35" max="100" value="92" style="width:100%"></div>
-        <div>雷达位置 <select id="setRadarPos" style="width:100%;padding:6px;border-radius:6px;background:#1a2340;color:#fff;border:1px solid rgba(255,255,255,.2)"><option value="right">右上角</option><option value="left">左上角</option></select></div>
-        <div>右摇杆 <select id="setAimStick" style="width:100%;padding:6px;border-radius:6px;background:#1a2340;color:#fff;border:1px solid rgba(255,255,255,.2)"><option value="aim">只瞄准（配合开火键）</option><option value="fire">推开即开火（开火摇杆）</option></select></div>
+        <div class="mobile-only">小地图雷达 <select id="setRadarShow" style="width:100%;padding:6px;border-radius:6px;background:#1a2340;color:#fff;border:1px solid rgba(255,255,255,.2)"><option value="on">显示</option><option value="off">关闭</option></select></div>
+        <div class="mobile-only">雷达大小 <input type="range" id="setRadarSize" min="70" max="180" value="112" style="width:100%"></div>
+        <div class="mobile-only">雷达透明度 <input type="range" id="setRadarAlpha" min="35" max="100" value="92" style="width:100%"></div>
+        <div class="mobile-only">雷达位置 <select id="setRadarPos" style="width:100%;padding:6px;border-radius:6px;background:#1a2340;color:#fff;border:1px solid rgba(255,255,255,.2)"><option value="right">右上角</option><option value="left">左上角</option></select></div>
+        <div class="mobile-only">右摇杆 <select id="setAimStick" style="width:100%;padding:6px;border-radius:6px;background:#1a2340;color:#fff;border:1px solid rgba(255,255,255,.2)"><option value="aim">只瞄准（配合开火键）</option><option value="fire">推开即开火（开火摇杆）</option></select></div>
         <div>全屏模式 <button class="btn" id="btnFullscreen" style="width:100%;padding:8px;margin-top:6px">切换全屏 / 退出全屏</button></div>
       </div>
       <div style="margin-top:8px;text-align:center">
@@ -2573,6 +2582,25 @@ function damagePlayer(victim, bullet){
   if(victim.isHuman || (bullet.owner && bullet.owner.isHuman)) sHit(); // 只有命中人类相关才响命中音
   if(victim.hp<=0) killPlayer(victim,bullet.owner);
 }
+/* 电脑端连杀全屏特效：复用原本闲置的 #screenFlash 与 .scoreBanner 样式。
+   手机端屏幕小，保持原来的朴素连杀小字，不触发全屏闪光/大横幅。 */
+function playKillFx(team,streak){
+  if(isTouch) return;
+  const flash=document.getElementById('screenFlash');
+  if(flash){
+    // 连杀重入：先清类+强制 reflow，保证每次都从头播放 0.4s 动画
+    flash.classList.remove('on','gold','red','blue');
+    void flash.offsetWidth;
+    flash.classList.add(team==='blue'?'blue':'gold','on');
+    clearTimeout(flash._killFxTimer);
+    flash._killFxTimer=setTimeout(()=>flash.classList.remove('on','gold','red','blue'),450);
+  }
+  const banner=document.createElement('div');
+  banner.className='scoreBanner'+(team==='blue'?' blue':'');
+  banner.textContent = streak>=5 ? '无情收割 RAMPAGE' : streak===4 ? '四杀 QUADRA KILL' : streak===3 ? '三杀 TRIPLE KILL' : '双杀 DOUBLE KILL';
+  stage.appendChild(banner);
+  setTimeout(()=>banner.remove(),1100);
+}
 function killPlayer(victim,killer){
   if(!victim.alive) return; // 同帧多颗子弹命中，只结算一次
   victim.alive=false; victim.hp=0; victim.respawn=CFG.respawnTime; victim.deaths++;
@@ -2591,11 +2619,14 @@ function killPlayer(victim,killer){
   if(killer.isHuman){
     killer.streak=(killer.streak||0)+1;
     if(killer.streak>=2){
-      const ov=document.createElement('div');
-      ov.style.cssText='position:fixed;top:25%;left:50%;transform:translateX(-50%);font-size:28px;font-weight:900;color:#ffd700;text-shadow:0 0 20px rgba(255,200,0,.8);z-index:80;animation:popScale .4s ease';
-      ov.textContent = killer.streak>=5 ? '★ 无情收割 ★' : killer.streak>=3 ? '🔥 三连杀！' : '双杀！';
-      document.body.appendChild(ov);
-      setTimeout(()=>ov.remove(),1200);
+      if(isTouch){
+        // 手机端：保持原来的朴素小字，不加全屏特效
+        const ov=document.createElement('div');
+        ov.style.cssText='position:fixed;top:25%;left:50%;transform:translateX(-50%);font-size:28px;font-weight:900;color:#ffd700;text-shadow:0 0 20px rgba(255,200,0,.8);z-index:80;animation:popScale .4s ease';
+        ov.textContent = killer.streak>=5 ? '★ 无情收割 ★' : killer.streak>=3 ? '🔥 三连杀！' : '双杀！';
+        document.body.appendChild(ov);
+        setTimeout(()=>ov.remove(),1200);
+      } else playKillFx(killer.team,killer.streak); // 电脑端：全屏闪光 + 大横幅（替代小字，避免重复刷屏）
     }
     // 升级系统：每3杀升一级
     killer.level = killer.level||1;
@@ -7576,16 +7607,18 @@ function buildHelp(){
   document.getElementById('helpBody').innerHTML =
     '<h4>一、游戏模式</h4>'+
     '<div><b>5V5 团队战</b>：红蓝各 5 人，你带 4 名 AI 队友对战 5 名 AI 敌人，先到 30 杀，或 3 分钟结束击杀多者胜；角色随机分配，只需选择难度与地图。</div>'+
-    '<div><b>1V1 决斗</b>：你单人对战一名 AI 对手，先到 5 杀，或 2 分钟结束击杀多者胜；操作与 5V5 相同，鼠标瞄准、左键开火。</div>'+
+    '<div><b>1V1 决斗</b>：你单人对战一名 AI 对手，先到 5 杀，或 2 分钟结束击杀多者胜；<span class="pc-only">操作与 5V5 相同，鼠标瞄准、左键开火。</span><span class="mobile-only">操作与 5V5 相同，左摇杆移动、右下开火键射击。</span></div>'+
     '<h4>二、角色与技能</h4>'+
     (window.innerWidth<=620 ? roleCards : '<div class="tblWrap"><table><tr><th>角色</th><th>移速</th><th>单发伤害</th><th>射速</th><th>技能（冷却）</th><th>说明</th></tr>'+rows+'</table></div>')+
     '<h4>三、战场地图</h4>'+
     '<div>单机在选择页选图；1V1 联机由房主在准备室定图，双方都看得到。每张图障碍布局不同，打法也不一样。</div>'+
     mapRows+
     '<h4>四、操作键位</h4>'+
-    '<div class="tblWrap"><table><tr><th>模式</th><th>移动</th><th>射击</th><th>技能</th><th>转身瞄准</th></tr>'+
+    '<div class="tblWrap pc-only"><table><tr><th>模式</th><th>移动</th><th>射击</th><th>技能</th><th>转身瞄准</th></tr>'+
     '<tr><td>5V5 / 1V1</td><td>W A S D</td><td>鼠标瞄准 · 左键 / 空格</td><td>E</td><td>鼠标</td></tr></table></div>'+
-    '<div>通用：P 暂停菜单 · Esc 中途退出对局 · M 静音 · 结算后 R 再来一局。</div>'+
+    '<div class="tblWrap mobile-only"><table><tr><th>模式</th><th>移动</th><th>射击</th><th>技能</th><th>瞄准</th></tr>'+
+    '<tr><td>5V5 / 1V1</td><td>左摇杆</td><td>右下开火键</td><td>技能键</td><td>自动瞄准 / 右摇杆</td></tr></table></div>'+
+    '<div class="pc-only">电脑快捷键：P 暂停菜单 · Esc 中途退出对局 · M 静音 · 结算后 R 再来一局。</div>'+
     '<h5>五、规则说明</h5>'+
     '<div>· 每人 100 点血量，死亡后 3 秒复活，复活后短暂无敌。<br>'+
     '· 击杀对方得 1 分；技能有冷却时间，冷却结束前不能重复释放。<br>'+
@@ -7601,13 +7634,13 @@ function buildHelp(){
     +'<h5>七、手机与电脑</h5>'
     +'<div>· 同一个网址，浏览器自动判断：有触屏按手机模式，没触屏按电脑模式。<br>'
     +'· <b>两端联机互不相通</b>：电脑只能连电脑，手机只能连手机；房间码格式一样，但交叉输入进不去。<br>'
-    +'· <b>手机移动</b>：左半屏任意位置拖动就是摇杆，手指松开回中；摇杆大小、透明度、离边距离都能在「自定义设置」里调。<br>'
+    +'<span class="mobile-only">· <b>手机移动</b>：左半屏任意位置拖动就是摇杆，手指松开回中；摇杆大小、透明度、离边距离都能在「自定义设置」里调。<br>'
     +'· <b>手机开火</b>：右下红色大键，按下即开火并自动瞄准最近敌人；按住可连发。<br>'
     +'· <b>手机技能</b>：开火键上方的黄色小键，冷却好了会亮起；技能可设为朝敌人放或跟摇杆方向放（设置里切换）。<br>'
     +'· <b>手机退出</b>：左上角 ✕ 随时退出本局回主菜单；暂停需要双方同意，掉线直接判对方胜。<br>'
     +'· <b>手机显示</b>：竖屏拿起来会自动转横屏；顶部左右两侧是双方角色与血量，血条绿>黄>红；雷达在左上角，只显示你自己和已探测到的对手。<br>'
-    +'· <b>手机手感</b>：开火键大小、雷达大小、界面间距都可在设置里改；已禁用双指缩放和长按复制，只有档案号那一处点一下可复制。<br>'
-    +'· 电脑：W A S D 移动、鼠标瞄准、左键开火、E 放技能、P 暂停、M 静音。<br>'
+    +'· <b>手机手感</b>：开火键大小、雷达大小、界面间距都可在设置里改；已禁用双指缩放和长按复制，只有档案号那一处点一下可复制。<br></span>'
+    +'<span class="pc-only">· 电脑：W A S D 移动、鼠标瞄准、左键开火、E 放技能、P 暂停、M 静音。<br></span>'
     +'· 竖屏可以玩，横屏视野更广。</div>'
     +'<h5>八、好友与明信片</h5>'
     +'<div>· 主菜单「好友」里输名字或档案号就能搜人，搜到直接看到对方的明信片（签名、段位、击杀、胜率）。<br>'
