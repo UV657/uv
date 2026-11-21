@@ -892,6 +892,12 @@ body.is-touch .nhTime{display:none !important}
               <label class="admField">卡宾枪冷却倍率<input id="admTuneCarbine" type="number" min="0.2" max="2" step="0.05" class="admInput"></label>
               <label class="admField">电磁炮冷却倍率<input id="admTuneRailgun" type="number" min="1" max="8" step="0.1" class="admInput"></label>
               <label class="admField">战术散弹冷却倍率<input id="admTuneScatter" type="number" min="0.3" max="3" step="0.05" class="admInput"></label>
+              <label class="admField">左轮冷却倍率<input id="admTuneRevolver" type="number" min="0.5" max="3" step="0.05" class="admInput"></label>
+              <label class="admField">迷你冲锋冷却倍率<input id="admTuneMp9" type="number" min="0.15" max="1" step="0.05" class="admInput"></label>
+              <label class="admField">独头弹冷却倍率<input id="admTuneSlug" type="number" min="0.5" max="4" step="0.05" class="admInput"></label>
+              <label class="admField">十字弩冷却倍率<input id="admTuneCrossbow" type="number" min="1" max="8" step="0.1" class="admInput"></label>
+              <label class="admField">双持手枪冷却倍率<input id="admTuneTwin" type="number" min="0.2" max="2" step="0.05" class="admInput"></label>
+              <label class="admField">电弧枪冷却倍率<input id="admTuneTesla" type="number" min="0.3" max="3" step="0.05" class="admInput"></label>
               <label class="admField">准备室倒计时（秒）<input id="admTunePrep" type="number" min="2" max="10" step="1" class="admInput"></label>
               <label class="admField">堡垒正面减伤（0-1）<input id="admTuneFront" type="number" min="0.3" max="0.85" step="0.05" class="admInput"></label>
               <label class="admField">地雷伤害<input id="admTuneMine" type="number" min="20" max="120" step="5" class="admInput"></label>
@@ -1272,7 +1278,7 @@ body.is-touch .nhTime{display:none !important}
       </div>
     </div>
     <div class="overlay hidden" id="settingsScreen">
-      <div class="title">自定义设置 <span id="verTag" style="font-size:11px;color:#7d8aa8;font-weight:400;display:block;margin-top:2px">v2.9.6</span></div>
+      <div class="title">自定义设置 <span id="verTag" style="font-size:11px;color:#7d8aa8;font-weight:400;display:block;margin-top:2px">v2.9.7</span></div>
       <div class="rowBtns" style="justify-content:center;flex-wrap:wrap;margin:2px auto 8px;max-width:320px;width:100%">
         <button class="btn" id="btnSettingsDoneTop">完成</button>
         <button class="btn ghost" id="btnSettingsExitTop">退出</button>
@@ -1327,6 +1333,7 @@ body.is-touch .nhTime{display:none !important}
         <div id="historyBox" style="display:none;margin-top:10px;border-top:1px solid rgba(255,255,255,.1);padding-top:10px">
           <div style="font-size:13px;font-weight:800;color:#67e8f9;margin-bottom:6px">修改历史</div>
           <div style="line-height:1.8">
+            <div><b style="color:#ffd34d">v2.9.7</b>　新增角色「狂战士」（血怒：增伤+减伤）；新增 6 把武器（左轮/迷你冲锋/独头弹/十字弩/双持手枪/电弧枪，终端可调冷却）；新增 2 张地图（十字回廊/双环哨位）</div>
             <div><b style="color:#ffd34d">v2.9.6</b>　设置页顶部新增固定「完成/退出」按钮；新增 3 个角色（鹰眼/守护者/捕兽人）与 6 张地图（双环回廊/四象限/锯齿通道/三柱阵/侧翼回环/窄口博弈）</div>
             <div><b style="color:#ffd34d">v2.9.5</b>　电脑端新增键位自定义：设置页里能改前进/后退/左移/右移/射击/技能/暂停/静音 8 个键，点「改」再按一下新键就生效，保存在本机，可一键恢复默认（手机端不显示这一块）
             <div><b style="color:#ffd34d">v2.9.4</b>　1V1 改成单人打 AI：去掉本地 P2 双人，操作和 5V5 一样（鼠标瞄准、左键/空格开火、E 技能）；选人页只选自己这边的角色与地图，对手由 AI 扮演
@@ -1513,6 +1520,12 @@ const MAPS = {
         {x:380,y:540,w:90,h:140},{x:810,y:540,w:90,h:140},
         {x:610,y:370,w:60,h:60},
       ]},
+    { name:'十字回廊', obs:[
+        {x:300,y:180,w:120,h:90},{x:860,y:180,w:120,h:90},
+        {x:300,y:530,w:120,h:90},{x:860,y:530,w:120,h:90},
+        {x:500,y:300,w:80,h:200},{x:700,y:300,w:80,h:200},
+        {x:600,y:370,w:80,h:60},
+      ]},
   ],
   '1v1': [
     { name:'对称十字', obs:CFG.modes['1v1'].obs },
@@ -1547,6 +1560,11 @@ const MAPS = {
         {x:180,y:400,w:120,h:100},{x:660,y:400,w:120,h:100},
         {x:330,y:260,w:90,h:80},{x:540,y:260,w:90,h:80},
         {x:450,y:285,w:60,h:30},
+      ]},
+    { name:'双环哨位', obs:[
+        {x:200,y:110,w:110,h:90},{x:650,y:110,w:110,h:90},
+        {x:200,y:400,w:110,h:90},{x:650,y:400,w:110,h:90},
+        {x:360,y:250,w:90,h:100},{x:510,y:250,w:90,h:100},
       ]},
   ],
 };
@@ -1618,6 +1636,11 @@ const ROLES = {
     skill:{name:'捕兽夹', key:'E', cd:7, mineDmg:38, mineR:58, mineLife:10, maxMines:4,
       desc:'脚下布夹，范围更大、可同时放 4 个，敌人踩到吃 38 伤并减速', tag:'控制'},
     ai:{ mine:true } },
+  berserker: { id:'berserker', name:'狂战士', icon:'🪓', color:'#ff7a6b',
+    speed:246, dmg:15, fireCD:0.36, bulletSpeed:780, bulletLife:1.2,
+    skill:{name:'血怒', key:'E', cd:9, rageDur:5, rageDmgMul:1.6, rageDr:0.35,
+      desc:'5 秒血怒：伤害提升 60%，同时受到的伤害减少 35%，正面对拼无敌', tag:'爆发'},
+    ai:{ rage:true } },
 };
 const ROLE_IDS = Object.keys(ROLES);
 /* 角色出厂数值：终端删掉某角色的调参后能真正还原回默认 */
@@ -1643,6 +1666,12 @@ const WEAPONS = {
   carbine:{ id:'carbine', name:'卡宾枪',  dmgMul:0.92, cdMul:0.58, spread:0.055,pellets:1, lifeMul:0.9,  spdMul:1.02, desc:'轻型步枪，射速快且后坐稳，中近距离全能' },
   railgun:{ id:'railgun', name:'电磁炮',  dmgMul:2.20, cdMul:3.20, spread:0.005,pellets:1, lifeMul:1.9,  spdMul:1.60, desc:'蓄能射线，穿透力强、弹速极快，射速慢' },
   scatter:{ id:'scatter', name:'战术散弹', dmgMul:0.34, cdMul:0.95, spread:0.19, pellets:7, lifeMul:0.4, spdMul:0.88, desc:'七弹散射，比霰弹更快、弹丸更多，近距离压制' },
+  revolver:{ id:'revolver', name:'左轮',     dmgMul:1.50, cdMul:1.20, spread:0.006,pellets:1, lifeMul:1.1,  spdMul:1.10, desc:'高伤精准、出枪沉稳，中距离两枪带走' },
+  mp9:    { id:'mp9',     name:'迷你冲锋', dmgMul:0.50, cdMul:0.30, spread:0.10, pellets:1, lifeMul:0.65, spdMul:0.98, desc:'极限射速、单发偏低，贴脸泼水压制' },
+  slug:   { id:'slug',    name:'独头弹',   dmgMul:1.65, cdMul:1.50, spread:0.015,pellets:1, lifeMul:0.55, spdMul:0.95, desc:'霰弹枪改独头，一发重击、近距离爆发' },
+  crossbow:{ id:'crossbow',name:'十字弩',  dmgMul:2.35, cdMul:2.80, spread:0.002,pellets:1, lifeMul:1.7,  spdMul:1.35, desc:'弩箭无声、精准高伤，射速慢需预判' },
+  twin:   { id:'twin',    name:'双持手枪', dmgMul:0.62, cdMul:0.48, spread:0.07, pellets:2, lifeMul:0.8,  spdMul:1.00, desc:'双枪齐射，命中率高、中近距离灵活' },
+  tesla:  { id:'tesla',   name:'电弧枪',   dmgMul:0.82, cdMul:0.85, spread:0.04, pellets:1, lifeMul:0.9,  spdMul:1.20, slowHit:0.6, desc:'电弧命中使对手减速，追击与拉扯利器' },
 };
 const WEAPON_IDS = Object.keys(WEAPONS);
 /* 每把枪的弹道光束参数：粗细 / 长度 / 存活时长 / 拖尾形状 */
@@ -1659,7 +1688,13 @@ const TRACER_STYLE = {
   breaker:{ wid:5.6, len:210, ms:300, core:0.95, halo:0.34 },
   carbine:{ wid:3.9, len:225, ms:255, core:0.9, halo:0.26 },
   railgun:{ wid:4.6, len:460, ms:380, core:1.0, halo:0.40 },
-  scatter:{ wid:2.9, len:175, ms:235, core:0.8, halo:0.20, beams:4 }
+  scatter:{ wid:2.9, len:175, ms:235, core:0.8, halo:0.20, beams:4 },
+  revolver:{ wid:4.8, len:280, ms:320, core:1.0, halo:0.32 },
+  mp9:    { wid:2.6, len:170, ms:200, core:0.82, halo:0.20 },
+  slug:   { wid:5.2, len:205, ms:280, core:0.95, halo:0.30 },
+  crossbow:{ wid:3.2, len:380, ms:400, core:1.0, halo:0.18 },
+  twin:   { wid:3.0, len:195, ms:235, core:0.85, halo:0.22, beams:2 },
+  tesla:  { wid:3.6, len:210, ms:260, core:0.88, halo:0.38 }
 };
 function tracerStyle(id){ return TRACER_STYLE[id] || TRACER_STYLE.rifle; }
 function currentWeapon(){ return WEAPONS[lsGetRaw('gunWeapon')] ? WEAPONS[lsGetRaw('gunWeapon')] : WEAPONS.rifle; }
@@ -1742,7 +1777,7 @@ function makePlayer(team, idx, role0, name, isHuman){  const spawns = team==='re
     flash:0, muzzleT:0, recoil:0, walkT:0, respawnRing:0, // 动画：受击闪白/枪口闪光/后坐/行走摆动/复活环
     cooldown:0, respawn:0, invuln:0, skillCD:0,
     kills:0, deaths:0, dmgDealt:0, shots:0, hits:0, // 结算统计：总伤害 / 开火数 / 命中数
-    shield:0, shieldTimer:0, dashT:0, dashVX:0, dashVY:0, snipeReady:false,
+    shield:0, shieldTimer:0, dashT:0, dashVX:0, dashVY:0, snipeReady:false, rageT:0,
     strafeDir:1, strafeT:0, wanderT:0, lastX:s.x, lastY:s.y,
     burstLeft:0, restT:0,  // AI 点射节奏：本波剩余子弹 / 波后停顿时间
     stuckT:0, detourT:0, detourDir:1,  // AI 避障：卡住计时 / 绕行剩余时间 / 绕行方向
@@ -2036,7 +2071,7 @@ function shoot(p){
   }
   const sx=p.x+Math.cos(ang)*(CFG.playerRadius+6), sy=p.y+Math.sin(ang)*(CFG.playerRadius+6);
   const wp = p.weapon || WEAPONS.rifle;
-  let dmg=Math.round(p.role.dmg*wp.dmgMul*(p.dmgBonus||1)), life=p.role.bulletLife*wp.lifeMul, spd=p.role.bulletSpeed*wp.spdMul;
+  let dmg=Math.round(p.role.dmg*wp.dmgMul*(p.dmgBonus||1)*((p.rageT>0 && p.role.skill)?(p.role.skill.rageDmgMul||1):1)), life=p.role.bulletLife*wp.lifeMul, spd=p.role.bulletSpeed*wp.spdMul;
   if(p.snipeReady){ const sk=p.role.skill; dmg=sk.dmg||ROLES.sniper.skill.dmg; life=sk.life||ROLES.sniper.skill.life; spd=1300; p.snipeReady=false; }
   // 散射：每颗弹丸独立随机偏角，霰弹一枪撒 5 颗
   for(let i=0;i<(wp.pellets||1);i++){
@@ -2107,6 +2142,7 @@ function skillKind(s){
   if(s.dash) return 'dash';
   if(s.shield) return 'shield';
   if(s.front) return 'front';
+  if(s.rageDur) return 'rage';
   if(s.mineDmg) return 'mine';
   if(s.jamRange) return 'jam';
   if(s.dmg) return 'snipe';
@@ -2123,6 +2159,7 @@ function netGhostSkill(m){
   else if(m.k==='dash'){ for(let i=0;i<9;i++){ const a=Math.random()*Math.PI*2; spawnParticle(f.x,f.y,Math.cos(a)*160,Math.sin(a)*160,'#ffd34d',0.3,4); } }
   else if(m.k==='snipe'){ spawnParticle(f.x,f.y,0,0,'#ff8fa0',0.45,16); }
   else if(m.k==='front'){ for(let i=0;i<10;i++){ const a=Math.random()*Math.PI*2, sp=80+Math.random()*110; spawnParticle(f.x,f.y,Math.cos(a)*sp,Math.sin(a)*sp,'#f2a65a',0.5,3); } }
+  else if(m.k==='rage'){ f.rageT=(f.role.skill&&f.role.skill.rageDur)||5; spawnRing(f.x,f.y,'#ff7a6b',60); }
   else if(m.k==='mine'){ spawnRing(f.x,f.y,'#c9a7ff',30); }
   else if(m.k==='jam'){ spawnRing(f.x,f.y,'#8fb8ff',60); }
   else if(m.k==='ghost'){ spawnRing(f.x,f.y,'#9ad7ff',44); }
@@ -2176,6 +2213,13 @@ function castSkill(p){
     spawnRing(p.x,p.y,'#f2a65a',48);
     for(let i=0;i<10;i++){ const a=p.aim-Math.PI/3+rng()*Math.PI*2/3, sp=90+rng()*90;
       spawnParticle(p.x+Math.cos(a)*18,p.y+Math.sin(a)*18,Math.cos(a)*sp,Math.sin(a)*sp,'#f2a65a',0.35,3); }
+    sShield();
+  } else if(s.rageDur){ // 狂战士：血怒（增伤 + 减伤）
+    p.rageT=(s.rageDur||5);
+    spawnRing(p.x,p.y,'#ff7a6b',60);
+    for(let i=0;i<14;i++){ const a=rng()*Math.PI*2, sp=90+rng()*120;
+      spawnParticle(p.x+Math.cos(a)*16,p.y+Math.sin(a)*16,Math.cos(a)*sp,Math.sin(a)*sp,'#ff7a6b',0.4+rng()*0.3,3); }
+    addFloater(p.x,p.y-30,'血怒！','#ff7a6b');
     sShield();
   } else if(s.mineDmg){ // 铁匠：布设地雷
     state.mines=state.mines||[];
@@ -2535,6 +2579,7 @@ function updateAI(p,dt){
     else if(s.dmg && ai.snipe && bdPx>ai.snipe.dist) castSkill(p);
     else if(s.dash && ai.dash && bdPx>ai.dash.min && bdPx<ai.dash.max && p.hp>55 && rng()>0.55) castSkill(p);
     else if(s.front && ai.front && p.hp<72 && p.frontT<=0) castSkill(p);
+    else if(s.rageDur && ai.rage && bdPx<280 && p.rageT<=0 && rng()>0.5) castSkill(p);
     else if(s.mineDmg && ai.mine && bdPx<320 && rng()>0.55) castSkill(p);
     else if(s.jamRange && ai.jam && bdPx<s.jamRange && rng()>0.45) castSkill(p);
     else if(s.ghostDur && ai.ghost && (p.hp<70 || bdPx>420) && rng()>0.5) castSkill(p);
@@ -2577,6 +2622,10 @@ function damagePlayer(victim, bullet){
     return;
   }
   let dmg=bullet.dmg;
+  // 狂战士血怒：持续时间内受到的伤害减少
+  if(victim.rageT>0 && victim.role.skill){
+    const dr=victim.role.skill.rageDr||0; if(dr>0){ dmg=dmg*(1-dr); addFloater(victim.x,victim.y-32,'血怒减伤','#ff7a6b'); }
+  }
   // 堡垒的正面装甲：只减正面来的伤害（入射方向与朝间的夹角 < 90°）
   if(victim.frontT>0){
     const inc=Math.atan2(bullet.vy||0, bullet.vx||0);
@@ -2739,6 +2788,7 @@ function update(dt, rawDt){
     if(p.skillBlockT>0) p.skillBlockT-=dt;
     if(p.slowT>0) p.slowT-=dt;
     if(p.ghostT>0) p.ghostT-=dt;
+    if(p.rageT>0) p.rageT-=dt;
     if(!p.alive){
       p.respawn-=realDt; // 复活等待按真实秒数算，手机端不再被拖成 3 秒多
       if(p.respawn<=0){ const s=(p.team==='red'?state.world.redSpawn:state.world.blueSpawn)[p.idx];
@@ -3320,7 +3370,7 @@ function drawPlayers(){
     ctx2d.fillStyle='hsl('+(120*ratio)+',85%,55%)'; ctx2d.fillRect(bx,by,bw*ratio,bh);
     // 名字：5V5 混战用兵种单字，一眼分得清队友是什么职业
     ctx2d.font='bold 12px "Microsoft YaHei",sans-serif';
-    const shortRole={assault:'突',tank:'重',sniper:'神',medic:'医',bulwark:'堡',engineer:'铁',jammer:'静',recon:'幽',demo:'炮',rivet:'铆',hunter:'鹰',guardian:'守',trapper:'捕'}[p.role.id]||'';
+    const shortRole={assault:'突',tank:'重',sniper:'神',medic:'医',bulwark:'堡',engineer:'铁',jammer:'静',recon:'幽',demo:'炮',rivet:'铆',hunter:'鹰',guardian:'守',trapper:'捕',berserker:'狂'}[p.role.id]||'';
     const label=state.mode==='5v5'?(p.isHuman?(currentNick().slice(0,5)||'你'):shortRole):p.name;
     ctx2d.lineWidth=2.5; ctx2d.strokeStyle='rgba(0,0,0,.65)'; ctx2d.strokeText(label,px,by-6); // 深色描边保证压在掩体上也看得清
     ctx2d.fillStyle=p.isHuman?'#ffd34d':(p.team==='red'?'#ffb3bd':'#a9ddff');
@@ -4445,8 +4495,8 @@ function runSelfCheck(){
   // 3. 配置合法性
   ok('血量配置正常', CFG.maxHp>0 && CFG.respawnTime>0, 'HP'+CFG.maxHp+' 复活'+CFG.respawnTime+'s');
   ok('两种模式都注册', !!(CFG.modes['5v5'] && CFG.modes['1v1']));
-  ok('地图数据完整', !!(MAPS['5v5'] && MAPS['1v1'] && MAPS['5v5'].length>=8 && MAPS['1v1'].length>=8 && MAPS['5v5'].every(m=>Array.isArray(m.obs))));
-  ok('角色表 13 个且数值合法（含堡垒/铁匠/静默/幽灵/炮锤/铆钉/鹰眼/守护者/捕兽人）', ROLE_IDS.length===13 && ROLE_IDS.every(id=>ROLES[id].dmg>0 && ROLES[id].speed>0 && ROLES[id].fireCD>0), ROLE_IDS.join('/'));
+  ok('地图数据完整（两模式各 9 张，含十字回廊/双环哨位）', !!(MAPS['5v5'] && MAPS['1v1'] && MAPS['5v5'].length>=9 && MAPS['1v1'].length>=9 && MAPS['5v5'].every(m=>Array.isArray(m.obs)) && MAPS['5v5'].some(m=>m.name==='十字回廊') && MAPS['1v1'].some(m=>m.name==='双环哨位')));
+  ok('角色表 14 个且数值合法（含堡垒/铁匠/静默/幽灵/炮锤/铆钉/鹰眼/守护者/捕兽人/狂战士）', ROLE_IDS.length===14 && ROLE_IDS.every(id=>ROLES[id].dmg>0 && ROLES[id].speed>0 && ROLES[id].fireCD>0), ROLE_IDS.join('/'));
 
   // 4. 命名与身份
   const n9=pickAINames(9,'测试名');
@@ -4464,17 +4514,19 @@ function runSelfCheck(){
   })());
 
   // 4.5 新增系统：武器 / 段位 / 皮肤 / 技能键自定义
-  ok('武器表 13 把齐全（含轻机枪/双管/手枪/猎隼/铆钉枪/破障/卡宾枪/电磁炮/战术散弹）', WEAPON_IDS.length===13 && !!WEAPONS.lmg && !!WEAPONS.db && !!WEAPONS.pistol && !!WEAPONS.falcon && !!WEAPONS.rivetgun && !!WEAPONS.breaker && !!WEAPONS.carbine && !!WEAPONS.railgun && !!WEAPONS.scatter, WEAPON_IDS.map(k=>WEAPONS[k].name).join('/'));
+  ok('武器表 19 把齐全（含左轮/迷你冲锋/独头弹/十字弩/双持手枪/电弧枪）', WEAPON_IDS.length===19 && !!WEAPONS.lmg && !!WEAPONS.db && !!WEAPONS.pistol && !!WEAPONS.falcon && !!WEAPONS.rivetgun && !!WEAPONS.breaker && !!WEAPONS.carbine && !!WEAPONS.railgun && !!WEAPONS.scatter && !!WEAPONS.revolver && !!WEAPONS.mp9 && !!WEAPONS.slug && !!WEAPONS.crossbow && !!WEAPONS.twin && !!WEAPONS.tesla, WEAPON_IDS.map(k=>WEAPONS[k].name).join('/'));
   ok('轻机枪有热量机制', !!WEAPONS.lmg.overheat && (TUNE.lmgHeatShots>0));
   ok('准备室模块齐全', typeof prepOpen==='function' && typeof prepRender==='function' && typeof prepGo==='function' && !!document.getElementById('prepScreen'));
   ok('新角色技能齐全（举盾/地雷/禁技）', !!(ROLES.bulwark.skill.front&&ROLES.engineer.skill.mineDmg&&ROLES.jammer.skill.jamRange&&typeof updateMines==='function'&&typeof drawMines==='function'));
   ok('对局参数含角色项', TUNE.frontReduce>0&&TUNE.mineDmg>0&&TUNE.jamDur>0&&TUNE.mineMax>0);
   ok('新角色技能链路齐全（潜行/炸药/补给）', !!(ROLES.recon.skill.ghostDur && ROLES.demo.skill.bombDmg && ROLES.rivet.skill.supR && typeof castBomb==='function' && typeof updateBombs==='function' && typeof updateSupplies==='function' && typeof drawBombs==='function' && typeof drawSupplies==='function'));
   ok('新增三角色技能齐全（猎鹰之眼/守护力场/捕兽夹）', !!(ROLES.hunter&&ROLES.hunter.skill.dmg&&ROLES.guardian&&ROLES.guardian.skill.shield&&ROLES.trapper&&ROLES.trapper.skill.mineDmg));
+  ok('狂战士血怒机制齐全', !!(ROLES.berserker&&ROLES.berserker.skill.rageDur>0&&ROLES.berserker.skill.rageDmgMul>1&&ROLES.berserker.skill.rageDr>0&&skillKind(ROLES.berserker.skill)==='rage'));
   ok('新武器特性到位（栓狙/拖慢/爆破）', WEAPONS.falcon.dmgMul>=2.4 && WEAPONS.rivetgun.slowHit>0 && !!(WEAPONS.breaker.explode&&WEAPONS.breaker.explode.r>0) && typeof explodeBullet==='function');
   ok('准备室可锁定地图与角色武器', typeof prepSend==='function' && String(prepRender).indexOf('data-prep-map')>=0 && String(prepRender).indexOf('data-prep-role')>=0);
   ok('霰弹枪 5 弹丸', WEAPONS.shotgun.pellets===5);
   ok('三把新武器弹道与调参齐全', ['carbine','railgun','scatter'].every(k=>!!TRACER_STYLE[k] && TUNE_LIM[k+'CdMul']) && WEAPONS.scatter.pellets===7);
+  ok('六把新武器弹道与调参齐全', ['revolver','mp9','slug','crossbow','twin','tesla'].every(k=>!!TRACER_STYLE[k] && TUNE_LIM[k+'CdMul'] && WEAPONS[k].dmgMul>0) && WEAPONS.twin.pellets===2 && WEAPONS.tesla.slowHit>0);
   ok('武器伤害倍率合法', WEAPON_IDS.every(k=>WEAPONS[k].dmgMul>0&&WEAPONS[k].cdMul>0));
   ok('段位表 6 档递增', RANKS.length===6 && RANKS.every((r,i)=>i===0||r.min>RANKS[i-1].min));
   ok('段位胜利加分', ({S:26,A:20,B:14,C:9})[gradeOf(true,12,3,800,'5v5')]>0);
@@ -4704,9 +4756,11 @@ function netBind(){
 /* ================= 对局参数（管理终端可改，retained 同步） ================= */
 const TUNE_DEF={ lmgHeatShots:14, lmgOverheatCd:1.0, dbCdMul:1.75, pistolCdMul:0.70, prepSec:3,
   carbineCdMul:0.58, railgunCdMul:3.20, scatterCdMul:0.95,
+  revolverCdMul:1.20, mp9CdMul:0.30, slugCdMul:1.50, crossbowCdMul:2.80, twinCdMul:0.48, teslaCdMul:0.85,
   frontReduce:0.6, mineDmg:55, mineMax:3, jamDur:3 };
 const TUNE_LIM={ lmgHeatShots:[6,40], lmgOverheatCd:[0.4,3.0], dbCdMul:[1.0,3.0], pistolCdMul:[0.3,1.5], prepSec:[2,10],
   carbineCdMul:[0.2,2.0], railgunCdMul:[1.0,8.0], scatterCdMul:[0.3,3.0],
+  revolverCdMul:[0.5,3.0], mp9CdMul:[0.15,1.0], slugCdMul:[0.5,4.0], crossbowCdMul:[1.0,8.0], twinCdMul:[0.2,2.0], teslaCdMul:[0.3,3.0],
   frontReduce:[0.3,0.85], mineDmg:[20,120], mineMax:[1,6], jamDur:[1,8] };
 const TUNE={...TUNE_DEF};
 const TUNE_TOPIC='gunfight9/tune';
@@ -4728,6 +4782,12 @@ function tuneApply(t){
   if(WEAPONS.carbine) WEAPONS.carbine.cdMul = TUNE.carbineCdMul;
   if(WEAPONS.railgun) WEAPONS.railgun.cdMul = TUNE.railgunCdMul;
   if(WEAPONS.scatter) WEAPONS.scatter.cdMul = TUNE.scatterCdMul;
+  if(WEAPONS.revolver) WEAPONS.revolver.cdMul = TUNE.revolverCdMul;
+  if(WEAPONS.mp9) WEAPONS.mp9.cdMul = TUNE.mp9CdMul;
+  if(WEAPONS.slug) WEAPONS.slug.cdMul = TUNE.slugCdMul;
+  if(WEAPONS.crossbow) WEAPONS.crossbow.cdMul = TUNE.crossbowCdMul;
+  if(WEAPONS.twin) WEAPONS.twin.cdMul = TUNE.twinCdMul;
+  if(WEAPONS.tesla) WEAPONS.tesla.cdMul = TUNE.teslaCdMul;
   if(WEAPONS.lmg){ WEAPONS.lmg.overheat = TUNE.lmgHeatShots; WEAPONS.lmg.overheatCd = TUNE.lmgOverheatCd; }
   if(ROLES.bulwark && ROLES.bulwark.skill){ ROLES.bulwark.skill.front = TUNE.frontReduce; }
   if(ROLES.engineer && ROLES.engineer.skill){ ROLES.engineer.skill.mineDmg = TUNE.mineDmg; ROLES.engineer.skill.maxMines = Math.round(TUNE.mineMax); }
@@ -6178,6 +6238,12 @@ function admGameFill(){
     set('admTuneCarbine', TUNE.carbineCdMul);
     set('admTuneRailgun', TUNE.railgunCdMul);
     set('admTuneScatter', TUNE.scatterCdMul);
+    set('admTuneRevolver', TUNE.revolverCdMul);
+    set('admTuneMp9', TUNE.mp9CdMul);
+    set('admTuneSlug', TUNE.slugCdMul);
+    set('admTuneCrossbow', TUNE.crossbowCdMul);
+    set('admTuneTwin', TUNE.twinCdMul);
+    set('admTuneTesla', TUNE.teslaCdMul);
     set('admTunePrep', TUNE.prepSec);
     set('admTuneFront', TUNE.frontReduce); set('admTuneMine', TUNE.mineDmg);
     set('admTuneMineMax', TUNE.mineMax); set('admTuneJam', TUNE.jamDur);
@@ -6189,6 +6255,9 @@ function admGameRead(){
               dbCdMul:num('admTuneDb',TUNE.dbCdMul), pistolCdMul:num('admTunePistol',TUNE.pistolCdMul),
               carbineCdMul:num('admTuneCarbine',TUNE.carbineCdMul), railgunCdMul:num('admTuneRailgun',TUNE.railgunCdMul),
               scatterCdMul:num('admTuneScatter',TUNE.scatterCdMul),
+              revolverCdMul:num('admTuneRevolver',TUNE.revolverCdMul), mp9CdMul:num('admTuneMp9',TUNE.mp9CdMul),
+              slugCdMul:num('admTuneSlug',TUNE.slugCdMul), crossbowCdMul:num('admTuneCrossbow',TUNE.crossbowCdMul),
+              twinCdMul:num('admTuneTwin',TUNE.twinCdMul), teslaCdMul:num('admTuneTesla',TUNE.teslaCdMul),
               prepSec:num('admTunePrep',TUNE.prepSec),
               frontReduce:num('admTuneFront',TUNE.frontReduce), mineDmg:num('admTuneMine',TUNE.mineDmg),
               mineMax:num('admTuneMineMax',TUNE.mineMax), jamDur:num('admTuneJam',TUNE.jamDur) };
@@ -7655,9 +7724,11 @@ function buildHelp(){
     ['5V5','双环回廊','左右两个环形掩体群，中路一块小掩体','沿环绕行包抄，别在开阔中路久留'],
     ['5V5','四象限','四个象限各一块大掩体，中路三块小掩体','借大掩体推进，抢中路小掩体的射击位'],
     ['5V5','锯齿通道','交错竖墙形成锯齿状通道','贴墙走锯齿通道，拐角处预瞄伏击'],
+    ['5V5','十字回廊','四角横墙 + 中路双竖墙夹出十字走廊','走两翼回廊包抄，中路竖墙后探头对枪'],
     ['1V1','三柱阵','五块掩体呈三柱分布，左右对称','绕柱换位，用柱子卡对手预瞄线'],
     ['1V1','侧翼回环','四角掩体加中央大掩体形成回环','绕中央大掩体兜圈，从侧翼切进去'],
     ['1V1','窄口博弈','两侧掩体夹出中央窄口','远距离卡窄口对枪，绕侧翼打破僵局'],
+    ['1V1','双环哨位','四角掩体加中路双柱，形成左右两道环线','借中路双柱卡视野，绕环线侧翼切入'],
   ].map(r=>{
     const mode = r[0]==='5V5' ? '5v5' : '1v1';
     const conf = CFG.modes[mode];
