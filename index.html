@@ -84,6 +84,9 @@ body{
 body.in-game .playerPanel{display:block !important}
 body.in-game #topbar{display:flex !important}
 body.in-game .playerPanel.hidden{display:none !important}
+/* UI透明度只作用于对局 HUD；菜单/设置/选人等 overlay 不是 HUD，不受影响。
+   变量由 applySettings() 写在 documentElement 上，缺省 0.6 与滑块默认值一致。 */
+#topbar,#killfeed,.playerPanel,#mapName,#hintBar{opacity:var(--uialpha,.6)}
 body.is-touch.in-game #btnFire{display:flex !important}
 body.is-touch.in-game #btnSkill{display:flex !important}
 body.is-touch.in-game #btnExitFight{display:flex !important}
@@ -92,6 +95,14 @@ body.is-touch.in-game.ended #btnFire, body.is-touch.in-game.ended #btnSkill,
 body.is-touch.in-game.ended #btnExitFight, body.ended #touchTip, body.ended #rotateTip,
 body.is-touch.in-game.paused-fight #btnFire, body.is-touch.in-game.paused-fight #btnSkill,
 body.is-touch.in-game.paused-fight #btnExitFight{display:none !important}
+/* 任何覆盖层打开时，对局触控层/HUD 一律让位，避免按钮穿透遮挡设置/选人页。
+   :has() 为现代浏览器实时生效；body.has-overlay 由下方 JS 同步，兼容旧内核。 */
+body:has(.overlay:not(.hidden)) #btnFire, body.has-overlay #btnFire,
+body:has(.overlay:not(.hidden)) #btnSkill, body.has-overlay #btnSkill,
+body:has(.overlay:not(.hidden)) #btnExitFight, body.has-overlay #btnExitFight,
+body:has(.overlay:not(.hidden)) #touchLayer, body.has-overlay #touchLayer,
+body:has(.overlay:not(.hidden)) #topbar, body.has-overlay #topbar,
+body:has(.overlay:not(.hidden)) .playerPanel, body.has-overlay .playerPanel{display:none !important}
 .scoreChip{display:flex;align-items:center;gap:10px;font-weight:800;font-size:22px;font-family:Consolas,"Microsoft YaHei",monospace;letter-spacing:1px;padding:8px 18px;border-radius:999px;background:rgba(10,16,30,.6);border:1px solid rgba(255,255,255,.1)}
 .scoreChip.pop{animation:scorePop .38s cubic-bezier(.2,1.6,.4,1)}
 .scoreChip.glow{box-shadow:0 0 22px rgba(255,211,77,.5),0 0 0 1px rgba(255,255,255,.2);transition:box-shadow .5s}
@@ -352,6 +363,10 @@ body.is-touch .ppSub{display:none}
   body.is-touch #menuScreen .modeCard{flex:1 1 0 !important;width:auto !important;min-width:0 !important;padding:9px 12px !important}
   body.is-touch #menuScreen .mcDesc{font-size:10px !important;line-height:1.35 !important;white-space:normal !important;overflow:visible !important;text-overflow:clip !important}
   body.is-touch #menuScreen .mcName{font-size:15px !important}
+  /* 13 张角色卡固定等宽换行：禁止 flex-grow 把最后一行撑成大卡 */
+  body.is-touch .roleRow{flex-wrap:wrap !important;justify-content:center !important}
+  body.is-touch #selectScreen .roleRow,body.is-touch #prepScreen .roleRow{max-width:760px !important}
+  body.is-touch .roleCard{flex:0 0 100px !important;width:100px !important;min-width:0 !important;max-width:100px !important}
   body #dailyTask:empty{display:none !important}
   body #dailyTask{max-width:700px !important;white-space:nowrap !important;overflow:hidden !important;text-overflow:ellipsis !important;font-size:10.5px !important;padding:4px 10px !important}
   body #rankHero{max-width:560px !important;width:calc(100% - 8px) !important;padding:8px 12px !important;margin:6px auto !important}
@@ -375,7 +390,8 @@ body.is-touch .ppSub{display:none}
   .modeGrid{flex-direction:row !important;gap:12px !important}
   .modeCard{padding:12px !important}
   .modeCard .mcName{font-size:16px !important}
-  #btnFire{bottom:calc(20px + var(--uiGap,10px) * .35) !important;right:calc(20px + var(--uiGap,10px) * .35) !important;width:64px !important;height:64px !important}
+  /* 横屏仍按默认 74px→约64px 的紧凑比例，但保留 --fire 可调，避免横屏开火键大小设置失效 */
+  #btnFire{bottom:calc(20px + var(--uiGap,10px) * .35) !important;right:calc(20px + var(--uiGap,10px) * .35) !important;width:calc(var(--fire,74px) * .86) !important;height:calc(var(--fire,74px) * .86) !important}
   #btnSkill{bottom:calc(30px + var(--uiGap,10px) * .35) !important;right:calc(100px + var(--uiGap,10px) * .35) !important;width:48px !important;height:48px !important}
 }
 /* 操作键左右布局（必须放在上面横屏 media query 之后，才能覆盖其中的 !important 定位） */
@@ -1833,7 +1849,8 @@ function currentSkin(){
 }
 function skinBuy(id){
   const sk = SKINS[id]; if(!sk) return '皮肤不存在';
-  if(skinOwned().includes(id)) return '已拥有';
+  // 已拥有的皮肤再次选择时必须真正换上，否则设置里的皮肤选项是假设置
+  if(skinOwned().includes(id)){ lsSet('gunSkin', id); return '已拥有'; }
   const honor = lsGet('gunHonor', 0);
   if(honor < sk.cost) return '荣誉点不够，还差 '+(sk.cost-honor)+' 点';
   lsSet('gunHonor', honor - sk.cost);
@@ -2293,6 +2310,8 @@ document.addEventListener('touchstart', e=>{
   if(!state.running || state.paused) return;
   e.preventDefault();
   for(const t of e.changedTouches){
+    // 开火/技能/退出键与摇杆同侧时，按在这些键上的手指不算摇杆手势
+    if(t.target && t.target.closest && t.target.closest('button,#btnSkill,#btnExitFight')) continue;
     const onJoySide = (state.joySide==='right') ? (t.clientX >= window.innerWidth/2)
                                                   : (t.clientX <  window.innerWidth/2);
     if(onJoySide && !state.touchMove.active){
@@ -7355,22 +7374,25 @@ bindBtn('btnForceReload', ()=>{ const u=new URL(location.href); u.searchParams.s
 })();
 function applySettings(){
   try{ adminTuneApply(); }catch(e){}
+  const s = lsGet('gunSettings', {});
   // 界面间距：顶部状态栏、左右面板、技能键的内外边距统一由 --uiGap 驱动
+  // 必须从已保存的 s.gap 恢复，否则刷新页面后滑块显示旧值、样式却退回默认 10px
   {
     const gEl = document.getElementById('setGap');
-    const gv = (gEl && gEl.value) || 10;
+    const gv = (s.gap!==undefined && s.gap!==null) ? +s.gap : ((gEl && +gEl.value) || 10);
     document.documentElement.style.setProperty('--uiGap', gv+'px');
+    if(gEl && s.gap!==undefined && s.gap!==null) gEl.value = s.gap;
   }
-  const s = lsGet('gunSettings', {});
   if(s.joy){ document.documentElement.style.setProperty('--joy', s.joy+'px'); }
   if(s.fire){ document.documentElement.style.setProperty('--fire', s.fire+'px'); }
-  if(s.alpha){ document.body.style.setProperty('--uialpha', (s.alpha/100)); }
+  // UI透明度写在根元素（与 --joy/--fire/--uiGap 一致），HUD 用 var(--uialpha) 读取
+  if(s.alpha){ document.documentElement.style.setProperty('--uialpha', (s.alpha/100)); }
   if(s.sens){ state.touchSens = s.sens/100; }
-  // 摇杆在哪一侧，决定触摸归摇杆还是归瞄准；开火键必须放对侧，两根手指才打得开
+  // 摇杆在哪一侧，决定触摸归摇杆还是归瞄准；开火键位置由玩家自己的设置决定
   const joySide = (s.joyPos==='right') ? 'right' : 'left';
   state.joySide = joySide;
-  let fireSide = (s.firePos==='left') ? 'left' : 'right';
-  if(fireSide===joySide) fireSide = (joySide==='right'?'left':'right'); // 同侧会打架，强制分开
+  // 开火键位置按玩家选择生效；与摇杆同侧时由 touchstart 排除按钮上的触摸，不再偷偷翻转
+  const fireSide = (s.firePos==='left') ? 'left' : 'right';
   // 技能键：'开火键旁边'跟随开火侧，'对角位置'放对侧
   const skillMode = s.skillPos||'left';
   const skillSide = (skillMode==='right') ? (fireSide==='right'?'left':'right') : fireSide;
@@ -7394,6 +7416,7 @@ function applySettings(){
   document.getElementById('setJoyPos').value = s.joyPos||'left';
   document.getElementById('setFirePos').value = s.firePos||'right';
   document.getElementById('setSkillPos').value = s.skillPos||'left';
+  document.getElementById('setSkillDir').value = s.skillDir||'aim';
   const skinEl=document.getElementById('setSkin'); if(skinEl) skinEl.value = currentSkin().id;
   document.getElementById('setAutoFire').value = s.autoFire||'off';
   document.getElementById('setAutoAim').value = s.autoAim||'on';
@@ -7443,6 +7466,21 @@ function saveSettings(){
 ['setJoy','setFire','setAlpha','setSens','setJoyPos','setFirePos','setSkillPos','setAutoFire','setHoldFire','setAutoAim','setRadarShow','setRadarSize','setRadarAlpha','setRadarPos','setSkin','setAimStick','setGap','setSkillDir'].forEach(id=>{
   document.getElementById(id).addEventListener('input', ()=>{ saveSettings(); applySettings(); });
 });
+/* 有 overlay 打开时给 body 打标记，隐藏对局 HUD/触控键。
+   CSS 的 :has() 已能实时处理；这里再同步一个类名，兼容不支持 :has() 的内核。 */
+(function(){
+  const overlays = Array.prototype.slice.call(document.querySelectorAll('.overlay'));
+  function syncOverlayHud(){
+    const open = overlays.some(el => getComputedStyle(el).display !== 'none');
+    document.body.classList.toggle('has-overlay', open);
+  }
+  if(typeof MutationObserver === 'function'){
+    const mo = new MutationObserver(syncOverlayHud);
+    overlays.forEach(el => mo.observe(el, {attributes:true, attributeFilter:['class','style']}));
+  }
+  window.__syncOverlayHud = syncOverlayHud;
+  syncOverlayHud();
+})();
 applySettings();
 bindBtn('btnFight', ()=>{
   // 倒计时3秒开战
