@@ -1340,7 +1340,7 @@ body.layout-free #btnFire.on{transform:translate(-50%,-50%) scale(.94) !importan
       </div>
     </div>
     <div class="overlay hidden" id="settingsScreen">
-      <div class="title">自定义设置 <span id="verTag" style="font-size:11px;color:#7d8aa8;font-weight:400;display:block;margin-top:2px">v2.9.14</span></div>
+      <div class="title">自定义设置 <span id="verTag" style="font-size:11px;color:#7d8aa8;font-weight:400;display:block;margin-top:2px">v2.9.15</span></div>
       <div class="rowBtns" style="justify-content:center;flex-wrap:wrap;margin:2px auto 8px;max-width:320px;width:100%">
         <button class="btn" id="btnSettingsDoneTop">完成</button>
         <button class="btn ghost" id="btnSettingsExitTop">退出</button>
@@ -1378,6 +1378,7 @@ body.layout-free #btnFire.on{transform:translate(-50%,-50%) scale(.94) !importan
         <div class="mobile-only">雷达透明度 <input type="range" id="setRadarAlpha" min="35" max="100" value="92" style="width:100%"></div>
         <div class="mobile-only">雷达位置 <select id="setRadarPos" style="width:100%;padding:6px;border-radius:6px;background:#1a2340;color:#fff;border:1px solid rgba(255,255,255,.2)"><option value="right">右上角</option><option value="left">左上角</option><option value="free">自定义（拖动摆放）</option></select></div>
         <div class="mobile-only">右摇杆 <select id="setAimStick" style="width:100%;padding:6px;border-radius:6px;background:#1a2340;color:#fff;border:1px solid rgba(255,255,255,.2)"><option value="aim">只瞄准（配合开火键）</option><option value="fire">推开即开火（开火摇杆）</option></select></div>
+        <div>画质（帧率） <select id="setQuality" style="width:100%;padding:6px;border-radius:6px;background:#1a2340;color:#fff;border:1px solid rgba(255,255,255,.2)"><option value="auto">自动（掉帧自动降）</option><option value="high">高清（画面最好）</option><option value="smooth">流畅（省电，久战不卡）</option></select></div>
         <div>全屏模式 <button class="btn" id="btnFullscreen" style="width:100%;padding:8px;margin-top:6px">切换全屏 / 退出全屏</button></div>
       </div>
       <div style="margin-top:8px;text-align:center">
@@ -1396,6 +1397,7 @@ body.layout-free #btnFire.on{transform:translate(-50%,-50%) scale(.94) !importan
         <div id="historyBox" style="display:none;margin-top:10px;border-top:1px solid rgba(255,255,255,.1);padding-top:10px">
           <div style="font-size:13px;font-weight:800;color:#67e8f9;margin-bottom:6px">修改历史</div>
           <div style="line-height:1.8">
+            <div><b style="color:#ffd34d">v2.9.15</b>　手机端 5V5 久战防卡死：新增画质三档（自动/高清/流畅），掉帧自动降分辨率与特效、内存吃紧自动清临时对象；HUD 改为 10Hz 刷新不再每帧改 DOM；竖屏视野外的角色/子弹/粒子直接不画；角色渐变缓存、音效节点用完断开、屏幕旋转防抖，减少发热与闪退</div>
             <div><b style="color:#ffd34d">v2.9.14</b>　修复两个问题：①恢复技能不再每次复活就刷新，死亡等待期间冷却照常走；②联机开局显示对方挂机/无法正常玩——开局重置掉线计时、掉线判胜放宽到 12 秒，客机漏收「开局」消息时收到对方状态会自动跟上，开局指令补发三次</div>
             <div><b style="color:#ffd34d">v2.9.13</b>　手机端控件全面可拖：设置页「调整按键 / 雷达位置」里，摇杆、开火、技能、恢复、雷达、退出键都能按住拖动，坐标存成百分比，横竖屏切换不跑位；雷达可摆到屏幕任意位置；摇杆新增「固定位置 / 跟随手指」模式</div>
             <div><b style="color:#ffd34d">v2.9.12</b>　新增<b>通用恢复技能</b>（独立按键 F / 手机绿色恢复键，全角色可用）：只给自己持续回血，每秒 10 点、累计最多回 50 点即停，冷却 35 秒；AI 开火攻速与角色移速改成与玩家完全一致（不再有 1.8 倍射速惩罚与 0.7 移速折扣）</div>
@@ -2451,13 +2453,45 @@ function updateDash(p,dt){
 
 /* ================= 6. 输入 ================= */
 const stage=document.getElementById('stage'), canvas=document.getElementById('game');
-const ctx2d=canvas.getContext('2d');
+// 主画布不透明（每帧都整屏填满底色）：手机上能省一层合成和一块显存，久战更稳
+const ctx2d=canvas.getContext('2d',{alpha:false}) || canvas.getContext('2d');
 let SCALE_X=1, SCALE_Y=1;
 /* 视口：竖屏时旋转 90° 显示整张地图，避免拉伸变形 */
 let VIEW={rot:false, scale:1, ox:0, oy:0};
-/* DPR 封顶：电脑最高 2，手机最高 1.5，避免高 DPR 屏把画布撑大导致掉帧。
+/* ---- 画质档位：低端手机 5V5 十人混战时画布像素和特效太多，容易卡顿甚至被系统杀掉页面。
+   分三档（0 流畅 / 1 均衡 / 2 高清），自动档按实测帧率升降；设置里可手动锁定。 ---- */
+const PERF = { mode:'auto', tier:2, acc:0, frames:0, lowT:0, okT:0, fps:60, lowToast:false, memHold:0 };
+function perfDprCap(t){ return isTouch ? [1.0,1.25,1.5][t==null?PERF.tier:t] : [1.25,1.6,2][t==null?PERF.tier:t]; }
+function perfSetTier(n, why){
+  n=Math.max(0,Math.min(2,n|0));
+  if(n===PERF.tier) return;
+  PERF.tier=n; PERF.lowT=0; PERF.okT=0; PERF.acc=0; PERF.frames=0;
+  if(state.running && !state.ended){ try{ resize(); }catch(e){} }  // 立刻按新分辨率重建画布
+  if(why && n===0 && !PERF.lowToast){ PERF.lowToast=true; try{ toastMsg('已自动切到流畅画质，保证不卡'); }catch(e){} }
+}
+/* 手动锁定画质（设置里选过就按选的来，不再自动升降） */
+function perfApplyMode(m){
+  PERF.mode = (m==='high'||m==='smooth') ? m : 'auto';
+  if(PERF.mode==='high') perfSetTier(2);
+  else if(PERF.mode==='smooth') perfSetTier(0);
+}
+/* 每帧调用：连续 3 秒掉到 31fps 以下就降一档；稳定 58fps 以上 8 秒再升回去 */
+function perfTick(frameMs){
+  if(!(frameMs>0) || frameMs>120) return;          // 切后台回来的超大间隔不算
+  PERF.acc+=frameMs; PERF.frames++;
+  if(PERF.acc<1000) return;
+  const avg=PERF.acc/PERF.frames;
+  PERF.acc=0; PERF.frames=0; PERF.fps=1000/avg;
+  if(PERF.mode!=='auto') return;
+  if(avg>32){ PERF.lowT++; PERF.okT=0; } else if(avg<17.2){ PERF.okT++; PERF.lowT=0; } else { PERF.lowT=0; PERF.okT=0; }
+  if(PERF.lowT>=3 && PERF.tier>0) perfSetTier(PERF.tier-1, true);
+  else if(PERF.okT>=8 && PERF.tier<2) perfSetTier(PERF.tier+1);
+}
+function maxParticles(){ return PERF.tier===0?90:(PERF.tier===1?160:240); }
+function maxFloaters(){ return PERF.tier===0?20:(PERF.tier===1?40:60); }
+/* DPR 封顶：电脑最高 2，手机最高 1.5（性能档位再往下压），避免高 DPR 屏把画布撑大导致掉帧。
    注意鼠标坐标换算必须用同一个 DPR，否则点击位置会偏。 */
-function effDpr(){ const cap=isTouch?1.5:2; return Math.min(cap, Math.max(1, window.devicePixelRatio||1)); }
+function effDpr(){ return Math.min(perfDprCap(), Math.max(1, window.devicePixelRatio||1)); }
 function worldPos(e){ const r=canvas.getBoundingClientRect(), dpr=effDpr();
   const px=(e.clientX-r.left)*dpr, py=(e.clientY-r.top)*dpr;
   if(VIEW.rot){
@@ -2728,7 +2762,13 @@ function resize(){
   // 旋转屏幕/改窗口后，没自定义过雷达的话按方向重算默认位置（横屏往下让开顶部血条）
   try{ layRadarDefault(); }catch(e){}
 }
-window.addEventListener('resize', resize);
+/* 手机浏览器地址栏收起/展开会连续触发 resize，每次都重建画布会抖一下还吃内存，
+   这里合并成一次（120ms 内只做最后一次）；开局和切画质时仍直接调 resize。 */
+let __rzTimer=0;
+window.addEventListener('resize', ()=>{
+  clearTimeout(__rzTimer);
+  __rzTimer=setTimeout(()=>{ try{ resize(); }catch(e){} }, 120);
+});
 
 /* ================= 7. AI ================= */
 /* 视线检测：两点之间是否被掩体挡住（用于 AI 不再隔墙对射） */
@@ -2968,19 +3008,18 @@ function checkWin(){
 }
 
 /* ================= 9. 粒子与浮字 ================= */
-/* 粒子/浮字数量封顶：激烈对局时避免数组无限增长拖慢渲染 */
-const MAX_PARTICLES=240, MAX_FLOATERS=60;
+/* 粒子/浮字数量封顶：激烈对局时避免数组无限增长拖慢渲染（上限随画质档位变化） */
 function spawnParticle(x,y,vx,vy,color,life,size){
-  if(state.particles.length>=MAX_PARTICLES) state.particles.shift();
+  if(state.particles.length>=maxParticles()) state.particles.shift();
   state.particles.push({x,y,vx,vy,color,life,maxLife:life,size});
 }
 /* 冲击波圆环粒子：由内向外扩散（命中 / 死亡 / 复活） */
 function spawnRing(x,y,color,size){
-  if(state.particles.length>=MAX_PARTICLES) state.particles.shift();
+  if(state.particles.length>=maxParticles()) state.particles.shift();
   state.particles.push({x,y,vx:0,vy:0,color,life:0.35,maxLife:0.35,size,ring:true});
 }
 function addFloater(x,y,text,color){
-  if(state.floaters.length>=MAX_FLOATERS) state.floaters.shift();
+  if(state.floaters.length>=maxFloaters()) state.floaters.shift();
   state.floaters.push({x,y,text,color,life:0.9,maxLife:0.9});
 }
 
@@ -2990,14 +3029,39 @@ function tick(t){
   if(!state.running || state.paused || state.ended) return;
   // 时间戳可能回退（切标签页/系统休眠/CDP 干预），dt 必须钳在 [0, 0.033]：
   // 否则负 dt 会让粒子寿命反向增长、半径变负，arc() 抛异常直接中断整帧渲染（画面卡死）
+  const frameMs=((t-state.lastT)/1000)*1000;
   let dt=Math.min(0.033, Math.max(0,((t-state.lastT)/1000)||0.016));
   const rawDt=dt; // 真实时间：复活等待、UI 计时不该被节奏缩放拉长
   if(isTouch) dt*=0.62; // 手机触屏操作精度低，整体节奏放慢，电脑端不受影响
   state.lastT=t;
-  update(dt, rawDt);
-  netTick(rawDt);
-  render();
+  perfTick(frameMs);            // 帧率监控：掉帧就自动降画质，别等系统把页面杀掉
+  // 卡死兜底：连续两帧耗时超过 0.25 秒（严重掉帧/GC 停顿），立刻清特效并降到流畅档
+  if(frameMs>250){ PERF.freezeN=(PERF.freezeN||0)+1; if(PERF.freezeN>=2){ PERF.freezeN=0; state.particles.length=0; state.floaters.length=0; try{ perfSetTier(0,true); }catch(e){} } }
+  else PERF.freezeN=0;
+  memGuard();
+  // 单帧异常不该让画面永久冻住：记录一次，后面继续跑（否则一次除零就会卡到玩家退出）
+  try{
+    update(dt, rawDt);
+    netTick(rawDt);
+    render();
+  }catch(err){
+    PERF.errN=(PERF.errN||0)+1;
+    if(PERF.errN<=3) try{ console.error('[帧异常]', err && (err.stack||err.message)); }catch(e){}
+    if(PERF.errN===4) try{ toastMsg('检测到画面异常，已自动恢复'); }catch(e){}
+    if(PERF.errN>30){ PERF.errN=0; state.particles.length=0; state.floaters.length=0; }
+  }
   // 回放功能暂时关闭（bug太多）
+}
+/* 内存兜底：手机上 JS 堆一直涨（特效对象 + 中转消息）会把标签页顶崩，超阈值先清临时对象再降档 */
+function memGuard(){
+  const m=window.performance && performance.memory;
+  if(!m || !m.usedJSHeapSize) return;
+  if(m.usedJSHeapSize > 300*1024*1024){
+    state.particles.length=0; state.floaters.length=0;
+    if(state.ghostShots) state.ghostShots.length=0;
+    if(state.bullets.length>60) state.bullets.length=60;
+    if(!PERF.memHold){ PERF.memHold=1; try{ perfSetTier(0, true); }catch(e){} }
+  } else if(m.usedJSHeapSize < 180*1024*1024){ PERF.memHold=0; }
 }
 
 function update(dt, rawDt){
@@ -3167,7 +3231,7 @@ function update(dt, rawDt){
     if(f.life<=0) state.floaters.splice(i,1);
   }
   if(state.shake>0) state.shake=Math.max(0,state.shake-dt*18);
-  updateHUD();
+  hudTick(realDt);   // 按真实时间节流，手机端节奏缩放不会把 HUD 拖到 6Hz
 }
 
 
@@ -3290,9 +3354,21 @@ function render(){
     ctx2d.scale(VIEW.scale, VIEW.scale);
   }
   if(state.shake>0) ctx2d.translate((rng()-0.5)*state.shake,(rng()-0.5)*state.shake);
+  VIEW.vr=viewWorldRect();
   drawStaticBackground(); drawMines(); drawBombs(); drawSupplies(); drawPlayers(); drawFrontArcs(); drawBullets(); drawParticles(); drawFloaters();
   drawDanger();
   drawRadar();
+}
+/* 当前画面能看到的世界坐标范围（外扩一圈，避免边缘刚体的角色/特效闪断）。
+   横屏整张地图都在画面里时不裁剪，返回 null。 */
+function viewWorldRect(){
+  if(!VIEW.cam || !(VIEW.scale>0)) return null;
+  const vw=canvas.width/VIEW.scale, vh=canvas.height/VIEW.scale;
+  if(vw>=state.world.W-1 && vh>=state.world.H-1) return null;
+  const cx=(VIEW.cx!==undefined)?VIEW.cx:state.world.W/2;
+  const cy=(VIEW.cy!==undefined)?VIEW.cy:state.world.H/2;
+  const m=80;
+  return { x0:cx-vw/2-m, y0:cy-vh/2-m, x1:cx+vw/2+m, y1:cy+vh/2+m };
 }
 
 /* 残血预警：血量低于 30 时屏幕边缘红色呼吸，血量越低越浓 */
@@ -3350,9 +3426,11 @@ function roundRect(x,y,w,h,r,c=ctx2d){
 let STATIC_BG=null, STATIC_BG_KEY='', STATIC_BG_OBS=null;
 function drawStaticBackground(){
   const W=state.world.W, H=state.world.H, obs=state.world.obs||[];
-  const s=Math.min(2,Math.max(1,effDpr()));
+  const s=PERF.tier===0 ? 1 : Math.min(2,Math.max(1,effDpr()));
   const key=state.mode+'/'+state.mapIdx+'/'+W+'x'+H+'@'+s;
   if(!STATIC_BG || STATIC_BG_KEY!==key || STATIC_BG_OBS!==obs){
+    // 先释放旧画布再建新的：手机上同时挂两张背景图很容易顶到内存上限
+    if(STATIC_BG){ try{ STATIC_BG.width=1; STATIC_BG.height=1; }catch(e){} STATIC_BG=null; }
     const cv=document.createElement('canvas');
     cv.width=Math.round(W*s); cv.height=Math.round(H*s);
     const c=cv.getContext('2d');
@@ -3532,9 +3610,26 @@ function drawFrontArcs(){
     ctx2d.restore();
   }
 }
+/* 角色本体渐变按配色缓存：原来每个角色每帧都新建一次径向渐变，5V5 十人混战等于每秒 600 个对象，
+   手机上光垃圾回收就够呛。改成在「角色本地坐标」建一次，之后靠 translate 复用。 */
+const PLAYER_GRADS={};
+function playerGrad(main,dark){
+  const key=main+'|'+dark+'|'+CFG.playerRadius;
+  let g=PLAYER_GRADS[key];
+  if(!g){
+    g=ctx2d.createRadialGradient(-5,-6,3,0,0,CFG.playerRadius);
+    g.addColorStop(0,main); g.addColorStop(1,dark);
+    PLAYER_GRADS[key]=g;
+  }
+  return g;
+}
 function drawPlayers(){
+  const vr=VIEW.vr;
   for(const p of state.players){
     if(!p.alive) continue;
+    // 自己永远画；别人在视野外就整段跳过（竖屏只显示约四分之一地图，十个人里常有一半在屏幕外）
+    const isSelf = state.netMode ? (p===netMe() || (p.isHuman && p.team===netMyTeam())) : p.isHuman;
+    if(vr && !isSelf && (p.x<vr.x0||p.x>vr.x1||p.y<vr.y0||p.y>vr.y1)) continue;
     let main=p.team==='red'?'#ff5b6e':'#4dc3ff', dark=p.team==='red'?'#c2203a':'#1f6fa8';
     if(p.isHuman && !state.netMode){ const sk=currentSkin(); main=sk.main; dark=sk.dark; }
     const ang=p.facing; // 平滑转向后的绘制朝向
@@ -3543,7 +3638,6 @@ function drawPlayers(){
     // 行走摆动：轻微呼吸缩放
     const breathe=1+Math.sin(p.walkT)*0.035;
     // 自己：脚下脉冲圈 + 头顶「你」，5V5 人多时一眼找到
-    const isSelf = state.netMode ? (p===netMe() || (p.isHuman && p.team===netMyTeam())) : p.isHuman;
     if(isSelf){
       const tnow=performance.now()/1000;
       const rr=CFG.playerRadius+11+Math.sin(tnow*2.6)*2;
@@ -3595,13 +3689,11 @@ function drawPlayers(){
     // 枪口白点：朝向更清晰
     ctx2d.beginPath(); ctx2d.arc(px+Math.cos(ang)*(CFG.playerRadius+9),py+Math.sin(ang)*(CFG.playerRadius+9),3,0,Math.PI*2);
     ctx2d.fillStyle='#fff'; ctx2d.fill();
-    // 角色本体（呼吸缩放）
+    // 角色本体（呼吸缩放 + 缓存渐变，靠 translate 把本地坐标挪到角色身上）
     ctx2d.save();
-    ctx2d.translate(px,py); ctx2d.scale(breathe,breathe); ctx2d.translate(-px,-py);
-    const g=ctx2d.createRadialGradient(px-5,py-6,3,px,py,CFG.playerRadius);
-    g.addColorStop(0,main); g.addColorStop(1,dark);
-    ctx2d.fillStyle=g; ctx2d.strokeStyle='rgba(255,255,255,.55)'; ctx2d.lineWidth=1.5;
-    ctx2d.beginPath(); ctx2d.arc(px,py,CFG.playerRadius,0,Math.PI*2); ctx2d.fill(); ctx2d.stroke();
+    ctx2d.translate(px,py); ctx2d.scale(breathe,breathe);
+    ctx2d.fillStyle=playerGrad(main,dark); ctx2d.strokeStyle='rgba(255,255,255,.55)'; ctx2d.lineWidth=1.5;
+    ctx2d.beginPath(); ctx2d.arc(0,0,CFG.playerRadius,0,Math.PI*2); ctx2d.fill(); ctx2d.stroke();
     ctx2d.restore();
     // 受击闪白
     if(p.flash>0){
@@ -3617,9 +3709,11 @@ function drawPlayers(){
       ctx2d.beginPath(); ctx2d.arc(px,py,20+70*rr,0,Math.PI*2); ctx2d.stroke();
       ctx2d.globalAlpha=1;
     }
-    // 角色小图标（名字上方）
-    ctx2d.font='12px "Segoe UI Emoji",sans-serif'; ctx2d.textAlign='center';
-    ctx2d.fillText(p.role.icon,px,py-CFG.playerRadius-19);
+    // 角色小图标（名字上方）：低画质档跳过 emoji 字体渲染，手机上这一步很吃 CPU
+    if(PERF.tier>0){
+      ctx2d.font='12px "Segoe UI Emoji",sans-serif'; ctx2d.textAlign='center';
+      ctx2d.fillText(p.role.icon,px,py-CFG.playerRadius-19);
+    }
     // 血条
     const bw=CFG.playerRadius*2.2, bh=4, bx=px-bw/2, by=py-CFG.playerRadius-13;
     const ratio=clamp(p.hp/(p.maxHp||CFG.maxHp),0,1);
@@ -3649,8 +3743,10 @@ function rayClear(x,y,ang,dist){
 }
 function drawBullets(){
   ctx2d.lineCap='round';
+  const vr=VIEW.vr;
   /* 只画子弹本体：实心小队色弹头，不带光束、拖尾、白热或任何发光 */
   for(const b of state.bullets){
+    if(vr && (b.x<vr.x0||b.x>vr.x1||b.y<vr.y0||b.y>vr.y1)) continue;   // 视野外的子弹不画（竖屏只看到四分之一地图）
     const rgb = b.team==='red' ? '255,91,110' : '77,195,255';
     ctx2d.fillStyle='rgb('+rgb+')';
     ctx2d.beginPath(); ctx2d.arc(b.x,b.y, Math.max(3, b.r||3), 0, Math.PI*2); ctx2d.fill();
@@ -3673,7 +3769,9 @@ function drawBullets(){
 }
 function drawParticles(){
   ctx2d.globalCompositeOperation='lighter';
+  const vr=VIEW.vr;
   for(const pt of state.particles){
+    if(vr && (pt.x<vr.x0||pt.x>vr.x1||pt.y<vr.y0||pt.y>vr.y1)) continue;
     const k=1-pt.life/pt.maxLife;
     if(pt.ring){ // 冲击波圆环：由内向外扩散
       ctx2d.globalAlpha=clamp(pt.life/pt.maxLife,0,1)*0.9;
@@ -3689,7 +3787,9 @@ function drawParticles(){
 }
 function drawFloaters(){
   ctx2d.font='bold 13px "Microsoft YaHei",sans-serif'; ctx2d.textAlign='center';
+  const vr=VIEW.vr;
   for(const f of state.floaters){
+    if(vr && (f.x<vr.x0||f.x>vr.x1||f.y<vr.y0||f.y>vr.y1)) continue;
     ctx2d.globalAlpha=clamp(f.life/f.maxLife,0,1);
     ctx2d.fillStyle=f.color;
     ctx2d.fillText(f.text,f.x,f.y);
@@ -3837,6 +3937,16 @@ function updateRecoverHint(){
   else if(cd>0) el.textContent='恢复 冷却 '+Math.ceil(cd)+'s';
   else el.textContent='['+kbName(KB.recover)+'] 恢复';
 }
+/* HUD 节流：血条/技能环/倒计时这些没必要 60fps 去改 DOM（每次写 textContent 都会触发文字排版，
+   5V5 十人混战时是手机上最贵的一笔开销）。10Hz 视觉上完全够用，低画质档再降到 6Hz。 */
+let __hudAcc=0;
+function hudTick(dt){
+  __hudAcc+=dt;
+  const step=PERF.tier===0?0.16:0.1;
+  if(__hudAcc<step) return;
+  __hudAcc=0;
+  updateHUD();
+}
 function updateHUD(){
   updateSkillBtn();
   updateRecoverBtn();
@@ -3900,14 +4010,21 @@ function initAudio(){
     if(AC.state==='suspended' && AC.resume) AC.resume().catch(()=>{});
   }catch(e){ AC=null; }
 }
+/* 5V5 十人混战时每秒可能几十次开火，音效节点必须限流并及时断开：
+   iOS 上音频节点只 stop 不断开，节点图会越积越大，久战容易把页面拖崩。 */
+let __blipWin=0, __blipN=0;
 function blip(freq,dur,type,vol,slide){
   if(!AC||state.muted) return;
+  const now=performance.now();
+  if(now-__blipWin>120){ __blipWin=now; __blipN=0; }
+  if(++__blipN > (PERF.tier===0?3:5)) return;      // 同一时间窗内只保留最响的几发
   const o=AC.createOscillator(), g=AC.createGain();
   o.type=type; o.frequency.value=freq;
   if(slide) o.frequency.exponentialRampToValueAtTime(Math.max(40,freq+slide),AC.currentTime+dur);
   g.gain.setValueAtTime(vol,AC.currentTime);
   g.gain.exponentialRampToValueAtTime(0.0001,AC.currentTime+dur);
   o.connect(g); g.connect(master); o.start(); o.stop(AC.currentTime+dur+0.02);
+  o.onended=()=>{ try{ o.disconnect(); g.disconnect(); }catch(e){} };
 }
 /* 对局音效：不在对局中（含暂停/结算）一律不响，避免误开局或切界面后还在响 */
 function gameplaySfxOn(){ return state.running && !state.paused && !state.ended; }
@@ -4737,6 +4854,26 @@ function runSelfCheck(){
   ok('对手开火也生成弹头', netGhostShot.toString().indexOf('ghostShots.push')>0);
   ok('终端页不挂公告条', adminBoot.toString().indexOf("nb.style.display='none'")>0);
   ok('不画任何曳光光束', drawBullets.toString().indexOf('state.tracers')<0);
+  // 手机久战防崩：画质档位 + 分辨率上限 + HUD 节流 + 视口裁剪 + 音频节点释放
+  ok('画质档位与自适应降档可用', typeof PERF==='object' && PERF.tier>=0 && PERF.tier<=2
+    && typeof perfTick==='function' && typeof perfSetTier==='function', 'tier='+(PERF&&PERF.tier));
+  ok('手机画布分辨率有上限（不超过 1.5 倍 DPR）', (function(){
+      try{ const t=PERF.tier; const caps=[0,1,2].map(x=>{ PERF.tier=x; return effDpr(); }); PERF.tier=t;
+        return caps.every(v=>v<=1.5) && caps[0]<=caps[2]; }catch(e){ return false; }
+    })());
+  ok('HUD 不再每帧改 DOM（10Hz 节流）', typeof hudTick==='function' && String(update).indexOf('hudTick(realDt)')>0
+    && String(update).indexOf('updateHUD()')<0);
+  ok('视野外角色/子弹/粒子不绘制（竖屏裁剪）', String(drawPlayers).indexOf('VIEW.vr')>0
+    && String(drawBullets).indexOf('VIEW.vr')>0 && String(drawParticles).indexOf('VIEW.vr')>0);
+  ok('音效节点用完断开（iOS 久战不积压）', String(blip).indexOf('disconnect()')>0);
+  ok('粒子数量上限随画质档位收缩', maxParticles()<=240 && maxFloaters()<=60
+    && (function(){ const t=PERF.tier; PERF.tier=0; const a=maxParticles(), b=maxFloaters(); PERF.tier=t; return a<240 && b<60; })());
+  ok('设置里有画质选项', !!document.getElementById('setQuality'));
+  ok('单帧异常不会冻住画面（主循环有兜底）', String(tick).indexOf('catch(err)')>0);
+  ok('严重掉帧会自动清特效并降档', String(tick).indexOf('frameMs>250')>0 && String(tick).indexOf('perfSetTier(0')>0);
+  ok('主画布不透明（省一层合成）', (function(){
+      try{ const a=ctx2d.getContextAttributes && ctx2d.getContextAttributes(); return !a || a.alpha!==true; }catch(e){ return true; }
+    })());
   ok('结算与中断时不挂公告条', [...document.querySelectorAll('style')].some(st=>st.textContent.indexOf('body.ended #noticeBar')>0));
   ok('开火有冷却（按角色+武器）', (function(){
       try{
@@ -7957,6 +8094,9 @@ function applySettings(){
     alpha: +(s.radarAlpha||92),
     pos: s.radarPos||'right'
   };
+  // 画质档位：自动/高清/流畅。手动锁定后不再按帧率自动调整
+  try{ perfApplyMode(s.quality||'auto'); }catch(e){}
+  const qEl=document.getElementById('setQuality'); if(qEl) qEl.value = PERF.mode;
   // 自由布局：把摇杆底座 / 开火 / 技能 / 恢复 / 雷达 / 退出键摆到玩家拖好的位置
   try{ layApply(); }catch(e){}
 }
@@ -7979,7 +8119,8 @@ function saveSettings(){
     radarShow: document.getElementById('setRadarShow').value,
     radarSize: +document.getElementById('setRadarSize').value,
     radarAlpha: +document.getElementById('setRadarAlpha').value,
-    radarPos: document.getElementById('setRadarPos').value
+    radarPos: document.getElementById('setRadarPos').value,
+    quality: document.getElementById('setQuality').value
   }));
   // 雷达位置下拉：已有自定义布局时，选左上/右上也要真的挪过去（同时更新拖动坐标）
   try{
@@ -8001,7 +8142,7 @@ function saveSettings(){
   }
   applySettings();
 }
-['setJoy','setFire','setAlpha','setSens','setJoyPos','setFirePos','setSkillPos','setJoyMode','setAutoFire','setHoldFire','setAutoAim','setRadarShow','setRadarSize','setRadarAlpha','setRadarPos','setSkin','setAimStick','setGap','setSkillDir'].forEach(id=>{
+['setJoy','setFire','setAlpha','setSens','setJoyPos','setFirePos','setSkillPos','setJoyMode','setAutoFire','setHoldFire','setAutoAim','setRadarShow','setRadarSize','setRadarAlpha','setRadarPos','setSkin','setAimStick','setGap','setSkillDir','setQuality'].forEach(id=>{
   document.getElementById(id).addEventListener('input', ()=>{ saveSettings(); applySettings(); });
 });
 /* 有 overlay 打开时给 body 打标记，隐藏对局 HUD/触控键。
