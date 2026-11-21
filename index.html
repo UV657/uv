@@ -80,7 +80,7 @@ body{
 /* 全局隐藏工具类：.hidden 必须真正隐藏（角色行/难度行/地图行都依赖它） */
 .hidden{display:none !important}
 /* 游戏内 HUD 默认隐藏，对局中才显示（放最后确保优先级） */
-.playerPanel, #topbar, #btnFire, #btnSkill, #btnExitFight{display:none !important}
+.playerPanel, #topbar, #btnFire, #btnSkill, #btnRecover, #btnExitFight{display:none !important}
 body.in-game .playerPanel{display:block !important}
 body.in-game #topbar{display:flex !important}
 body.in-game .playerPanel.hidden{display:none !important}
@@ -89,16 +89,19 @@ body.in-game .playerPanel.hidden{display:none !important}
 #topbar,#killfeed,.playerPanel,#mapName,#hintBar{opacity:var(--uialpha,.6)}
 body.is-touch.in-game #btnFire{display:flex !important}
 body.is-touch.in-game #btnSkill{display:flex !important}
+body.is-touch.in-game #btnRecover{display:flex !important}
 body.is-touch.in-game #btnExitFight{display:flex !important}
 /* 结算/暂停时隐藏对局操作控件，避免遮挡结算面板 */
-body.is-touch.in-game.ended #btnFire, body.is-touch.in-game.ended #btnSkill,
+body.is-touch.in-game.ended #btnFire, body.is-touch.in-game.ended #btnSkill, body.is-touch.in-game.ended #btnRecover,
 body.is-touch.in-game.ended #btnExitFight, body.ended #touchTip, body.ended #rotateTip,
 body.is-touch.in-game.paused-fight #btnFire, body.is-touch.in-game.paused-fight #btnSkill,
+body.is-touch.in-game.paused-fight #btnRecover,
 body.is-touch.in-game.paused-fight #btnExitFight{display:none !important}
 /* 任何覆盖层打开时，对局触控层/HUD 一律让位，避免按钮穿透遮挡设置/选人页。
    :has() 为现代浏览器实时生效；body.has-overlay 由下方 JS 同步，兼容旧内核。 */
 body:has(.overlay:not(.hidden)) #btnFire, body.has-overlay #btnFire,
 body:has(.overlay:not(.hidden)) #btnSkill, body.has-overlay #btnSkill,
+body:has(.overlay:not(.hidden)) #btnRecover, body.has-overlay #btnRecover,
 body:has(.overlay:not(.hidden)) #btnExitFight, body.has-overlay #btnExitFight,
 body:has(.overlay:not(.hidden)) #touchLayer, body.has-overlay #touchLayer,
 body:has(.overlay:not(.hidden)) #topbar, body.has-overlay #topbar,
@@ -265,6 +268,17 @@ body.is-touch.in-game #btnSkill{display:flex}
   mask:radial-gradient(circle, transparent 52%, #000 56%);
   transition:opacity .2s}
 #skillCdNum{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:16px;font-weight:800;color:#fff;text-shadow:0 1px 5px #000,0 0 8px rgba(0,0,0,.9);pointer-events:none;z-index:2}
+/* 通用恢复键：独立于角色技能，竖排在技能键上方，绿色系以便一眼区分 */
+#btnRecover{position:fixed;right:calc(90px + var(--uiGap,10px) * .4);bottom:calc(170px + var(--uiGap,10px) * .3);width:52px;height:52px;border-radius:50%;background:rgba(134,239,172,.22);border:2px solid rgba(134,239,172,.7);color:#d9ffe7;font-size:16px;font-weight:800;display:none;align-items:center;justify-content:center;z-index:50;pointer-events:auto;touch-action:none;font-family:inherit;transition:background .25s ease,border-color .25s ease}
+#btnRecover.on{background:rgba(134,239,172,.55)}
+#btnRecover.ing{background:rgba(134,239,172,.4);border-color:rgba(134,239,172,.95)}
+#recRing{position:absolute;inset:-3px;border-radius:50%;pointer-events:none;
+  background:conic-gradient(#86efac 0 var(--deg,0deg), rgba(6,10,20,.72) var(--deg,0deg) 360deg);
+  -webkit-mask:radial-gradient(circle, transparent 52%, #000 56%);
+  mask:radial-gradient(circle, transparent 52%, #000 56%);
+  transition:opacity .2s}
+#recNum{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:16px;font-weight:800;color:#fff;text-shadow:0 1px 5px #000,0 0 8px rgba(0,0,0,.9);pointer-events:none;z-index:2}
+#recLabel{position:relative;z-index:1}
 #btnFire{position:fixed;right:calc(18px + var(--uiGap,10px) * .35);bottom:calc(80px + var(--uiGap,10px) * .3);width:var(--fire,74px);height:var(--fire,74px);border-radius:50%;background:rgba(255,90,110,.35);border:3px solid rgba(255,120,140,.8);color:#fff;font-size:14px;font-weight:900;display:none;align-items:center;justify-content:center;z-index:50;pointer-events:auto;touch-action:none;font-family:inherit;box-shadow:0 4px 20px rgba(255,80,100,.4)}
 body.is-touch.in-game #btnFire{display:flex}
 #btnFire.on{background:rgba(255,90,110,.7);transform:scale(.94)}
@@ -393,6 +407,7 @@ body.is-touch .ppSub{display:none}
   /* 横屏仍按默认 74px→约64px 的紧凑比例，但保留 --fire 可调，避免横屏开火键大小设置失效 */
   #btnFire{bottom:calc(20px + var(--uiGap,10px) * .35) !important;right:calc(20px + var(--uiGap,10px) * .35) !important;width:calc(var(--fire,74px) * .86) !important;height:calc(var(--fire,74px) * .86) !important}
   #btnSkill{bottom:calc(30px + var(--uiGap,10px) * .35) !important;right:calc(100px + var(--uiGap,10px) * .35) !important;width:48px !important;height:48px !important}
+  #btnRecover{bottom:calc(86px + var(--uiGap,10px) * .35) !important;right:calc(100px + var(--uiGap,10px) * .35) !important;width:48px !important;height:48px !important}
 }
 /* 操作键左右布局（必须放在上面横屏 media query 之后，才能覆盖其中的 !important 定位） */
 body.fire-left #btnFire{left:calc(18px + var(--uiGap,10px) * .35) !important;right:auto !important}
@@ -677,9 +692,10 @@ body.is-touch .nhTime{display:none !important}
       <div id="joyAim" class="joy"><div class="knob"></div></div>
     </div>
     <div id="btnSkill"><span id="skillLabel">技</span><div id="skillRing"></div><span id="skillCdNum"></span></div>
+    <div id="btnRecover"><span id="recLabel">恢</span><div id="recRing"></div><span id="recNum"></span></div>
     <button id="btnFire"><span id="fireLabel">开火</span><div id="fireCdMask"></div></button>
     <div id="touchTip">左摇杆移动 · 自动瞄准 · 右下开火按钮射击</div>
-    <div id="pcTip" class="pc-only">W A S D 移动 · 鼠标瞄准 · 左键开火 · E 技能</div>
+    <div id="pcTip" class="pc-only">W A S D 移动 · 鼠标瞄准 · 左键开火 · E 技能 · F 恢复</div>
     <button id="btnExitFight">✕</button>
 
     <!-- HUD -->
@@ -697,6 +713,7 @@ body.is-touch .nhTime{display:none !important}
         <div class="ppHead"><span class="icon" id="p1Icon">⚡</span><span id="p1Name">玩家</span></div>
         <div id="hpBar"><div id="hpFill"></div></div>
         <div class="ppSub" id="p1Sub">击杀 0 · 死亡 0</div>
+        <div class="ppSub pc-only" id="recoverHint" style="color:#a7f3d0;margin-top:2px"></div>
         <div class="skillBox" id="skP1"><div class="skIcon" id="p1SkIcon">⚡</div><div class="skCd" id="p1SkCd"></div><div class="skCdNum" id="p1SkCdNum"></div><div class="skKey" id="p1SkKey">E</div><div class="skName" id="p1SkName"></div></div>
       </div>
 
@@ -1281,7 +1298,7 @@ body.is-touch .nhTime{display:none !important}
       </div>
     </div>
     <div class="overlay hidden" id="settingsScreen">
-      <div class="title">自定义设置 <span id="verTag" style="font-size:11px;color:#7d8aa8;font-weight:400;display:block;margin-top:2px">v2.9.11</span></div>
+      <div class="title">自定义设置 <span id="verTag" style="font-size:11px;color:#7d8aa8;font-weight:400;display:block;margin-top:2px">v2.9.12</span></div>
       <div class="rowBtns" style="justify-content:center;flex-wrap:wrap;margin:2px auto 8px;max-width:320px;width:100%">
         <button class="btn" id="btnSettingsDoneTop">完成</button>
         <button class="btn ghost" id="btnSettingsExitTop">退出</button>
@@ -1336,6 +1353,7 @@ body.is-touch .nhTime{display:none !important}
         <div id="historyBox" style="display:none;margin-top:10px;border-top:1px solid rgba(255,255,255,.1);padding-top:10px">
           <div style="font-size:13px;font-weight:800;color:#67e8f9;margin-bottom:6px">修改历史</div>
           <div style="line-height:1.8">
+            <div><b style="color:#ffd34d">v2.9.12</b>　新增<b>通用恢复技能</b>（独立按键 F / 手机绿色恢复键，全角色可用）：只给自己持续回血，每秒 10 点、累计最多回 50 点即停，冷却 35 秒；AI 开火攻速与角色移速改成与玩家完全一致（不再有 1.8 倍射速惩罚与 0.7 移速折扣）</div>
             <div><b style="color:#ffd34d">v2.9.11</b>　新增角色「战地医师」（💉 持续恢复：6 秒内每秒回 9 血、共 54 血，恢复期间照常移动射击），与医疗兵的瞬时回血互补；终端角色调参与玩法说明已自动接入</div>
             <div><b style="color:#ffd34d">v2.9.10</b>　修复“进入房间后无法正常对决”：对局开始后，迟到的准备消息会把准备室重新弹到画面上并重置状态；现已在对局中忽略准备消息，并冻结阵营与收发主题</div>
             <div><b style="color:#ffd34d">v2.9.9</b>　修复联机准备室：双方准备却不开局、房主选不了地图（房主身份改由本机稳定标记判定，收到 joined 不再被降级；两边各自触发开局）</div>
@@ -1446,7 +1464,7 @@ const CFG = {
   maxHp: 100,                        // 每人 100 血（用户硬约束，角色差异不走血量）
   playerRadius: 15,
   bulletRadius: 4,
-  aiFireMul: 1.8,                    // AI 射速 = 角色射速 × 1.8
+  aiFireMul: 1.0,                    // AI 开火间隔倍率：1.0 = 与玩家同一射速（难度只影响瞄准误差与交战距离）
   aiAimError: 0.09,
   aiEngageMin: 150, aiEngageMax: 430,
   respawnTime: 2.0, spawnProtect: 1.5,
@@ -1477,9 +1495,14 @@ const CFG = {
 /* 5V5 难度表：仅影响 AI 参数（1V1 无 AI，难度不生效） */
 const DIFFS = {
   easy:   { aimError:0.18, fireMul:1.0, engageMin:130 },
-  normal: { aimError:0.14, fireMul:1.15, engageMin:150 },
-  hard:   { aimError:0.09, fireMul:1.4, engageMin:105 },
+  normal: { aimError:0.14, fireMul:1.0, engageMin:150 },
+  hard:   { aimError:0.09, fireMul:1.0, engageMin:105 },
 };
+
+/* 通用恢复技能（独立按键，全角色可用）：只作用于自己，持续回血，累计封顶 */
+const RECOVER = { total:50,   // 累计最多回复 50 点生命
+                  rate:10,    // 每秒回复
+                  cd:35 };    // 冷却（秒）
 
 /* 战场地图：每种模式 3 张不同掩体布局（尺寸/出生点沿用模式，仅换障碍物） */
 const MAPS = {
@@ -1803,6 +1826,7 @@ function makePlayer(team, idx, role0, name, isHuman){  const spawns = team==='re
     kills:0, deaths:0, dmgDealt:0, shots:0, hits:0, // 结算统计：总伤害 / 开火数 / 命中数
     shield:0, shieldTimer:0, dashT:0, dashVX:0, dashVY:0, snipeReady:false, rageT:0,
     regenT:0, regenTick:0,
+    recoverLeft:0, recoverTick:0, recoverCD:0,   // 通用恢复：剩余可回血量 / 每秒结算计时 / 冷却
     strafeDir:1, strafeT:0, wanderT:0, lastX:s.x, lastY:s.y,
     burstLeft:0, restT:0,  // AI 点射节奏：本波剩余子弹 / 波后停顿时间
     stuckT:0, detourT:0, detourDir:1,  // AI 避障：卡住计时 / 绕行剩余时间 / 绕行方向
@@ -2313,6 +2337,46 @@ function castSkill(p){
   p.skillCD=s.cd;
   if(p.isHuman){ dailyProgress('skill', 1); if(state.netMode) { try{ netSend({t:'skill', k:skillKind(s)}, 0); }catch(e){} } }
 }
+/* 通用恢复技能：独立按键，只给自己回血，持续回血直到累计回复 RECOVER.total 点 */
+function castRecover(p){
+  if(!p || !p.alive) return false;
+  if(p.recoverCD>0){
+    if(p.isHuman) toastMsg('恢复冷却中：'+Math.ceil(p.recoverCD)+' 秒');
+    return false;
+  }
+  if(p.recoverLeft>0){ if(p.isHuman) toastMsg('正在恢复中'); return false; }
+  const cap=p.maxHp||CFG.maxHp;
+  if(p.hp>=cap){ if(p.isHuman) toastMsg('生命值已满'); return false; }
+  p.recoverLeft=RECOVER.total;
+  p.recoverTick=0;          // 按下即立刻回第一口，手感更跟手
+  p.recoverCD=RECOVER.cd;
+  if(p.isHuman){
+    sHeal();
+    addFloater(p.x,p.y-30,'恢复','#86efac');
+    if(state.netMode){ try{ netSend({t:'recover'}, 0); }catch(e){} }
+  }
+  spawnRing(p.x,p.y,'#86efac',58);
+  for(let i=0;i<12;i++){ const a=rng()*Math.PI*2, sp=45+rng()*95;
+    spawnParticle(p.x+Math.cos(a)*12,p.y+Math.sin(a)*12,Math.cos(a)*sp,Math.sin(a)*sp,'#86efac',0.45+rng()*0.3,3); }
+  return true;
+}
+/* 每帧推进恢复：每秒结算一次，累计不超过 RECOVER.total，血满即停 */
+function updateRecover(p,dt){
+  if(p.recoverCD>0) p.recoverCD=Math.max(0,p.recoverCD-dt);
+  if(p.recoverLeft<=0) return;
+  p.recoverTick-=dt;
+  if(p.recoverTick>0) return;
+  p.recoverTick+=1;
+  const cap=p.maxHp||CFG.maxHp;
+  if(p.hp>=cap){ p.recoverLeft=0; return; }   // 血满了就收手，不浪费剩余额度
+  const gain=Math.min(RECOVER.rate, p.recoverLeft, cap-p.hp);
+  p.hp=Math.round(Math.min(cap, p.hp+gain));
+  p.recoverLeft=Math.max(0, p.recoverLeft-gain);
+  addFloater(p.x,p.y-26,'+'+Math.round(gain),'#86efac');
+  for(let i=0;i<3;i++){ const a=rng()*Math.PI*2, sp=35+rng()*60;
+    spawnParticle(p.x+Math.cos(a)*10,p.y+Math.sin(a)*10,Math.cos(a)*sp,Math.sin(a)*sp,'#86efac',0.4,3); }
+  if(p.isHuman && p.recoverLeft<=0) sHeal();
+}
 function updateDash(p,dt){
   if(p.dashT<=0) return;
   const prevX=p.x, prevY=p.y;
@@ -2378,7 +2442,7 @@ if(isTouch){
   },{passive:false});
 }
 const joyMove=document.getElementById('joyMove'), joyAim=document.getElementById('joyAim'),
-      btnSkill=document.getElementById('btnSkill');
+      btnSkill=document.getElementById('btnSkill'), btnRecover=document.getElementById('btnRecover');
 state.touchMove={active:false,id:null,ox:0,oy:0,dx:0,dy:0};
 state.touchAim={active:false,id:null,ox:0,oy:0,dx:0,dy:0};
 const JOY_R=42;
@@ -2389,7 +2453,7 @@ document.addEventListener('touchstart', e=>{
   e.preventDefault();
   for(const t of e.changedTouches){
     // 开火/技能/退出键与摇杆同侧时，按在这些键上的手指不算摇杆手势
-    if(t.target && t.target.closest && t.target.closest('button,#btnSkill,#btnExitFight')) continue;
+    if(t.target && t.target.closest && t.target.closest('button,#btnSkill,#btnRecover,#btnExitFight')) continue;
     const onJoySide = (state.joySide==='right') ? (t.clientX >= window.innerWidth/2)
                                                   : (t.clientX <  window.innerWidth/2);
     if(onJoySide && !state.touchMove.active){
@@ -2443,6 +2507,16 @@ btnSkill.addEventListener('click', e=>{
   e.preventDefault(); e.stopPropagation();
   if(state.running && !state.paused){ const h=localP(); if(h && h.isHuman) castSkill(h); }
 });
+/* 恢复键：独立按钮，点一下开始持续回血（手机端） */
+btnRecover.addEventListener('touchstart', e=>{
+  e.preventDefault(); e.stopPropagation();
+  if(state.running && !state.paused){ const h=localP(); if(h && h.isHuman) castRecover(h); btnRecover.classList.add('on'); }
+},{passive:false});
+btnRecover.addEventListener('touchend', ()=>btnRecover.classList.remove('on'));
+btnRecover.addEventListener('click', e=>{
+  e.preventDefault(); e.stopPropagation();
+  if(state.running && !state.paused){ const h=localP(); if(h && h.isHuman) castRecover(h); }
+});
 /* 开火按钮：按住连射 */
 const btnFire=document.getElementById('btnFire');
 state.fireDown=false; state.fireBurst=0;
@@ -2487,6 +2561,7 @@ window.addEventListener('keydown', e=>{
   // 技能键：P1=E；P2=数字键 1（主键盘或小键盘）
   if(!e.repeat && state.running && !state.paused){
     if(e.code===KB.skill){ const h=localP(); if(h && h.isHuman) castSkill(h); }
+    if(e.code===KB.recover){ const h=localP(); if(h && h.isHuman) castRecover(h); }   // 通用恢复：独立按键
     if(e.code==='Digit1'||e.code==='Numpad1'){ const p2=state.players.find(p=>p.team==='blue'&&p.isHuman); if(p2) castSkill(p2); }
   }
 });
@@ -2552,9 +2627,12 @@ function hasLOS(ax,ay,bx,by){
   }
   return true;
 }
-const AI_SPEED_MUL = 0.7; // 电脑端 AI 移速系数：原先电脑端 AI 用满速，手机端有全局 0.62 节奏缩放，导致电脑端 AI 明显偏快。只用于移动，不影响射速/技能计时。
+const AI_SPEED_MUL = 1.0; // AI 移速系数：与玩家完全一致（角色的 speed 就是最终移速，不再打折扣）
 function updateAI(p,dt){
   const aiMoveDt = isTouch ? dt : dt*AI_SPEED_MUL; // AI 移动专用 dt：手机端已有 0.62 全局缩放，不再叠加
+  // 通用恢复：AI 与玩家同一套规则（血量低于 55% 且不在恢复中、冷却已好就用）
+  // 放在选目标之前，避免「附近没有敌人直接 return」时低血也不回血
+  if(p.recoverCD<=0 && p.recoverLeft<=0 && p.hp < (p.maxHp||CFG.maxHp)*0.55) castRecover(p);
   let best=null, bd=Infinity;
   for(const q of state.players){
     if(q.team===p.team || !q.alive) continue;
@@ -2849,10 +2927,12 @@ function update(dt, rawDt){
       if(p.respawn<=0){ const s=(p.team==='red'?state.world.redSpawn:state.world.blueSpawn)[p.idx];
         p.x=s.x; p.y=s.y; p.hp=p.maxHp||CFG.maxHp; p.alive=true; p.invuln=CFG.spawnProtect; p.shield=0;
         p.regenT=0; p.regenTick=0; // 复活时打断上一次的持续恢复，避免刚出生就跳治疗数字
+        p.recoverLeft=0; p.recoverTick=0; p.recoverCD=0; // 复活重置通用恢复
         p.respawnRing=1; spawnRing(p.x,p.y,p.team==='red'?'#ff5b6e':'#4dc3ff',64); } // 复活光环
       continue;
     }
     if(p.hp<=0){ killPlayer(p, p.lastHitter||null); continue; } // 兜底：异常血量不留活口
+    updateRecover(p,dt); // 通用恢复：每秒回血、累计封顶、冷却递减
     updateDash(p,dt); // 冲刺位移
     if(p.isHuman){
       // 触屏设备一律走摇杆（红蓝都算）：之前只给红队，加入方是蓝队，手机上根本动不了
@@ -2984,8 +3064,8 @@ function lsSet(key, obj){
 function lsGetRaw(key){ try{ return localStorage.getItem(key)||''; }catch(e){ return ''; } }
 
 /* ---- 电脑键位：可在自定义设置里改，存本机 ---- */
-const KB_DEF={up:'KeyW',down:'KeyS',left:'KeyA',right:'KeyD',fire:'Space',skill:'KeyE',pause:'KeyP',mute:'KeyM'};
-const KB_LABEL={up:'前进',down:'后退',left:'左移',right:'右移',fire:'射击',skill:'技能',pause:'暂停',mute:'静音'};
+const KB_DEF={up:'KeyW',down:'KeyS',left:'KeyA',right:'KeyD',fire:'Space',skill:'KeyE',recover:'KeyF',pause:'KeyP',mute:'KeyM'};
+const KB_LABEL={up:'前进',down:'后退',left:'左移',right:'右移',fire:'射击',skill:'技能',recover:'恢复',pause:'暂停',mute:'静音'};
 let KB=(function(){ try{ const o=lsGet('gunKeys',{}); return Object.assign({},KB_DEF,(o&&typeof o==='object')?o:{}); }catch(e){ return Object.assign({},KB_DEF); } })();
 let KB_CATCH=null;
 function kbName(code){
@@ -3596,8 +3676,50 @@ function updateSkillBtn(){
   }
   __skillReadyPrev = cd<=0;
 }
+/* 恢复键状态：冷却中显示秒数、恢复中显示剩余可回血量、可用时高亮 */
+function updateRecoverBtn(){
+  const btn=document.getElementById('btnRecover'), ring=document.getElementById('recRing'), num=document.getElementById('recNum');
+  if(!btn||!ring) return;
+  const p=state.players && localP();
+  if(!p) return;
+  const lbl=document.getElementById('recLabel');
+  const left=Math.max(0,p.recoverLeft||0), cd=Math.max(0,p.recoverCD||0);
+  let prog=1;
+  if(left>0){                       // 恢复中：环按「已回 / 总量」推进
+    prog=clamp(1-left/RECOVER.total,0,1);
+    num.textContent=Math.ceil(left);
+    btn.classList.add('ing'); btn.classList.remove('on');
+    ring.style.opacity='1';
+    if(lbl) lbl.style.opacity='0';
+  } else if(cd>0){                  // 冷却：环按冷却进度推进
+    prog=clamp(1-cd/RECOVER.cd,0,1);
+    num.textContent=Math.ceil(cd);
+    btn.classList.remove('ing'); btn.classList.remove('on');
+    ring.style.opacity='1';
+    if(lbl) lbl.style.opacity='0';
+  } else {
+    num.textContent='';
+    btn.classList.remove('ing'); btn.classList.add('on');
+    ring.style.opacity='.28';
+    if(lbl) lbl.style.opacity='1';
+  }
+  ring.style.setProperty('--deg',(prog*360).toFixed(1)+'deg');
+}
+/* 电脑端：玩家面板里的恢复提示（含当前按键名） */
+function updateRecoverHint(){
+  const el=document.getElementById('recoverHint');
+  if(!el) return;
+  const p=localP();
+  if(!p){ el.textContent=''; return; }
+  const left=Math.max(0,p.recoverLeft||0), cd=Math.max(0,p.recoverCD||0);
+  if(left>0) el.textContent='恢复中 '+Math.round(RECOVER.total-left)+'/'+RECOVER.total;
+  else if(cd>0) el.textContent='恢复 冷却 '+Math.ceil(cd)+'s';
+  else el.textContent='['+kbName(KB.recover)+'] 恢复';
+}
 function updateHUD(){
   updateSkillBtn();
+  updateRecoverBtn();
+  updateRecoverHint();
   updateFireCd();
   if(state.mode==='1v1'){
     // 红蓝两端都按队伍取人：房主在红、客机在蓝，双向显示才不会把自己写成对面
@@ -4582,6 +4704,13 @@ function runSelfCheck(){
     && String(skillKind).indexOf("'regen'")>=0
     && String(netGhostSkill).indexOf("m.k==='regen'")>=0), 'regenHeal='+(ROLES.surgeon&&ROLES.surgeon.skill.regenHeal)+' dur='+(ROLES.surgeon&&ROLES.surgeon.skill.regenDur));
   ok('帧步长钳制且冲击波半径不为负（防止 arc 抛异常中断渲染）', String(tick).indexOf('Math.max(0,((t-state.lastT)/1000)')>=0 && String(drawParticles).indexOf('Math.max(0,2+pt.size*k)')>=0);
+  ok('通用恢复技能齐全（独立按键F/手机按钮/只对自己/累计封顶50/冷却35s）', RECOVER.total===50 && RECOVER.rate>0 && RECOVER.cd>0
+    && typeof castRecover==='function' && typeof updateRecover==='function'
+    && KB_DEF.recover==='KeyF' && !!document.getElementById('btnRecover')
+    && String(castRecover).indexOf('p.recoverLeft=RECOVER.total')>=0
+    && String(updateRecover).indexOf('RECOVER.rate')>=0, 'total='+RECOVER.total+' rate='+RECOVER.rate+' cd='+RECOVER.cd);
+  ok('AI 开火攻速与移速与玩家一致（无 1.8 倍射速惩罚、无 0.7 移速折扣）', CFG.aiFireMul===1 && AI_SPEED_MUL===1
+    && DIFFS.easy.fireMul===1 && DIFFS.normal.fireMul===1 && DIFFS.hard.fireMul===1, 'aiFireMul='+CFG.aiFireMul+' aiSpeedMul='+AI_SPEED_MUL);
   ok('狂战士血怒机制齐全', !!(ROLES.berserker&&ROLES.berserker.skill.rageDur>0&&ROLES.berserker.skill.rageDmgMul>1&&ROLES.berserker.skill.rageDr>0&&skillKind(ROLES.berserker.skill)==='rage'));
   ok('新武器特性到位（栓狙/拖慢/爆破）', WEAPONS.falcon.dmgMul>=2.4 && WEAPONS.rivetgun.slowHit>0 && !!(WEAPONS.breaker.explode&&WEAPONS.breaker.explode.r>0) && typeof explodeBullet==='function');
   ok('准备室可锁定地图与角色武器', typeof prepSend==='function' && String(prepRender).indexOf('data-prep-map')>=0 && String(prepRender).indexOf('data-prep-role')>=0);
@@ -5023,6 +5152,7 @@ function netOnMsg(m){
     else if(m.t==='died'){ netRemoteDied(); }
     else if(m.t==='shot'){ netGhostShot(m); }
     else if(m.t==='skill'){ netGhostSkill(m); }
+    else if(m.t==='recover'){ const f=netFoe(); if(f){ spawnRing(f.x,f.y,'#86efac',52); addFloater(f.x,f.y-26,'对方恢复','#86efac'); } }
     else if(m.t==='mine'){
       state.mines=state.mines||[];
       state.mines.push({x:m.x|0, y:m.y|0, team:m.team||'red', dmg:0, r:42, life:8, arm:0, remote:true});
@@ -7860,14 +7990,15 @@ function buildHelp(){
     '<div>单机在选择页选图；1V1 联机由房主在准备室定图，双方都看得到。每张图障碍布局不同，打法也不一样。</div>'+
     mapRows+
     '<h4>四、操作键位</h4>'+
-    '<div class="tblWrap pc-only"><table><tr><th>模式</th><th>移动</th><th>射击</th><th>技能</th><th>转身瞄准</th></tr>'+
-    '<tr><td>5V5 / 1V1</td><td>W A S D</td><td>鼠标瞄准 · 左键 / 空格</td><td>E</td><td>鼠标</td></tr></table></div>'+
-    '<div class="tblWrap mobile-only"><table><tr><th>模式</th><th>移动</th><th>射击</th><th>技能</th><th>瞄准</th></tr>'+
-    '<tr><td>5V5 / 1V1</td><td>左摇杆</td><td>右下开火键</td><td>技能键</td><td>自动瞄准 / 右摇杆</td></tr></table></div>'+
+    '<div class="tblWrap pc-only"><table><tr><th>模式</th><th>移动</th><th>射击</th><th>技能</th><th>恢复</th><th>转身瞄准</th></tr>'+
+    '<tr><td>5V5 / 1V1</td><td>W A S D</td><td>鼠标瞄准 · 左键 / 空格</td><td>E</td><td>F</td><td>鼠标</td></tr></table></div>'+
+    '<div class="tblWrap mobile-only"><table><tr><th>模式</th><th>移动</th><th>射击</th><th>技能</th><th>恢复</th><th>瞄准</th></tr>'+
+    '<tr><td>5V5 / 1V1</td><td>左摇杆</td><td>右下开火键</td><td>技能键</td><td>恢复键</td><td>自动瞄准 / 右摇杆</td></tr></table></div>'+
     '<div class="pc-only">电脑快捷键：P 暂停菜单 · Esc 中途退出对局 · M 静音 · 结算后 R 再来一局。</div>'+
     '<h5>五、规则说明</h5>'+
     '<div>· 每人 100 点血量，死亡后 3 秒复活，复活后短暂无敌。<br>'+
     '· 击杀对方得 1 分；技能有冷却时间，冷却结束前不能重复释放。<br>'+
+    '· <b>恢复</b>：所有角色通用，独立按键/按钮。按下后每秒回 10 点血，<b>累计最多回 50 点</b>就自动停止；只作用于自己，不治疗队友；冷却 35 秒，血满时按下无效。<br>'+
     '· 结算界面展示双方伤害、命中率与全场最佳 MVP。</div>'
     +'<h5>六、账号与名字</h5>'
     +'<div>· <b>昵称全网唯一</b>：先注册先得，一个名字只能用一次，别人再输同一个名字会被直接拒绝。<br>'
@@ -7883,10 +8014,11 @@ function buildHelp(){
     +'<span class="mobile-only">· <b>手机移动</b>：左半屏任意位置拖动就是摇杆，手指松开回中；摇杆大小、透明度、离边距离都能在「自定义设置」里调。<br>'
     +'· <b>手机开火</b>：右下红色大键，按下即开火并自动瞄准最近敌人；按住可连发。<br>'
     +'· <b>手机技能</b>：开火键上方的黄色小键，冷却好了会亮起；技能可设为朝敌人放或跟摇杆方向放（设置里切换）。<br>'
+    +'· <b>手机恢复</b>：右下开火键上方那颗绿色键，点一下持续回血（最多回 50）；恢复中显示剩余可回量，冷却时显示秒数。<br>'
     +'· <b>手机退出</b>：左上角 ✕ 随时退出本局回主菜单；暂停需要双方同意，掉线直接判对方胜。<br>'
     +'· <b>手机显示</b>：竖屏拿起来会自动转横屏；顶部左右两侧是双方角色与血量，血条绿>黄>红；雷达在左上角，只显示你自己和已探测到的对手。<br>'
     +'· <b>手机手感</b>：开火键大小、雷达大小、界面间距都可在设置里改；已禁用双指缩放和长按复制，只有档案号那一处点一下可复制。<br></span>'
-    +'<span class="pc-only">· 电脑：W A S D 移动、鼠标瞄准、左键开火、E 放技能、P 暂停、M 静音。<br></span>'
+    +'<span class="pc-only">· 电脑：W A S D 移动、鼠标瞄准、左键开火、E 放技能、F 恢复（持续回血，最多回 50）、P 暂停、M 静音。<br></span>'
     +'· 竖屏可以玩，横屏视野更广。</div>'
     +'<h5>八、好友与明信片</h5>'
     +'<div>· 主菜单「好友」里输名字或档案号就能搜人，搜到直接看到对方的明信片（签名、段位、击杀、胜率）。<br>'
