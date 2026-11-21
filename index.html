@@ -418,10 +418,12 @@ body.skill-free #btnSkill{left:var(--skx,80%) !important;top:var(--sky,72%) !imp
 /* 布局编辑层 */
 #layoutScreen{justify-content:flex-start !important;padding:0}
 .layStage{position:relative;width:100vw;height:100vh;background:radial-gradient(circle at 30% 70%,rgba(40,80,150,.18),transparent 60%)}
-#laySkill{position:absolute;left:80%;top:72%;transform:translate(-50%,-50%);width:62px;height:62px;border-radius:50%;background:rgba(255,211,77,.3);border:2px solid rgba(255,211,77,.8);color:#ffe9a8;font-size:18px;font-weight:800;display:flex;align-items:center;justify-content:center;touch-action:none;cursor:grab;box-shadow:0 0 20px rgba(255,211,77,.35)}
-.layBar{position:fixed;left:0;right:0;bottom:0;padding:12px 14px;display:flex;gap:10px;background:linear-gradient(transparent,rgba(6,10,18,.95) 40%);z-index:60}
-.layBar .btn{flex:1}
-.layTip{position:fixed;left:0;right:0;top:14px;text-align:center;font-size:13px;color:#9fb2d0;z-index:60}
+/* 编辑层的按钮条放顶部居中：底部要留给开火/技能/恢复，放底部会挡拖拽 */
+.layBar{position:fixed;left:50%;top:8px;transform:translateX(-50%);width:min(280px,80vw);padding:5px 8px;display:flex;gap:8px;
+  background:rgba(8,14,26,.9);border:1px solid rgba(120,155,215,.28);border-radius:14px;z-index:64;pointer-events:none;
+  box-shadow:0 6px 20px rgba(0,0,0,.35)}
+.layBar .btn{flex:1;padding:7px 10px;font-size:12.5px;pointer-events:auto}
+.layTip{position:fixed;left:0;right:0;top:61px;text-align:center;font-size:12.5px;color:#9fb2d0;z-index:60;pointer-events:none;line-height:1.5}
 body.fire-left.skill-left #btnSkill{left:calc(96px + var(--uiGap,10px) * .35) !important}
 body.skill-left:not(.fire-left) #btnSkill{left:18px !important;right:auto !important}
 body.fire-left:not(.skill-left) #btnSkill{right:calc(18px + var(--uiGap,10px) * .35) !important;left:auto !important}
@@ -619,6 +621,38 @@ body.is-touch .nhTime{display:none !important}
 #btnFire.hot{box-shadow:0 0 0 2px rgba(255,138,72,.7), 0 0 22px rgba(255,138,72,.45) inset;border-color:rgba(255,138,72,.8)}
 
 .skillBox.blocked,.skBox.blocked{border-color:rgba(143,184,255,.85);box-shadow:0 0 0 2px rgba(143,184,255,.35) inset}
+
+/* ===== 手机端控件自由布局：摇杆底座 / 开火 / 技能 / 恢复 / 雷达 / 退出 均可拖动 ===== */
+#joyBase{display:none;position:fixed;left:16%;top:78%;transform:translate(-50%,-50%);width:110px;height:110px;border-radius:50%;
+  background:radial-gradient(circle,rgba(150,190,255,.13),rgba(150,190,255,.05) 66%,transparent 67%);
+  border:2px solid rgba(150,190,255,.28);z-index:47;pointer-events:auto;touch-action:none}
+#joyBase .knob{position:absolute;left:50%;top:50%;width:50px;height:50px;margin:-25px 0 0 -25px;border-radius:50%;
+  background:rgba(160,210,255,.32);border:2px solid rgba(180,215,255,.5);box-shadow:0 0 12px rgba(120,180,255,.3)}
+body.is-touch.in-game.joy-fixed #joyBase{display:block}
+body.joy-following #joyBase{display:none !important}
+body.has-overlay #joyBase,body:has(.overlay:not(.hidden)) #joyBase,
+body.ended #joyBase,body.paused-fight #joyBase{display:none !important}
+/* 自由布局：四个 DOM 控件统一用 --lx/--ly 定位（内联设置百分比，横竖屏都不跑位） */
+body.layout-free #btnFire,
+body.layout-free #btnSkill,
+body.layout-free #btnRecover,
+body.layout-free #btnExitFight{
+  left:var(--lx,50%) !important;top:var(--ly,50%) !important;right:auto !important;bottom:auto !important;
+  transform:translate(-50%,-50%) !important;margin:0 !important
+}
+body.layout-free #btnFire.on{transform:translate(-50%,-50%) scale(.94) !important}
+/* 布局编辑层：多控件拖拽 */
+.layChip{position:absolute;transform:translate(-50%,-50%);display:flex;align-items:center;justify-content:center;
+  border-radius:50%;touch-action:none;cursor:grab;user-select:none;-webkit-user-select:none;z-index:65;
+  font-size:13px;font-weight:800;color:#e8eefc;background:rgba(120,160,230,.28);border:2px solid rgba(150,190,255,.75);
+  box-shadow:0 0 16px rgba(90,140,230,.3)}
+.layChip:active{cursor:grabbing;box-shadow:0 0 22px rgba(120,180,255,.55)}
+.layChip[data-k="joy"]{width:86px;height:86px;border-radius:50%;background:rgba(120,170,255,.22);border-color:rgba(140,190,255,.8)}
+.layChip[data-k="fire"]{width:74px;height:74px;background:rgba(255,90,110,.3);border-color:rgba(255,120,140,.85);color:#ffd9df}
+.layChip[data-k="skill"]{width:54px;height:54px;background:rgba(255,211,77,.3);border-color:rgba(255,211,77,.85);color:#ffe9a8}
+.layChip[data-k="recover"]{width:54px;height:54px;background:rgba(134,239,172,.26);border-color:rgba(134,239,172,.85);color:#d9ffe7}
+.layChip[data-k="radar"]{width:78px;height:58px;border-radius:10px;background:rgba(5,9,18,.85);border-color:rgba(120,155,215,.8);color:#9fd0ff;font-size:12px}
+.layChip[data-k="exit"]{width:42px;height:42px;background:rgba(255,90,110,.2);border-color:rgba(255,120,140,.7);color:#ffb3c0}
 </style>
 <script>/* MQTT 客户端（内联，免 CDN 依赖） */
 "use strict";var mqtt=(()=>{var ys=Object.defineProperty;var Kg=Object.getOwnPropertyDescriptor;var Gg=Object.getOwnPropertyNames;var Qg=Object.prototype.hasOwnProperty;var _e=(t,e)=>()=>(t&&(e=t(t=0)),e);var M=(t,e)=>()=>(e||t((e={exports:{}}).exports,e),e.exports),Jt=(t,e)=>{for(var r in e)ys(t,r,{get:e[r],enumerable:!0})},Yg=(t,e,r,i)=>{if(e&&typeof e=="object"||typeof e=="function")for(let n of Gg(e))!Qg.call(t,n)&&n!==r&&ys(t,n,{get:()=>e[n],enumerable:!(i=Kg(e,n))||i.enumerable});return t};var X=t=>Yg(ys({},"__esModule",{value:!0}),t);var _=_e(()=>{});var B={};Jt(B,{_debugEnd:()=>yu,_debugProcess:()=>gu,_events:()=>Ou,_eventsCount:()=>xu,_exiting:()=>Yl,_fatalExceptions:()=>cu,_getActiveHandles:()=>eu,_getActiveRequests:()=>Zl,_kill:()=>ru,_linkedBinding:()=>Gl,_maxListeners:()=>ku,_preload_modules:()=>Cu,_rawDebug:()=>zl,_startProfilerIdleNotifier:()=>bu,_stopProfilerIdleNotifier:()=>wu,_tickCallback:()=>pu,abort:()=>Eu,addListener:()=>Mu,allowedNodeEnvironmentFlags:()=>lu,arch:()=>xl,argv:()=>Ul,argv0:()=>Ru,assert:()=>uu,binding:()=>Fl,chdir:()=>Hl,config:()=>Jl,cpuUsage:()=>$i,cwd:()=>$l,debugPort:()=>Tu,default:()=>$u,dlopen:()=>Xl,domain:()=>Ql,emit:()=>Du,emitWarning:()=>jl,env:()=>Ll,execArgv:()=>Nl,execPath:()=>Iu,exit:()=>ou,features:()=>fu,hasUncaughtExceptionCaptureCallback:()=>du,hrtime:()=>Wi,kill:()=>su,listeners:()=>Wu,memoryUsage:()=>nu,moduleLoadList:()=>Kl,nextTick:()=>Pl,off:()=>Uu,on:()=>wt,once:()=>Lu,openStdin:()=>au,pid:()=>Su,platform:()=>Ml,ppid:()=>Au,prependListener:()=>ju,prependOnceListener:()=>Fu,reallyExit:()=>tu,release:()=>Vl,removeAllListeners:()=>qu,removeListener:()=>Nu,resourceUsage:()=>iu,setSourceMapsEnabled:()=>Bu,setUncaughtExceptionCaptureCallback:()=>hu,stderr:()=>mu,stdin:()=>vu,stdout:()=>_u,title:()=>Ol,umask:()=>Wl,uptime:()=>Pu,version:()=>ql,versions:()=>Dl});function _s(t){throw new Error("Node.js process "+t+" is not supported by JSPM core outside of Node.js")}function Jg(){!Lr||!Xt||(Lr=!1,Xt.length?bt=Xt.concat(bt):Fi=-1,bt.length&&Bl())}function Bl(){if(!Lr){var t=setTimeout(Jg,0);Lr=!0;for(var e=bt.length;e;){for(Xt=bt,bt=[];++Fi<e;)Xt&&Xt[Fi].run();Fi=-1,e=bt.length}Xt=null,Lr=!1,clearTimeout(t)}}function Pl(t){var e=new Array(arguments.length-1);if(arguments.length>1)for(var r=1;r<arguments.length;r++)e[r-1]=arguments[r];bt.push(new kl(t,e)),bt.length===1&&!Lr&&setTimeout(Bl,0)}function kl(t,e){this.fun=t,this.array=e}function Ee(){}function Gl(t){_s("_linkedBinding")}function Xl(t){_s("dlopen")}function Zl(){return[]}function eu(){return[]}function uu(t,e){if(!t)throw new Error(e||"assertion error")}function du(){return!1}function Pu(){return Lt.now()/1e3}function Wi(t){var e=Math.floor((Date.now()-Lt.now())*.001),r=Lt.now()*.001,i=Math.floor(r)+e,n=Math.floor(r%1*1e9);return t&&(i=i-t[0],n=n-t[1],n<0&&(i--,n+=ws)),[i,n]}function wt(){return $u}function Wu(t){return[]}var bt,Lr,Xt,Fi,Ol,xl,Ml,Ll,Ul,Nl,ql,Dl,jl,Fl,Wl,$l,Hl,Vl,zl,Kl,Ql,Yl,Jl,tu,ru,$i,iu,nu,su,ou,au,lu,fu,cu,hu,pu,gu,yu,bu,wu,_u,mu,vu,Eu,Su,Au,Iu,Tu,Ru,Cu,Bu,Lt,bs,ws,ku,Ou,xu,Mu,Lu,Uu,Nu,qu,Du,ju,Fu,$u,Hu=_e(()=>{_();v();m();bt=[],Lr=!1,Fi=-1;kl.prototype.run=function(){this.fun.apply(null,this.array)};Ol="browser",xl="x64",Ml="browser",Ll={PATH:"/usr/bin",LANG:navigator.language+".UTF-8",PWD:"/",HOME:"/home",TMP:"/tmp"},Ul=["/usr/bin/node"],Nl=[],ql="v16.8.0",Dl={},jl=function(t,e){console.warn((e?e+": ":"")+t)},Fl=function(t){_s("binding")},Wl=function(t){return 0},$l=function(){return"/"},Hl=function(t){},Vl={name:"node",sourceUrl:"",headersUrl:"",libUrl:""};zl=Ee,Kl=[];Ql={},Yl=!1,Jl={};tu=Ee,ru=Ee,$i=function(){return{}},iu=$i,nu=$i,su=Ee,ou=Ee,au=Ee,lu={};fu={inspector:!1,debug:!1,uv:!1,ipv6:!1,tls_alpn:!1,tls_sni:!1,tls_ocsp:!1,tls:!1,cached_builtins:!0},cu=Ee,hu=Ee;pu=Ee,gu=Ee,yu=Ee,bu=Ee,wu=Ee,_u=void 0,mu=void 0,vu=void 0,Eu=Ee,Su=2,Au=1,Iu="/bin/usr/node",Tu=9229,Ru="node",Cu=[],Bu=Ee,Lt={now:typeof performance<"u"?performance.now.bind(performance):void 0,timing:typeof performance<"u"?performance.timing:void 0};Lt.now===void 0&&(bs=Date.now(),Lt.timing&&Lt.timing.navigationStart&&(bs=Lt.timing.navigationStart),Lt.now=()=>Date.now()-bs);ws=1e9;Wi.bigint=function(t){var e=Wi(t);return typeof BigInt>"u"?e[0]*ws+e[1]:BigInt(e[0]*ws)+BigInt(e[1])};ku=10,Ou={},xu=0;Mu=wt,Lu=wt,Uu=wt,Nu=wt,qu=wt,Du=Ee,ju=wt,Fu=wt;$u={version:ql,versions:Dl,arch:xl,platform:Ml,release:Vl,_rawDebug:zl,moduleLoadList:Kl,binding:Fl,_linkedBinding:Gl,_events:Ou,_eventsCount:xu,_maxListeners:ku,on:wt,addListener:Mu,once:Lu,off:Uu,removeListener:Nu,removeAllListeners:qu,emit:Du,prependListener:ju,prependOnceListener:Fu,listeners:Wu,domain:Ql,_exiting:Yl,config:Jl,dlopen:Xl,uptime:Pu,_getActiveRequests:Zl,_getActiveHandles:eu,reallyExit:tu,_kill:ru,cpuUsage:$i,resourceUsage:iu,memoryUsage:nu,kill:su,exit:ou,openStdin:au,allowedNodeEnvironmentFlags:lu,assert:uu,features:fu,_fatalExceptions:cu,setUncaughtExceptionCaptureCallback:hu,hasUncaughtExceptionCaptureCallback:du,emitWarning:jl,nextTick:Pl,_tickCallback:pu,_debugProcess:gu,_debugEnd:yu,_startProfilerIdleNotifier:bu,_stopProfilerIdleNotifier:wu,stdout:_u,stdin:vu,stderr:mu,abort:Eu,umask:Wl,chdir:Hl,cwd:$l,env:Ll,title:Ol,argv:Ul,execArgv:Nl,pid:Su,ppid:Au,execPath:Iu,debugPort:Tu,hrtime:Wi,argv0:Ru,_preload_modules:Cu,setSourceMapsEnabled:Bu}});var m=_e(()=>{Hu()});var me={};Jt(me,{Buffer:()=>x,INSPECT_MAX_BYTES:()=>ty,default:()=>Ut,kMaxLength:()=>ry});function Xg(){if(Vu)return ci;Vu=!0,ci.byteLength=a,ci.toByteArray=c,ci.fromByteArray=g;for(var t=[],e=[],r=typeof Uint8Array<"u"?Uint8Array:Array,i="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/",n=0,o=i.length;n<o;++n)t[n]=i[n],e[i.charCodeAt(n)]=n;e["-".charCodeAt(0)]=62,e["_".charCodeAt(0)]=63;function s(y){var w=y.length;if(w%4>0)throw new Error("Invalid string. Length must be a multiple of 4");var S=y.indexOf("=");S===-1&&(S=w);var E=S===w?0:4-S%4;return[S,E]}function a(y){var w=s(y),S=w[0],E=w[1];return(S+E)*3/4-E}function l(y,w,S){return(w+S)*3/4-S}function c(y){var w,S=s(y),E=S[0],I=S[1],C=new r(l(y,E,I)),R=0,U=I>0?E-4:E,N;for(N=0;N<U;N+=4)w=e[y.charCodeAt(N)]<<18|e[y.charCodeAt(N+1)]<<12|e[y.charCodeAt(N+2)]<<6|e[y.charCodeAt(N+3)],C[R++]=w>>16&255,C[R++]=w>>8&255,C[R++]=w&255;return I===2&&(w=e[y.charCodeAt(N)]<<2|e[y.charCodeAt(N+1)]>>4,C[R++]=w&255),I===1&&(w=e[y.charCodeAt(N)]<<10|e[y.charCodeAt(N+1)]<<4|e[y.charCodeAt(N+2)]>>2,C[R++]=w>>8&255,C[R++]=w&255),C}function h(y){return t[y>>18&63]+t[y>>12&63]+t[y>>6&63]+t[y&63]}function d(y,w,S){for(var E,I=[],C=w;C<S;C+=3)E=(y[C]<<16&16711680)+(y[C+1]<<8&65280)+(y[C+2]&255),I.push(h(E));return I.join("")}function g(y){for(var w,S=y.length,E=S%3,I=[],C=16383,R=0,U=S-E;R<U;R+=C)I.push(d(y,R,R+C>U?U:R+C));return E===1?(w=y[S-1],I.push(t[w>>2]+t[w<<4&63]+"==")):E===2&&(w=(y[S-2]<<8)+y[S-1],I.push(t[w>>10]+t[w>>4&63]+t[w<<2&63]+"=")),I.join("")}return ci}function Zg(){if(zu)return Hi;zu=!0;return Hi.read=function(t,e,r,i,n){var o,s,a=n*8-i-1,l=(1<<a)-1,c=l>>1,h=-7,d=r?n-1:0,g=r?-1:1,y=t[e+d];for(d+=g,o=y&(1<<-h)-1,y>>=-h,h+=a;h>0;o=o*256+t[e+d],d+=g,h-=8);for(s=o&(1<<-h)-1,o>>=-h,h+=i;h>0;s=s*256+t[e+d],d+=g,h-=8);if(o===0)o=1-c;else{if(o===l)return s?NaN:(y?-1:1)*(1/0);s=s+Math.pow(2,i),o=o-c}return(y?-1:1)*s*Math.pow(2,o-i)},Hi.write=function(t,e,r,i,n,o){var s,a,l,c=o*8-n-1,h=(1<<c)-1,d=h>>1,g=n===23?Math.pow(2,-24)-Math.pow(2,-77):0,y=i?0:o-1,w=i?1:-1,S=e<0||e===0&&1/e<0?1:0;for(e=Math.abs(e),isNaN(e)||e===1/0?(a=isNaN(e)?1:0,s=h):(s=Math.floor(Math.log(e)/Math.LN2),e*(l=Math.pow(2,-s))<1&&(s--,l*=2),s+d>=1?e+=g/l:e+=g*Math.pow(2,1-d),e*l>=2&&(s++,l/=2),s+d>=h?(a=0,s=h):s+d>=1?(a=(e*l-1)*Math.pow(2,n),s=s+d):(a=e*Math.pow(2,d-1)*Math.pow(2,n),s=0));n>=8;t[r+y]=a&255,y+=w,a/=256,n-=8);for(s=s<<n|a,c+=n;c>0;t[r+y]=s&255,y+=w,s/=256,c-=8);t[r+y-w]|=S*128},Hi}function ey(){if(Ku)return Zt;Ku=!0;let t=Xg(),e=Zg(),r=typeof Symbol=="function"&&typeof Symbol.for=="function"?Symbol.for("nodejs.util.inspect.custom"):null;Zt.Buffer=s,Zt.SlowBuffer=I,Zt.INSPECT_MAX_BYTES=50;let i=2147483647;Zt.kMaxLength=i,s.TYPED_ARRAY_SUPPORT=n(),!s.TYPED_ARRAY_SUPPORT&&typeof console<"u"&&typeof console.error=="function"&&console.error("This browser lacks typed array (Uint8Array) support which is required by `buffer` v5.x. Use `buffer` v4.x if you require old browser support.");function n(){try{let p=new Uint8Array(1),u={foo:function(){return 42}};return Object.setPrototypeOf(u,Uint8Array.prototype),Object.setPrototypeOf(p,u),p.foo()===42}catch{return!1}}Object.defineProperty(s.prototype,"parent",{enumerable:!0,get:function(){if(s.isBuffer(this))return this.buffer}}),Object.defineProperty(s.prototype,"offset",{enumerable:!0,get:function(){if(s.isBuffer(this))return this.byteOffset}});function o(p){if(p>i)throw new RangeError('The value "'+p+'" is invalid for option "size"');let u=new Uint8Array(p);return Object.setPrototypeOf(u,s.prototype),u}function s(p,u,f){if(typeof p=="number"){if(typeof u=="string")throw new TypeError('The "string" argument must be of type string. Received type number');return h(p)}return a(p,u,f)}s.poolSize=8192;function a(p,u,f){if(typeof p=="string")return d(p,u);if(ArrayBuffer.isView(p))return y(p);if(p==null)throw new TypeError("The first argument must be one of type string, Buffer, ArrayBuffer, Array, or Array-like Object. Received type "+typeof p);if(Ye(p,ArrayBuffer)||p&&Ye(p.buffer,ArrayBuffer)||typeof SharedArrayBuffer<"u"&&(Ye(p,SharedArrayBuffer)||p&&Ye(p.buffer,SharedArrayBuffer)))return w(p,u,f);if(typeof p=="number")throw new TypeError('The "value" argument must not be of type number. Received type number');let b=p.valueOf&&p.valueOf();if(b!=null&&b!==p)return s.from(b,u,f);let A=S(p);if(A)return A;if(typeof Symbol<"u"&&Symbol.toPrimitive!=null&&typeof p[Symbol.toPrimitive]=="function")return s.from(p[Symbol.toPrimitive]("string"),u,f);throw new TypeError("The first argument must be one of type string, Buffer, ArrayBuffer, Array, or Array-like Object. Received type "+typeof p)}s.from=function(p,u,f){return a(p,u,f)},Object.setPrototypeOf(s.prototype,Uint8Array.prototype),Object.setPrototypeOf(s,Uint8Array);function l(p){if(typeof p!="number")throw new TypeError('"size" argument must be of type number');if(p<0)throw new RangeError('The value "'+p+'" is invalid for option "size"')}function c(p,u,f){return l(p),p<=0?o(p):u!==void 0?typeof f=="string"?o(p).fill(u,f):o(p).fill(u):o(p)}s.alloc=function(p,u,f){return c(p,u,f)};function h(p){return l(p),o(p<0?0:E(p)|0)}s.allocUnsafe=function(p){return h(p)},s.allocUnsafeSlow=function(p){return h(p)};function d(p,u){if((typeof u!="string"||u==="")&&(u="utf8"),!s.isEncoding(u))throw new TypeError("Unknown encoding: "+u);let f=C(p,u)|0,b=o(f),A=b.write(p,u);return A!==f&&(b=b.slice(0,A)),b}function g(p){let u=p.length<0?0:E(p.length)|0,f=o(u);for(let b=0;b<u;b+=1)f[b]=p[b]&255;return f}function y(p){if(Ye(p,Uint8Array)){let u=new Uint8Array(p);return w(u.buffer,u.byteOffset,u.byteLength)}return g(p)}function w(p,u,f){if(u<0||p.byteLength<u)throw new RangeError('"offset" is outside of buffer bounds');if(p.byteLength<u+(f||0))throw new RangeError('"length" is outside of buffer bounds');let b;return u===void 0&&f===void 0?b=new Uint8Array(p):f===void 0?b=new Uint8Array(p,u):b=new Uint8Array(p,u,f),Object.setPrototypeOf(b,s.prototype),b}function S(p){if(s.isBuffer(p)){let u=E(p.length)|0,f=o(u);return f.length===0||p.copy(f,0,0,u),f}if(p.length!==void 0)return typeof p.length!="number"||gs(p.length)?o(0):g(p);if(p.type==="Buffer"&&Array.isArray(p.data))return g(p.data)}function E(p){if(p>=i)throw new RangeError("Attempt to allocate Buffer larger than maximum size: 0x"+i.toString(16)+" bytes");return p|0}function I(p){return+p!=p&&(p=0),s.alloc(+p)}s.isBuffer=function(u){return u!=null&&u._isBuffer===!0&&u!==s.prototype},s.compare=function(u,f){if(Ye(u,Uint8Array)&&(u=s.from(u,u.offset,u.byteLength)),Ye(f,Uint8Array)&&(f=s.from(f,f.offset,f.byteLength)),!s.isBuffer(u)||!s.isBuffer(f))throw new TypeError('The "buf1", "buf2" arguments must be one of type Buffer or Uint8Array');if(u===f)return 0;let b=u.length,A=f.length;for(let T=0,P=Math.min(b,A);T<P;++T)if(u[T]!==f[T]){b=u[T],A=f[T];break}return b<A?-1:A<b?1:0},s.isEncoding=function(u){switch(String(u).toLowerCase()){case"hex":case"utf8":case"utf-8":case"ascii":case"latin1":case"binary":case"base64":case"ucs2":case"ucs-2":case"utf16le":case"utf-16le":return!0;default:return!1}},s.concat=function(u,f){if(!Array.isArray(u))throw new TypeError('"list" argument must be an Array of Buffers');if(u.length===0)return s.alloc(0);let b;if(f===void 0)for(f=0,b=0;b<u.length;++b)f+=u[b].length;let A=s.allocUnsafe(f),T=0;for(b=0;b<u.length;++b){let P=u[b];if(Ye(P,Uint8Array))T+P.length>A.length?(s.isBuffer(P)||(P=s.from(P)),P.copy(A,T)):Uint8Array.prototype.set.call(A,P,T);else if(s.isBuffer(P))P.copy(A,T);else throw new TypeError('"list" argument must be an Array of Buffers');T+=P.length}return A};function C(p,u){if(s.isBuffer(p))return p.length;if(ArrayBuffer.isView(p)||Ye(p,ArrayBuffer))return p.byteLength;if(typeof p!="string")throw new TypeError('The "string" argument must be one of type string, Buffer, or ArrayBuffer. Received type '+typeof p);let f=p.length,b=arguments.length>2&&arguments[2]===!0;if(!b&&f===0)return 0;let A=!1;for(;;)switch(u){case"ascii":case"latin1":case"binary":return f;case"utf8":case"utf-8":return ps(p).length;case"ucs2":case"ucs-2":case"utf16le":case"utf-16le":return f*2;case"hex":return f>>>1;case"base64":return Cl(p).length;default:if(A)return b?-1:ps(p).length;u=(""+u).toLowerCase(),A=!0}}s.byteLength=C;function R(p,u,f){let b=!1;if((u===void 0||u<0)&&(u=0),u>this.length||((f===void 0||f>this.length)&&(f=this.length),f<=0)||(f>>>=0,u>>>=0,f<=u))return"";for(p||(p="utf8");;)switch(p){case"hex":return qg(this,u,f);case"utf8":case"utf-8":return Pr(this,u,f);case"ascii":return hs(this,u,f);case"latin1":case"binary":return Ng(this,u,f);case"base64":return ge(this,u,f);case"ucs2":case"ucs-2":case"utf16le":case"utf-16le":return Dg(this,u,f);default:if(b)throw new TypeError("Unknown encoding: "+p);p=(p+"").toLowerCase(),b=!0}}s.prototype._isBuffer=!0;function U(p,u,f){let b=p[u];p[u]=p[f],p[f]=b}s.prototype.swap16=function(){let u=this.length;if(u%2!==0)throw new RangeError("Buffer size must be a multiple of 16-bits");for(let f=0;f<u;f+=2)U(this,f,f+1);return this},s.prototype.swap32=function(){let u=this.length;if(u%4!==0)throw new RangeError("Buffer size must be a multiple of 32-bits");for(let f=0;f<u;f+=4)U(this,f,f+3),U(this,f+1,f+2);return this},s.prototype.swap64=function(){let u=this.length;if(u%8!==0)throw new RangeError("Buffer size must be a multiple of 64-bits");for(let f=0;f<u;f+=8)U(this,f,f+7),U(this,f+1,f+6),U(this,f+2,f+5),U(this,f+3,f+4);return this},s.prototype.toString=function(){let u=this.length;return u===0?"":arguments.length===0?Pr(this,0,u):R.apply(this,arguments)},s.prototype.toLocaleString=s.prototype.toString,s.prototype.equals=function(u){if(!s.isBuffer(u))throw new TypeError("Argument must be a Buffer");return this===u?!0:s.compare(this,u)===0},s.prototype.inspect=function(){let u="",f=Zt.INSPECT_MAX_BYTES;return u=this.toString("hex",0,f).replace(/(.{2})/g,"$1 ").trim(),this.length>f&&(u+=" ... "),"<Buffer "+u+">"},r&&(s.prototype[r]=s.prototype.inspect),s.prototype.compare=function(u,f,b,A,T){if(Ye(u,Uint8Array)&&(u=s.from(u,u.offset,u.byteLength)),!s.isBuffer(u))throw new TypeError('The "target" argument must be one of type Buffer or Uint8Array. Received type '+typeof u);if(f===void 0&&(f=0),b===void 0&&(b=u?u.length:0),A===void 0&&(A=0),T===void 0&&(T=this.length),f<0||b>u.length||A<0||T>this.length)throw new RangeError("out of range index");if(A>=T&&f>=b)return 0;if(A>=T)return-1;if(f>=b)return 1;if(f>>>=0,b>>>=0,A>>>=0,T>>>=0,this===u)return 0;let P=T-A,$=b-f,se=Math.min(P,$),te=this.slice(A,T),oe=u.slice(f,b);for(let J=0;J<se;++J)if(te[J]!==oe[J]){P=te[J],$=oe[J];break}return P<$?-1:$<P?1:0};function N(p,u,f,b,A){if(p.length===0)return-1;if(typeof f=="string"?(b=f,f=0):f>2147483647?f=2147483647:f<-2147483648&&(f=-2147483648),f=+f,gs(f)&&(f=A?0:p.length-1),f<0&&(f=p.length+f),f>=p.length){if(A)return-1;f=p.length-1}else if(f<0)if(A)f=0;else return-1;if(typeof u=="string"&&(u=s.from(u,b)),s.isBuffer(u))return u.length===0?-1:W(p,u,f,b,A);if(typeof u=="number")return u=u&255,typeof Uint8Array.prototype.indexOf=="function"?A?Uint8Array.prototype.indexOf.call(p,u,f):Uint8Array.prototype.lastIndexOf.call(p,u,f):W(p,[u],f,b,A);throw new TypeError("val must be string, number or Buffer")}function W(p,u,f,b,A){let T=1,P=p.length,$=u.length;if(b!==void 0&&(b=String(b).toLowerCase(),b==="ucs2"||b==="ucs-2"||b==="utf16le"||b==="utf-16le")){if(p.length<2||u.length<2)return-1;T=2,P/=2,$/=2,f/=2}function se(oe,J){return T===1?oe[J]:oe.readUInt16BE(J*T)}let te;if(A){let oe=-1;for(te=f;te<P;te++)if(se(p,te)===se(u,oe===-1?0:te-oe)){if(oe===-1&&(oe=te),te-oe+1===$)return oe*T}else oe!==-1&&(te-=te-oe),oe=-1}else for(f+$>P&&(f=P-$),te=f;te>=0;te--){let oe=!0;for(let J=0;J<$;J++)if(se(p,te+J)!==se(u,J)){oe=!1;break}if(oe)return te}return-1}s.prototype.includes=function(u,f,b){return this.indexOf(u,f,b)!==-1},s.prototype.indexOf=function(u,f,b){return N(this,u,f,b,!0)},s.prototype.lastIndexOf=function(u,f,b){return N(this,u,f,b,!1)};function K(p,u,f,b){f=Number(f)||0;let A=p.length-f;b?(b=Number(b),b>A&&(b=A)):b=A;let T=u.length;b>T/2&&(b=T/2);let P;for(P=0;P<b;++P){let $=parseInt(u.substr(P*2,2),16);if(gs($))return P;p[f+P]=$}return P}function z(p,u,f,b){return ji(ps(u,p.length-f),p,f,b)}function Q(p,u,f,b){return ji($g(u),p,f,b)}function pe(p,u,f,b){return ji(Cl(u),p,f,b)}function Yt(p,u,f,b){return ji(Hg(u,p.length-f),p,f,b)}s.prototype.write=function(u,f,b,A){if(f===void 0)A="utf8",b=this.length,f=0;else if(b===void 0&&typeof f=="string")A=f,b=this.length,f=0;else if(isFinite(f))f=f>>>0,isFinite(b)?(b=b>>>0,A===void 0&&(A="utf8")):(A=b,b=void 0);else throw new Error("Buffer.write(string, encoding, offset[, length]) is no longer supported");let T=this.length-f;if((b===void 0||b>T)&&(b=T),u.length>0&&(b<0||f<0)||f>this.length)throw new RangeError("Attempt to write outside buffer bounds");A||(A="utf8");let P=!1;for(;;)switch(A){case"hex":return K(this,u,f,b);case"utf8":case"utf-8":return z(this,u,f,b);case"ascii":case"latin1":case"binary":return Q(this,u,f,b);case"base64":return pe(this,u,f,b);case"ucs2":case"ucs-2":case"utf16le":case"utf-16le":return Yt(this,u,f,b);default:if(P)throw new TypeError("Unknown encoding: "+A);A=(""+A).toLowerCase(),P=!0}},s.prototype.toJSON=function(){return{type:"Buffer",data:Array.prototype.slice.call(this._arr||this,0)}};function ge(p,u,f){return u===0&&f===p.length?t.fromByteArray(p):t.fromByteArray(p.slice(u,f))}function Pr(p,u,f){f=Math.min(p.length,f);let b=[],A=u;for(;A<f;){let T=p[A],P=null,$=T>239?4:T>223?3:T>191?2:1;if(A+$<=f){let se,te,oe,J;switch($){case 1:T<128&&(P=T);break;case 2:se=p[A+1],(se&192)===128&&(J=(T&31)<<6|se&63,J>127&&(P=J));break;case 3:se=p[A+1],te=p[A+2],(se&192)===128&&(te&192)===128&&(J=(T&15)<<12|(se&63)<<6|te&63,J>2047&&(J<55296||J>57343)&&(P=J));break;case 4:se=p[A+1],te=p[A+2],oe=p[A+3],(se&192)===128&&(te&192)===128&&(oe&192)===128&&(J=(T&15)<<18|(se&63)<<12|(te&63)<<6|oe&63,J>65535&&J<1114112&&(P=J))}}P===null?(P=65533,$=1):P>65535&&(P-=65536,b.push(P>>>10&1023|55296),P=56320|P&1023),b.push(P),A+=$}return Or(b)}let kr=4096;function Or(p){let u=p.length;if(u<=kr)return String.fromCharCode.apply(String,p);let f="",b=0;for(;b<u;)f+=String.fromCharCode.apply(String,p.slice(b,b+=kr));return f}function hs(p,u,f){let b="";f=Math.min(p.length,f);for(let A=u;A<f;++A)b+=String.fromCharCode(p[A]&127);return b}function Ng(p,u,f){let b="";f=Math.min(p.length,f);for(let A=u;A<f;++A)b+=String.fromCharCode(p[A]);return b}function qg(p,u,f){let b=p.length;(!u||u<0)&&(u=0),(!f||f<0||f>b)&&(f=b);let A="";for(let T=u;T<f;++T)A+=Vg[p[T]];return A}function Dg(p,u,f){let b=p.slice(u,f),A="";for(let T=0;T<b.length-1;T+=2)A+=String.fromCharCode(b[T]+b[T+1]*256);return A}s.prototype.slice=function(u,f){let b=this.length;u=~~u,f=f===void 0?b:~~f,u<0?(u+=b,u<0&&(u=0)):u>b&&(u=b),f<0?(f+=b,f<0&&(f=0)):f>b&&(f=b),f<u&&(f=u);let A=this.subarray(u,f);return Object.setPrototypeOf(A,s.prototype),A};function ye(p,u,f){if(p%1!==0||p<0)throw new RangeError("offset is not uint");if(p+u>f)throw new RangeError("Trying to access beyond buffer length")}s.prototype.readUintLE=s.prototype.readUIntLE=function(u,f,b){u=u>>>0,f=f>>>0,b||ye(u,f,this.length);let A=this[u],T=1,P=0;for(;++P<f&&(T*=256);)A+=this[u+P]*T;return A},s.prototype.readUintBE=s.prototype.readUIntBE=function(u,f,b){u=u>>>0,f=f>>>0,b||ye(u,f,this.length);let A=this[u+--f],T=1;for(;f>0&&(T*=256);)A+=this[u+--f]*T;return A},s.prototype.readUint8=s.prototype.readUInt8=function(u,f){return u=u>>>0,f||ye(u,1,this.length),this[u]},s.prototype.readUint16LE=s.prototype.readUInt16LE=function(u,f){return u=u>>>0,f||ye(u,2,this.length),this[u]|this[u+1]<<8},s.prototype.readUint16BE=s.prototype.readUInt16BE=function(u,f){return u=u>>>0,f||ye(u,2,this.length),this[u]<<8|this[u+1]},s.prototype.readUint32LE=s.prototype.readUInt32LE=function(u,f){return u=u>>>0,f||ye(u,4,this.length),(this[u]|this[u+1]<<8|this[u+2]<<16)+this[u+3]*16777216},s.prototype.readUint32BE=s.prototype.readUInt32BE=function(u,f){return u=u>>>0,f||ye(u,4,this.length),this[u]*16777216+(this[u+1]<<16|this[u+2]<<8|this[u+3])},s.prototype.readBigUInt64LE=Mt(function(u){u=u>>>0,Mr(u,"offset");let f=this[u],b=this[u+7];(f===void 0||b===void 0)&&fi(u,this.length-8);let A=f+this[++u]*2**8+this[++u]*2**16+this[++u]*2**24,T=this[++u]+this[++u]*2**8+this[++u]*2**16+b*2**24;return BigInt(A)+(BigInt(T)<<BigInt(32))}),s.prototype.readBigUInt64BE=Mt(function(u){u=u>>>0,Mr(u,"offset");let f=this[u],b=this[u+7];(f===void 0||b===void 0)&&fi(u,this.length-8);let A=f*2**24+this[++u]*2**16+this[++u]*2**8+this[++u],T=this[++u]*2**24+this[++u]*2**16+this[++u]*2**8+b;return(BigInt(A)<<BigInt(32))+BigInt(T)}),s.prototype.readIntLE=function(u,f,b){u=u>>>0,f=f>>>0,b||ye(u,f,this.length);let A=this[u],T=1,P=0;for(;++P<f&&(T*=256);)A+=this[u+P]*T;return T*=128,A>=T&&(A-=Math.pow(2,8*f)),A},s.prototype.readIntBE=function(u,f,b){u=u>>>0,f=f>>>0,b||ye(u,f,this.length);let A=f,T=1,P=this[u+--A];for(;A>0&&(T*=256);)P+=this[u+--A]*T;return T*=128,P>=T&&(P-=Math.pow(2,8*f)),P},s.prototype.readInt8=function(u,f){return u=u>>>0,f||ye(u,1,this.length),this[u]&128?(255-this[u]+1)*-1:this[u]},s.prototype.readInt16LE=function(u,f){u=u>>>0,f||ye(u,2,this.length);let b=this[u]|this[u+1]<<8;return b&32768?b|4294901760:b},s.prototype.readInt16BE=function(u,f){u=u>>>0,f||ye(u,2,this.length);let b=this[u+1]|this[u]<<8;return b&32768?b|4294901760:b},s.prototype.readInt32LE=function(u,f){return u=u>>>0,f||ye(u,4,this.length),this[u]|this[u+1]<<8|this[u+2]<<16|this[u+3]<<24},s.prototype.readInt32BE=function(u,f){return u=u>>>0,f||ye(u,4,this.length),this[u]<<24|this[u+1]<<16|this[u+2]<<8|this[u+3]},s.prototype.readBigInt64LE=Mt(function(u){u=u>>>0,Mr(u,"offset");let f=this[u],b=this[u+7];(f===void 0||b===void 0)&&fi(u,this.length-8);let A=this[u+4]+this[u+5]*2**8+this[u+6]*2**16+(b<<24);return(BigInt(A)<<BigInt(32))+BigInt(f+this[++u]*2**8+this[++u]*2**16+this[++u]*2**24)}),s.prototype.readBigInt64BE=Mt(function(u){u=u>>>0,Mr(u,"offset");let f=this[u],b=this[u+7];(f===void 0||b===void 0)&&fi(u,this.length-8);let A=(f<<24)+this[++u]*2**16+this[++u]*2**8+this[++u];return(BigInt(A)<<BigInt(32))+BigInt(this[++u]*2**24+this[++u]*2**16+this[++u]*2**8+b)}),s.prototype.readFloatLE=function(u,f){return u=u>>>0,f||ye(u,4,this.length),e.read(this,u,!0,23,4)},s.prototype.readFloatBE=function(u,f){return u=u>>>0,f||ye(u,4,this.length),e.read(this,u,!1,23,4)},s.prototype.readDoubleLE=function(u,f){return u=u>>>0,f||ye(u,8,this.length),e.read(this,u,!0,52,8)},s.prototype.readDoubleBE=function(u,f){return u=u>>>0,f||ye(u,8,this.length),e.read(this,u,!1,52,8)};function Ce(p,u,f,b,A,T){if(!s.isBuffer(p))throw new TypeError('"buffer" argument must be a Buffer instance');if(u>A||u<T)throw new RangeError('"value" argument is out of bounds');if(f+b>p.length)throw new RangeError("Index out of range")}s.prototype.writeUintLE=s.prototype.writeUIntLE=function(u,f,b,A){if(u=+u,f=f>>>0,b=b>>>0,!A){let $=Math.pow(2,8*b)-1;Ce(this,u,f,b,$,0)}let T=1,P=0;for(this[f]=u&255;++P<b&&(T*=256);)this[f+P]=u/T&255;return f+b},s.prototype.writeUintBE=s.prototype.writeUIntBE=function(u,f,b,A){if(u=+u,f=f>>>0,b=b>>>0,!A){let $=Math.pow(2,8*b)-1;Ce(this,u,f,b,$,0)}let T=b-1,P=1;for(this[f+T]=u&255;--T>=0&&(P*=256);)this[f+T]=u/P&255;return f+b},s.prototype.writeUint8=s.prototype.writeUInt8=function(u,f,b){return u=+u,f=f>>>0,b||Ce(this,u,f,1,255,0),this[f]=u&255,f+1},s.prototype.writeUint16LE=s.prototype.writeUInt16LE=function(u,f,b){return u=+u,f=f>>>0,b||Ce(this,u,f,2,65535,0),this[f]=u&255,this[f+1]=u>>>8,f+2},s.prototype.writeUint16BE=s.prototype.writeUInt16BE=function(u,f,b){return u=+u,f=f>>>0,b||Ce(this,u,f,2,65535,0),this[f]=u>>>8,this[f+1]=u&255,f+2},s.prototype.writeUint32LE=s.prototype.writeUInt32LE=function(u,f,b){return u=+u,f=f>>>0,b||Ce(this,u,f,4,4294967295,0),this[f+3]=u>>>24,this[f+2]=u>>>16,this[f+1]=u>>>8,this[f]=u&255,f+4},s.prototype.writeUint32BE=s.prototype.writeUInt32BE=function(u,f,b){return u=+u,f=f>>>0,b||Ce(this,u,f,4,4294967295,0),this[f]=u>>>24,this[f+1]=u>>>16,this[f+2]=u>>>8,this[f+3]=u&255,f+4};function vl(p,u,f,b,A){Rl(u,b,A,p,f,7);let T=Number(u&BigInt(4294967295));p[f++]=T,T=T>>8,p[f++]=T,T=T>>8,p[f++]=T,T=T>>8,p[f++]=T;let P=Number(u>>BigInt(32)&BigInt(4294967295));return p[f++]=P,P=P>>8,p[f++]=P,P=P>>8,p[f++]=P,P=P>>8,p[f++]=P,f}function El(p,u,f,b,A){Rl(u,b,A,p,f,7);let T=Number(u&BigInt(4294967295));p[f+7]=T,T=T>>8,p[f+6]=T,T=T>>8,p[f+5]=T,T=T>>8,p[f+4]=T;let P=Number(u>>BigInt(32)&BigInt(4294967295));return p[f+3]=P,P=P>>8,p[f+2]=P,P=P>>8,p[f+1]=P,P=P>>8,p[f]=P,f+8}s.prototype.writeBigUInt64LE=Mt(function(u,f=0){return vl(this,u,f,BigInt(0),BigInt("0xffffffffffffffff"))}),s.prototype.writeBigUInt64BE=Mt(function(u,f=0){return El(this,u,f,BigInt(0),BigInt("0xffffffffffffffff"))}),s.prototype.writeIntLE=function(u,f,b,A){if(u=+u,f=f>>>0,!A){let se=Math.pow(2,8*b-1);Ce(this,u,f,b,se-1,-se)}let T=0,P=1,$=0;for(this[f]=u&255;++T<b&&(P*=256);)u<0&&$===0&&this[f+T-1]!==0&&($=1),this[f+T]=(u/P>>0)-$&255;return f+b},s.prototype.writeIntBE=function(u,f,b,A){if(u=+u,f=f>>>0,!A){let se=Math.pow(2,8*b-1);Ce(this,u,f,b,se-1,-se)}let T=b-1,P=1,$=0;for(this[f+T]=u&255;--T>=0&&(P*=256);)u<0&&$===0&&this[f+T+1]!==0&&($=1),this[f+T]=(u/P>>0)-$&255;return f+b},s.prototype.writeInt8=function(u,f,b){return u=+u,f=f>>>0,b||Ce(this,u,f,1,127,-128),u<0&&(u=255+u+1),this[f]=u&255,f+1},s.prototype.writeInt16LE=function(u,f,b){return u=+u,f=f>>>0,b||Ce(this,u,f,2,32767,-32768),this[f]=u&255,this[f+1]=u>>>8,f+2},s.prototype.writeInt16BE=function(u,f,b){return u=+u,f=f>>>0,b||Ce(this,u,f,2,32767,-32768),this[f]=u>>>8,this[f+1]=u&255,f+2},s.prototype.writeInt32LE=function(u,f,b){return u=+u,f=f>>>0,b||Ce(this,u,f,4,2147483647,-2147483648),this[f]=u&255,this[f+1]=u>>>8,this[f+2]=u>>>16,this[f+3]=u>>>24,f+4},s.prototype.writeInt32BE=function(u,f,b){return u=+u,f=f>>>0,b||Ce(this,u,f,4,2147483647,-2147483648),u<0&&(u=4294967295+u+1),this[f]=u>>>24,this[f+1]=u>>>16,this[f+2]=u>>>8,this[f+3]=u&255,f+4},s.prototype.writeBigInt64LE=Mt(function(u,f=0){return vl(this,u,f,-BigInt("0x8000000000000000"),BigInt("0x7fffffffffffffff"))}),s.prototype.writeBigInt64BE=Mt(function(u,f=0){return El(this,u,f,-BigInt("0x8000000000000000"),BigInt("0x7fffffffffffffff"))});function Sl(p,u,f,b,A,T){if(f+b>p.length)throw new RangeError("Index out of range");if(f<0)throw new RangeError("Index out of range")}function Al(p,u,f,b,A){return u=+u,f=f>>>0,A||Sl(p,u,f,4),e.write(p,u,f,b,23,4),f+4}s.prototype.writeFloatLE=function(u,f,b){return Al(this,u,f,!0,b)},s.prototype.writeFloatBE=function(u,f,b){return Al(this,u,f,!1,b)};function Il(p,u,f,b,A){return u=+u,f=f>>>0,A||Sl(p,u,f,8),e.write(p,u,f,b,52,8),f+8}s.prototype.writeDoubleLE=function(u,f,b){return Il(this,u,f,!0,b)},s.prototype.writeDoubleBE=function(u,f,b){return Il(this,u,f,!1,b)},s.prototype.copy=function(u,f,b,A){if(!s.isBuffer(u))throw new TypeError("argument should be a Buffer");if(b||(b=0),!A&&A!==0&&(A=this.length),f>=u.length&&(f=u.length),f||(f=0),A>0&&A<b&&(A=b),A===b||u.length===0||this.length===0)return 0;if(f<0)throw new RangeError("targetStart out of bounds");if(b<0||b>=this.length)throw new RangeError("Index out of range");if(A<0)throw new RangeError("sourceEnd out of bounds");A>this.length&&(A=this.length),u.length-f<A-b&&(A=u.length-f+b);let T=A-b;return this===u&&typeof Uint8Array.prototype.copyWithin=="function"?this.copyWithin(f,b,A):Uint8Array.prototype.set.call(u,this.subarray(b,A),f),T},s.prototype.fill=function(u,f,b,A){if(typeof u=="string"){if(typeof f=="string"?(A=f,f=0,b=this.length):typeof b=="string"&&(A=b,b=this.length),A!==void 0&&typeof A!="string")throw new TypeError("encoding must be a string");if(typeof A=="string"&&!s.isEncoding(A))throw new TypeError("Unknown encoding: "+A);if(u.length===1){let P=u.charCodeAt(0);(A==="utf8"&&P<128||A==="latin1")&&(u=P)}}else typeof u=="number"?u=u&255:typeof u=="boolean"&&(u=Number(u));if(f<0||this.length<f||this.length<b)throw new RangeError("Out of range index");if(b<=f)return this;f=f>>>0,b=b===void 0?this.length:b>>>0,u||(u=0);let T;if(typeof u=="number")for(T=f;T<b;++T)this[T]=u;else{let P=s.isBuffer(u)?u:s.from(u,A),$=P.length;if($===0)throw new TypeError('The value "'+u+'" is invalid for argument "value"');for(T=0;T<b-f;++T)this[T+f]=P[T%$]}return this};let xr={};function ds(p,u,f){xr[p]=class extends f{constructor(){super(),Object.defineProperty(this,"message",{value:u.apply(this,arguments),writable:!0,configurable:!0}),this.name=`${this.name} [${p}]`,this.stack,delete this.name}get code(){return p}set code(A){Object.defineProperty(this,"code",{configurable:!0,enumerable:!0,value:A,writable:!0})}toString(){return`${this.name} [${p}]: ${this.message}`}}}ds("ERR_BUFFER_OUT_OF_BOUNDS",function(p){return p?`${p} is outside of buffer bounds`:"Attempt to access memory outside buffer bounds"},RangeError),ds("ERR_INVALID_ARG_TYPE",function(p,u){return`The "${p}" argument must be of type number. Received type ${typeof u}`},TypeError),ds("ERR_OUT_OF_RANGE",function(p,u,f){let b=`The value of "${p}" is out of range.`,A=f;return Number.isInteger(f)&&Math.abs(f)>2**32?A=Tl(String(f)):typeof f=="bigint"&&(A=String(f),(f>BigInt(2)**BigInt(32)||f<-(BigInt(2)**BigInt(32)))&&(A=Tl(A)),A+="n"),b+=` It must be ${u}. Received ${A}`,b},RangeError);function Tl(p){let u="",f=p.length,b=p[0]==="-"?1:0;for(;f>=b+4;f-=3)u=`_${p.slice(f-3,f)}${u}`;return`${p.slice(0,f)}${u}`}function jg(p,u,f){Mr(u,"offset"),(p[u]===void 0||p[u+f]===void 0)&&fi(u,p.length-(f+1))}function Rl(p,u,f,b,A,T){if(p>f||p<u){let P=typeof u=="bigint"?"n":"",$;throw T>3?u===0||u===BigInt(0)?$=`>= 0${P} and < 2${P} ** ${(T+1)*8}${P}`:$=`>= -(2${P} ** ${(T+1)*8-1}${P}) and < 2 ** ${(T+1)*8-1}${P}`:$=`>= ${u}${P} and <= ${f}${P}`,new xr.ERR_OUT_OF_RANGE("value",$,p)}jg(b,A,T)}function Mr(p,u){if(typeof p!="number")throw new xr.ERR_INVALID_ARG_TYPE(u,"number",p)}function fi(p,u,f){throw Math.floor(p)!==p?(Mr(p,f),new xr.ERR_OUT_OF_RANGE(f||"offset","an integer",p)):u<0?new xr.ERR_BUFFER_OUT_OF_BOUNDS:new xr.ERR_OUT_OF_RANGE(f||"offset",`>= ${f?1:0} and <= ${u}`,p)}let Fg=/[^+/0-9A-Za-z-_]/g;function Wg(p){if(p=p.split("=")[0],p=p.trim().replace(Fg,""),p.length<2)return"";for(;p.length%4!==0;)p=p+"=";return p}function ps(p,u){u=u||1/0;let f,b=p.length,A=null,T=[];for(let P=0;P<b;++P){if(f=p.charCodeAt(P),f>55295&&f<57344){if(!A){if(f>56319){(u-=3)>-1&&T.push(239,191,189);continue}else if(P+1===b){(u-=3)>-1&&T.push(239,191,189);continue}A=f;continue}if(f<56320){(u-=3)>-1&&T.push(239,191,189),A=f;continue}f=(A-55296<<10|f-56320)+65536}else A&&(u-=3)>-1&&T.push(239,191,189);if(A=null,f<128){if((u-=1)<0)break;T.push(f)}else if(f<2048){if((u-=2)<0)break;T.push(f>>6|192,f&63|128)}else if(f<65536){if((u-=3)<0)break;T.push(f>>12|224,f>>6&63|128,f&63|128)}else if(f<1114112){if((u-=4)<0)break;T.push(f>>18|240,f>>12&63|128,f>>6&63|128,f&63|128)}else throw new Error("Invalid code point")}return T}function $g(p){let u=[];for(let f=0;f<p.length;++f)u.push(p.charCodeAt(f)&255);return u}function Hg(p,u){let f,b,A,T=[];for(let P=0;P<p.length&&!((u-=2)<0);++P)f=p.charCodeAt(P),b=f>>8,A=f%256,T.push(A),T.push(b);return T}function Cl(p){return t.toByteArray(Wg(p))}function ji(p,u,f,b){let A;for(A=0;A<b&&!(A+f>=u.length||A>=p.length);++A)u[A+f]=p[A];return A}function Ye(p,u){return p instanceof u||p!=null&&p.constructor!=null&&p.constructor.name!=null&&p.constructor.name===u.name}function gs(p){return p!==p}let Vg=function(){let p="0123456789abcdef",u=new Array(256);for(let f=0;f<16;++f){let b=f*16;for(let A=0;A<16;++A)u[b+A]=p[f]+p[A]}return u}();function Mt(p){return typeof BigInt>"u"?zg:p}function zg(){throw new Error("BigInt not supported")}return Zt}var ci,Vu,Hi,zu,Zt,Ku,Ut,x,ty,ry,be=_e(()=>{_();v();m();ci={},Vu=!1;Hi={},zu=!1;Zt={},Ku=!1;Ut=ey();Ut.Buffer;Ut.SlowBuffer;Ut.INSPECT_MAX_BYTES;Ut.kMaxLength;x=Ut.Buffer,ty=Ut.INSPECT_MAX_BYTES,ry=Ut.kMaxLength});var v=_e(()=>{be()});var Gu=M(vs=>{"use strict";_();v();m();Object.defineProperty(vs,"__esModule",{value:!0});var ms=class{constructor(e){this.aliasToTopic={},this.max=e}put(e,r){return r===0||r>this.max?!1:(this.aliasToTopic[r]=e,this.length=Object.keys(this.aliasToTopic).length,!0)}getTopicByAlias(e){return this.aliasToTopic[e]}clear(){this.aliasToTopic={}}};vs.default=ms});var ce=M((AA,Qu)=>{"use strict";_();v();m();Qu.exports={ArrayIsArray(t){return Array.isArray(t)},ArrayPrototypeIncludes(t,e){return t.includes(e)},ArrayPrototypeIndexOf(t,e){return t.indexOf(e)},ArrayPrototypeJoin(t,e){return t.join(e)},ArrayPrototypeMap(t,e){return t.map(e)},ArrayPrototypePop(t,e){return t.pop(e)},ArrayPrototypePush(t,e){return t.push(e)},ArrayPrototypeSlice(t,e,r){return t.slice(e,r)},Error,FunctionPrototypeCall(t,e,...r){return t.call(e,...r)},FunctionPrototypeSymbolHasInstance(t,e){return Function.prototype[Symbol.hasInstance].call(t,e)},MathFloor:Math.floor,Number,NumberIsInteger:Number.isInteger,NumberIsNaN:Number.isNaN,NumberMAX_SAFE_INTEGER:Number.MAX_SAFE_INTEGER,NumberMIN_SAFE_INTEGER:Number.MIN_SAFE_INTEGER,NumberParseInt:Number.parseInt,ObjectDefineProperties(t,e){return Object.defineProperties(t,e)},ObjectDefineProperty(t,e,r){return Object.defineProperty(t,e,r)},ObjectGetOwnPropertyDescriptor(t,e){return Object.getOwnPropertyDescriptor(t,e)},ObjectKeys(t){return Object.keys(t)},ObjectSetPrototypeOf(t,e){return Object.setPrototypeOf(t,e)},Promise,PromisePrototypeCatch(t,e){return t.catch(e)},PromisePrototypeThen(t,e,r){return t.then(e,r)},PromiseReject(t){return Promise.reject(t)},ReflectApply:Reflect.apply,RegExpPrototypeTest(t,e){return t.test(e)},SafeSet:Set,String,StringPrototypeSlice(t,e,r){return t.slice(e,r)},StringPrototypeToLowerCase(t){return t.toLowerCase()},StringPrototypeToUpperCase(t){return t.toUpperCase()},StringPrototypeTrim(t){return t.trim()},Symbol,SymbolFor:Symbol.for,SymbolAsyncIterator:Symbol.asyncIterator,SymbolHasInstance:Symbol.hasInstance,SymbolIterator:Symbol.iterator,TypedArrayPrototypeSet(t,e,r){return t.set(e,r)},Uint8Array}});var Je=M((kA,Ss)=>{"use strict";_();v();m();var iy=(be(),X(me)),ny=Object.getPrototypeOf(async function(){}).constructor,Yu=globalThis.Blob||iy.Blob,sy=typeof Yu<"u"?function(e){return e instanceof Yu}:function(e){return!1},Es=class extends Error{constructor(e){if(!Array.isArray(e))throw new TypeError(`Expected input to be an Array, got ${typeof e}`);let r="";for(let i=0;i<e.length;i++)r+=`    ${e[i].stack}
@@ -694,6 +728,7 @@ body.is-touch .nhTime{display:none !important}
     <div id="btnSkill"><span id="skillLabel">技</span><div id="skillRing"></div><span id="skillCdNum"></span></div>
     <div id="btnRecover"><span id="recLabel">恢</span><div id="recRing"></div><span id="recNum"></span></div>
     <button id="btnFire"><span id="fireLabel">开火</span><div id="fireCdMask"></div></button>
+    <div id="joyBase"><div class="knob"></div></div>
     <div id="touchTip">左摇杆移动 · 自动瞄准 · 右下开火按钮射击</div>
     <div id="pcTip" class="pc-only">W A S D 移动 · 鼠标瞄准 · 左键开火 · E 技能 · F 恢复</div>
     <button id="btnExitFight">✕</button>
@@ -1187,10 +1222,17 @@ body.is-touch .nhTime{display:none !important}
       </div>
     </div>
 
-    <!-- 技能键布局编辑 -->
+    <!-- 手机端控件布局编辑：摇杆、开火、技能、恢复、雷达、退出键都能拖 -->
     <div class="overlay hidden" id="layoutScreen">
-      <div class="layTip">按住金色圆点，拖到顺手的位置</div>
-      <div class="layStage" id="layStage"><div id="laySkill">技</div></div>
+      <div class="layTip">按住任意控件拖动，摆成顺手的位置后点保存<br><span style="font-size:11px;color:#7d8aa8">左上角 ✕ 是游戏里的「退出对局」键，也能拖</span></div>
+      <div class="layStage" id="layStage">
+        <div class="layChip" id="layJoy" data-k="joy">摇杆</div>
+        <div class="layChip" id="layFire" data-k="fire">开火</div>
+        <div class="layChip" id="laySkill" data-k="skill">技</div>
+        <div class="layChip" id="layRecover" data-k="recover">恢</div>
+        <div class="layChip" id="layRadar" data-k="radar">雷达</div>
+        <div class="layChip" id="layExit" data-k="exit">✕</div>
+      </div>
       <div class="layBar">
         <button class="btn ghost" id="btnLayReset">恢复默认</button>
         <button class="btn primary" id="btnLaySave">保存</button>
@@ -1298,7 +1340,7 @@ body.is-touch .nhTime{display:none !important}
       </div>
     </div>
     <div class="overlay hidden" id="settingsScreen">
-      <div class="title">自定义设置 <span id="verTag" style="font-size:11px;color:#7d8aa8;font-weight:400;display:block;margin-top:2px">v2.9.12</span></div>
+      <div class="title">自定义设置 <span id="verTag" style="font-size:11px;color:#7d8aa8;font-weight:400;display:block;margin-top:2px">v2.9.13</span></div>
       <div class="rowBtns" style="justify-content:center;flex-wrap:wrap;margin:2px auto 8px;max-width:320px;width:100%">
         <button class="btn" id="btnSettingsDoneTop">完成</button>
         <button class="btn ghost" id="btnSettingsExitTop">退出</button>
@@ -1317,6 +1359,7 @@ body.is-touch .nhTime{display:none !important}
         <div class="mobile-only">技能方向 <select id="setSkillDir" style="width:100%;padding:6px;border-radius:6px;background:#1a2340;color:#fff;border:1px solid rgba(255,255,255,.2)"><option value="aim">跟随摇杆方向</option><option value="foe">朝对手方向</option></select></div>
         <div class="mobile-only">移动灵敏度 <input type="range" id="setSens" min="30" max="150" value="80" style="width:100%"></div>
         <div class="mobile-only">摇杆位置 <select id="setJoyPos" style="width:100%;padding:6px;border-radius:6px;background:#1a2340;color:#fff;border:1px solid rgba(255,255,255,.2)"><option value="left">左下角</option><option value="right">右下角</option></select></div>
+        <div class="mobile-only">摇杆模式 <select id="setJoyMode" style="width:100%;padding:6px;border-radius:6px;background:#1a2340;color:#fff;border:1px solid rgba(255,255,255,.2)"><option value="fixed">固定位置（可拖动摆放）</option><option value="follow">跟随手指（按哪出哪）</option></select></div>
         <div class="mobile-only">开火键位置 <select id="setFirePos" style="width:100%;padding:6px;border-radius:6px;background:#1a2340;color:#fff;border:1px solid rgba(255,255,255,.2)"><option value="right">右下角</option><option value="left">左下角</option></select></div>
         <div class="mobile-only">角色皮肤 <select id="setSkin" style="width:100%;padding:6px;border-radius:6px;background:#1a2340;color:#fff;border:1px solid rgba(255,255,255,.2)">
           <option value="default">战术红（默认）</option>
@@ -1326,14 +1369,14 @@ body.is-touch .nhTime{display:none !important}
           <option value="ice">极地（900 荣誉）</option>
         </select></div>
         <div class="mobile-only">技能键位置 <select id="setSkillPos" style="width:100%;padding:6px;border-radius:6px;background:#1a2340;color:#fff;border:1px solid rgba(255,255,255,.2)"><option value="left">开火键旁边</option><option value="right">对角位置</option><option value="joy">贴着摇杆那一侧</option><option value="free">自定义（自己拖）</option></select></div>
-        <div class="mobile-only"><button class="btn ghost" id="btnLayout" style="width:100%">调整技能键位置</button></div>
+        <div class="mobile-only"><button class="btn ghost" id="btnLayout" style="width:100%">调整按键 / 雷达位置（可拖动）</button></div>
         <div>自动开火 <select id="setAutoFire" style="width:100%;padding:6px;border-radius:6px;background:#1a2340;color:#fff;border:1px solid rgba(255,255,255,.2)"><option value="off">手动开火</option><option value="on">自动开火</option></select></div>
         <div class="pc-only">长按开火（电脑） <select id="setHoldFire" style="width:100%;padding:6px;border-radius:6px;background:#1a2340;color:#fff;border:1px solid rgba(255,255,255,.2)"><option value="on">开启（按住连发）</option><option value="off">关闭（单发，松开再按）</option></select></div>
         <div>自动瞄准 <select id="setAutoAim" style="width:100%;padding:6px;border-radius:6px;background:#1a2340;color:#fff;border:1px solid rgba(255,255,255,.2)"><option value="on">开启</option><option value="off">关闭（手动瞄准）</option></select></div>
         <div class="mobile-only">小地图雷达 <select id="setRadarShow" style="width:100%;padding:6px;border-radius:6px;background:#1a2340;color:#fff;border:1px solid rgba(255,255,255,.2)"><option value="on">显示</option><option value="off">关闭</option></select></div>
         <div class="mobile-only">雷达大小 <input type="range" id="setRadarSize" min="70" max="180" value="112" style="width:100%"></div>
         <div class="mobile-only">雷达透明度 <input type="range" id="setRadarAlpha" min="35" max="100" value="92" style="width:100%"></div>
-        <div class="mobile-only">雷达位置 <select id="setRadarPos" style="width:100%;padding:6px;border-radius:6px;background:#1a2340;color:#fff;border:1px solid rgba(255,255,255,.2)"><option value="right">右上角</option><option value="left">左上角</option></select></div>
+        <div class="mobile-only">雷达位置 <select id="setRadarPos" style="width:100%;padding:6px;border-radius:6px;background:#1a2340;color:#fff;border:1px solid rgba(255,255,255,.2)"><option value="right">右上角</option><option value="left">左上角</option><option value="free">自定义（拖动摆放）</option></select></div>
         <div class="mobile-only">右摇杆 <select id="setAimStick" style="width:100%;padding:6px;border-radius:6px;background:#1a2340;color:#fff;border:1px solid rgba(255,255,255,.2)"><option value="aim">只瞄准（配合开火键）</option><option value="fire">推开即开火（开火摇杆）</option></select></div>
         <div>全屏模式 <button class="btn" id="btnFullscreen" style="width:100%;padding:8px;margin-top:6px">切换全屏 / 退出全屏</button></div>
       </div>
@@ -1353,6 +1396,7 @@ body.is-touch .nhTime{display:none !important}
         <div id="historyBox" style="display:none;margin-top:10px;border-top:1px solid rgba(255,255,255,.1);padding-top:10px">
           <div style="font-size:13px;font-weight:800;color:#67e8f9;margin-bottom:6px">修改历史</div>
           <div style="line-height:1.8">
+            <div><b style="color:#ffd34d">v2.9.13</b>　手机端控件全面可拖：设置页「调整按键 / 雷达位置」里，摇杆、开火、技能、恢复、雷达、退出键都能按住拖动，坐标存成百分比，横竖屏切换不跑位；雷达可摆到屏幕任意位置；摇杆新增「固定位置 / 跟随手指」模式</div>
             <div><b style="color:#ffd34d">v2.9.12</b>　新增<b>通用恢复技能</b>（独立按键 F / 手机绿色恢复键，全角色可用）：只给自己持续回血，每秒 10 点、累计最多回 50 点即停，冷却 35 秒；AI 开火攻速与角色移速改成与玩家完全一致（不再有 1.8 倍射速惩罚与 0.7 移速折扣）</div>
             <div><b style="color:#ffd34d">v2.9.11</b>　新增角色「战地医师」（💉 持续恢复：6 秒内每秒回 9 血、共 54 血，恢复期间照常移动射击），与医疗兵的瞬时回血互补；终端角色调参与玩法说明已自动接入</div>
             <div><b style="color:#ffd34d">v2.9.10</b>　修复“进入房间后无法正常对决”：对局开始后，迟到的准备消息会把准备室重新弹到画面上并重置状态；现已在对局中忽略准备消息，并冻结阵营与收发主题</div>
@@ -1758,6 +1802,7 @@ const state = {
   replay:false, replayFrame:0, replayBuffer:[],
   keys:{}, keys2:{}, mouse:{x:0,y:0,down:false}, muted:false,
   holdFire:true, pcFireHeld:false, pcFireBuffer:0, // 电脑端长按开火开关 + 单发模式边沿检测
+  joyMode:'fixed',                                 // 手机摇杆：fixed 固定位置（可拖动）/ follow 跟随手指
 };
 function mulberry32(a){ return function(){ a|=0; a=a+0x6D2B79F5|0; let t=Math.imul(a^a>>>15,1|a); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; }; }
 let rng = mulberry32(CFG.seed);
@@ -2443,10 +2488,63 @@ if(isTouch){
 }
 const joyMove=document.getElementById('joyMove'), joyAim=document.getElementById('joyAim'),
       btnSkill=document.getElementById('btnSkill'), btnRecover=document.getElementById('btnRecover');
-state.touchMove={active:false,id:null,ox:0,oy:0,dx:0,dy:0};
+state.touchMove={active:false,id:null,ox:0,oy:0,dx:0,dy:0,fixed:false};
 state.touchAim={active:false,id:null,ox:0,oy:0,dx:0,dy:0};
 const JOY_R=42;
-function joyShow(el,on,x,y){ el.classList.toggle('show',on); if(on){ el.style.left=(x-55)+'px'; el.style.top=(y-55)+'px'; } }
+
+/* ===== 手机端控件自由布局（摇杆/开火/技能/恢复/雷达/退出键） =====
+   坐标统一存成屏幕百分比，横竖屏切换都不会跑位；拖动后写入 localStorage。 */
+var LAY=null;
+/* 默认值对齐原来的 CSS 布局（竖屏），保证「没拖过」和「拖过保存」看起来一致 */
+var LAY_DEF={joy:{x:.17,y:.76},fire:{x:.86,y:.86},skill:{x:.70,y:.86},recover:{x:.70,y:.77},radar:{x:.84,y:.16},exit:{x:.07,y:.06}};
+function layEnsure(){
+  if(LAY) return LAY;
+  LAY={};
+  for(const k in LAY_DEF) LAY[k]={x:LAY_DEF[k].x,y:LAY_DEF[k].y};
+  try{
+    const s=lsGet('gunLayout',null);
+    if(s && typeof s==='object'){
+      for(const k in LAY_DEF){
+        const v=s[k];
+        if(v && isFinite(v.x) && isFinite(v.y)) LAY[k]={x:clamp(+v.x,.03,.97), y:clamp(+v.y,.03,.97)};
+      }
+    }
+  }catch(e){}
+  return LAY;
+}
+function layCustom(){ try{ const s=lsGet('gunLayout',null); return !!(s && typeof s==='object'); }catch(e){ return false; } }
+function laySave(L){ try{ lsSet('gunLayout', L||layEnsure()); }catch(e){} }
+/* 非自定义布局下的雷达默认位置：竖屏贴右上，横屏下移避开顶部玩家血条 */
+function layRadarDefault(){
+  if(!state.radar || layCustom()) return;
+  const p=state.radar.pos||'right';
+  const land=window.innerWidth>window.innerHeight;
+  state.radar.x = p==='left'?0.16:0.84;
+  state.radar.y = land ? 0.30 : (p==='left'?0.16:0.15);
+}
+function layApply(){
+  const L=layEnsure();
+  document.body.classList.toggle('layout-free', layCustom());
+  const map={fire:'btnFire',skill:'btnSkill',recover:'btnRecover',exit:'btnExitFight'};
+  for(const k in map){
+    const el=document.getElementById(map[k]); if(!el) continue;
+    el.style.setProperty('--lx',(L[k].x*100).toFixed(2)+'%');
+    el.style.setProperty('--ly',(L[k].y*100).toFixed(2)+'%');
+  }
+  const jb=document.getElementById('joyBase');
+  if(jb){ jb.style.left=(L.joy.x*100).toFixed(2)+'%'; jb.style.top=(L.joy.y*100).toFixed(2)+'%'; }
+  document.body.classList.toggle('joy-fixed', state.joyMode!=='follow');
+  if(state.radar){
+    layRadarDefault();
+    if(layCustom()){ state.radar.x=L.radar.x; state.radar.y=L.radar.y; }
+  }
+}
+function joyFixedOn(){ return state.joyMode!=='follow'; }
+function joyAnchor(){ const L=layEnsure(); return {x:L.joy.x*window.innerWidth, y:L.joy.y*window.innerHeight}; }
+function joyShow(el,on,x,y){
+  el.classList.toggle('show',on);
+  if(on){ const s=el.offsetWidth||110; el.style.left=(x-s/2)+'px'; el.style.top=(y-s/2)+'px'; }
+}
 function joyKnob(el,dx,dy){ const k=el.querySelector('.knob'); k.style.transform='translate('+(dx*0.6)+'px,'+(dy*0.6)+'px)'; }
 document.addEventListener('touchstart', e=>{
   if(!state.running || state.paused) return;
@@ -2454,11 +2552,25 @@ document.addEventListener('touchstart', e=>{
   for(const t of e.changedTouches){
     // 开火/技能/退出键与摇杆同侧时，按在这些键上的手指不算摇杆手势
     if(t.target && t.target.closest && t.target.closest('button,#btnSkill,#btnRecover,#btnExitFight')) continue;
+    // 固定摇杆：按在底座上（或底座附近）就在底座位置激活，不跟手乱跑
+    if(joyFixedOn() && !state.touchMove.active){
+      const a=joyAnchor();
+      const onBase=!!(t.target && t.target.closest && t.target.closest('#joyBase'));
+      if(onBase || Math.hypot(t.clientX-a.x, t.clientY-a.y)<=80){
+        state.touchMove.active=true; state.touchMove.id=t.identifier;
+        state.touchMove.ox=t.clientX; state.touchMove.oy=t.clientY;
+        state.touchMove.dx=0; state.touchMove.dy=0; state.touchMove.fixed=true;
+        joyShow(joyMove,true,a.x,a.y); joyKnob(joyMove,0,0);
+        continue;
+      }
+    }
     const onJoySide = (state.joySide==='right') ? (t.clientX >= window.innerWidth/2)
                                                   : (t.clientX <  window.innerWidth/2);
     if(onJoySide && !state.touchMove.active){
-      state.touchMove.active=true; state.touchMove.id=t.identifier;
+      state.touchMove.active=true; state.touchMove.id=t.identifier; state.touchMove.fixed=false;
       state.touchMove.ox=t.clientX; state.touchMove.oy=t.clientY; state.touchMove.dx=0; state.touchMove.dy=0;
+      // 固定模式下按在底座外：临时切成跟手摇杆，避免底座和摇杆两个圈同时出现
+      if(joyFixedOn()) document.body.classList.add('joy-following');
       joyShow(joyMove,true,t.clientX,t.clientY);
     } else if(!onJoySide && !state.touchAim.active && (state.autoAim===false || state.aimStick==='fire')){
       state.touchAim.active=true; state.touchAim.id=t.identifier;
@@ -2489,7 +2601,8 @@ document.addEventListener('touchmove', e=>{
 function joyEnd(e){
   for(const t of e.changedTouches){
     if(state.touchMove.active && t.identifier===state.touchMove.id){
-      state.touchMove.active=false; state.touchMove.id=null; state.touchMove.dx=0; state.touchMove.dy=0; joyMove.classList.remove('show');
+      state.touchMove.active=false; state.touchMove.id=null; state.touchMove.dx=0; state.touchMove.dy=0; state.touchMove.fixed=false; joyMove.classList.remove('show');
+      document.body.classList.remove('joy-following');
     }
     if(state.touchAim.active && t.identifier===state.touchAim.id){
       state.touchAim.active=false; state.touchAim.id=null; state.touchAim.dx=0; state.touchAim.dy=0; joyAim.classList.remove('show');
@@ -2611,6 +2724,8 @@ function resize(){
   }
   SCALE_X = VIEW.scale; SCALE_Y = VIEW.scale;
   VIEW.dpr = dpr;
+  // 旋转屏幕/改窗口后，没自定义过雷达的话按方向重算默认位置（横屏往下让开顶部血条）
+  try{ layRadarDefault(); }catch(e){}
 }
 window.addEventListener('resize', resize);
 
@@ -3096,9 +3211,12 @@ function drawRadar(){
   const dpr=VIEW.dpr||1;
   const rw=Math.min((rd.size||112)*dpr, canvas.width*0.40);
   const rh=rw*(H/W);
+  // 位置：自由布局里存的是「中心点百分比」；没有自定义坐标时回退到右上/左上
   const left=rd.pos==='left';
-  const x=left? 8*dpr : canvas.width-rw-8*dpr;
-  const y=(left?150:100)*dpr;
+  const cxp=((rd.x!=null)?rd.x:(left?0.16:0.84))*canvas.width;
+  const cyp=((rd.y!=null)?rd.y:(left?0.16:0.15))*canvas.height;
+  const x=clamp(cxp-rw/2, 6*dpr, Math.max(6*dpr, canvas.width-rw-6*dpr));
+  const y=clamp(cyp-rh/2, 6*dpr, Math.max(6*dpr, canvas.height-rh-6*dpr));
   ctx2d.setTransform(1,0,0,1,0,0);
   ctx2d.save();
   // 底板
@@ -4747,12 +4865,13 @@ function runSelfCheck(){
   ok('本地存储可读写', lsOk);
 
   // 6. 设置项齐全
-  const sets=['setJoy','setFire','setAlpha','setSens','setJoyPos','setFirePos','setSkillPos','setAutoFire','setHoldFire','setAutoAim','setRadarShow','setRadarSize','setRadarAlpha','setRadarPos','setGap'];
+  const sets=['setJoy','setFire','setAlpha','setSens','setJoyPos','setJoyMode','setFirePos','setSkillPos','setAutoFire','setHoldFire','setAutoAim','setRadarShow','setRadarSize','setRadarAlpha','setRadarPos','setGap'];
   const setMiss=sets.filter(id=>!document.getElementById(id));
   ok('设置项 DOM 齐全（'+sets.length+' 项）', setMiss.length===0, setMiss.length?'缺失: '+setMiss.join(','):'');
 
-  // 7. 手机控件
-  ok('摇杆/开火/技能键存在', !!(document.getElementById('joy')||document.querySelector('.joyBase')||true));
+  // 7. 手机控件（所有控件都能拖动布局）
+  ok('摇杆/开火/技能键存在', !!(document.getElementById('joyBase') && document.getElementById('btnFire') && document.getElementById('btnSkill') && document.getElementById('btnRecover')));
+  ok('布局编辑层 6 个可拖控件齐全', ['layJoy','layFire','laySkill','layRecover','layRadar','layExit'].every(id=>!!document.getElementById(id)));
 
   // 8. 雷达参数
   const rd=state.radar||{};
@@ -7228,44 +7347,111 @@ document.getElementById('btnNetBack').addEventListener('click', ()=>{
   document.getElementById('menuScreen').classList.remove('hidden'); renderRankBar();
 });
 
-/* 技能键拖拽：编辑层里自由摆放，保存成百分比，横竖屏都不跑位 */
+/* 手机端控件布局编辑：摇杆、开火、技能、恢复、雷达、退出键都能拖，保存成百分比，横竖屏都不跑位 */
 (function(){
-  const stage=document.getElementById('layStage'), knob=document.getElementById('laySkill');
-  let dragging=false;
-  function place(x,y){
+  const stage=document.getElementById('layStage');
+  if(!stage) return;
+  const chips=Array.prototype.slice.call(stage.querySelectorAll('.layChip'));
+  let drag=null;
+  function clampPct(v){ return Math.max(.03,Math.min(.97,v)); }
+  function place(el,x,y){
     const r=stage.getBoundingClientRect();
-    const px=Math.max(0.06,Math.min(0.94,(x-r.left)/r.width));
-    const py=Math.max(0.06,Math.min(0.94,(y-r.top)/r.height));
-    knob.style.left=(px*100)+'%'; knob.style.top=(py*100)+'%';
-    knob.dataset.x=px; knob.dataset.y=py;
+    if(!r.width||!r.height) return;
+    // 按控件自身尺寸留边，避免拖到屏幕边缘后一半露在外面
+    const er=el.getBoundingClientRect();
+    const padX=Math.min(er.width/2+4, r.width/2), padY=Math.min(er.height/2+4, r.height/2);
+    const lx=Math.max(padX, Math.min(r.width-padX, x-r.left));
+    const ly=Math.max(padY, Math.min(r.height-padY, y-r.top));
+    const px=lx/r.width, py=ly/r.height;
+    el.style.left=(px*100)+'%'; el.style.top=(py*100)+'%';
+    el.dataset.x=px; el.dataset.y=py;
+  }
+  function renderChips(){
+    const L=layEnsure();
+    chips.forEach(el=>{
+      const v=L[el.dataset.k]||LAY_DEF[el.dataset.k];
+      el.style.left=(v.x*100)+'%'; el.style.top=(v.y*100)+'%';
+      el.dataset.x=v.x; el.dataset.y=v.y;
+    });
+    // 换方向后可能有个别控件压在屏幕边缘，进编辑层时先顶回可拖范围内
+    const r=stage.getBoundingClientRect();
+    chips.forEach(el=>{
+      const b=el.getBoundingClientRect();
+      if(b.width && (b.left<0 || b.top<0 || b.right>r.width+1 || b.bottom>r.height+1)){
+        place(el, b.left+b.width/2, b.top+b.height/2);
+      }
+    });
   }
   function openLayout(){
-    const xy=lsGet('gunSkillXY',{x:0.8,y:0.72});
     document.querySelectorAll('.overlay').forEach(e=>e.classList.add('hidden'));
-    const ls=document.getElementById('layoutScreen'); ls.classList.remove('hidden');
-    knob.style.left=(xy.x*100)+'%'; knob.style.top=(xy.y*100)+'%';
-    knob.dataset.x=xy.x; knob.dataset.y=xy.y;
+    document.getElementById('layoutScreen').classList.remove('hidden');
+    renderChips();
+    try{ window.__syncOverlayHud && window.__syncOverlayHud(); }catch(e){}
   }
-  const down=(e)=>{ dragging=true; knob.style.cursor='grabbing'; e.preventDefault(); };
-  const move=(e)=>{ if(!dragging) return; const t=e.touches?e.touches[0]:e; place(t.clientX,t.clientY); e.preventDefault(); };
-  const up=()=>{ dragging=false; knob.style.cursor='grab'; };
-  knob.addEventListener('touchstart',down,{passive:false});
-  knob.addEventListener('touchmove',move,{passive:false});
-  knob.addEventListener('touchend',up);
-  knob.addEventListener('mousedown',down);
+  function pt(e){ const t=(e.touches&&e.touches[0])||e; return {x:t.clientX,y:t.clientY}; }
+  function down(e){
+    const el=e.currentTarget;
+    drag=el; el.style.cursor='grabbing'; el.style.zIndex=70;
+    if(e.preventDefault) e.preventDefault();
+  }
+  function move(e){
+    if(!drag) return;
+    const p=pt(e); place(drag,p.x,p.y);
+    if(e.preventDefault) e.preventDefault();
+  }
+  function up(){
+    if(!drag) return;
+    drag.style.cursor='grab'; drag.style.zIndex='';
+    drag=null;
+  }
+  chips.forEach(el=>{
+    el.addEventListener('touchstart',down,{passive:false});
+    el.addEventListener('mousedown',down);
+  });
+  window.addEventListener('touchmove',move,{passive:false});
+  window.addEventListener('touchend',up);
+  window.addEventListener('touchcancel',up);
   window.addEventListener('mousemove',move);
   window.addEventListener('mouseup',up);
-  document.getElementById('btnLayout').addEventListener('click',(e)=>{ e.preventDefault(); sClick(); openLayout(); });
-  document.getElementById('btnLayReset').addEventListener('click',()=>{ place(stage.getBoundingClientRect().left+stage.getBoundingClientRect().width*0.8, stage.getBoundingClientRect().top+stage.getBoundingClientRect().height*0.72); });
-  document.getElementById('btnLaySave').addEventListener('click',()=>{
+
+  const btnLayout=document.getElementById('btnLayout');
+  if(btnLayout) btnLayout.addEventListener('click',(e)=>{ e.preventDefault(); sClick(); openLayout(); });
+  const reset=document.getElementById('btnLayReset');
+  if(reset) reset.addEventListener('click',()=>{
+    chips.forEach(el=>{
+      const v=LAY_DEF[el.dataset.k];
+      el.style.left=(v.x*100)+'%'; el.style.top=(v.y*100)+'%';
+      el.dataset.x=v.x; el.dataset.y=v.y;
+    });
+    toastMsg('已恢复默认位置，别忘了点保存');
+  });
+  const save=document.getElementById('btnLaySave');
+  if(save) save.addEventListener('click',()=>{
     sClick();
-    const x=parseFloat(knob.dataset.x||0.8), y=parseFloat(knob.dataset.y||0.72);
-    lsSet('gunSkillXY',{x,y});
-    lsSet('gunSettings', Object.assign(lsGet('gunSettings',{}), {skillPos:'free'}));
+    const L=layEnsure();
+    chips.forEach(el=>{
+      const d=LAY_DEF[el.dataset.k];
+      L[el.dataset.k]={
+        x:clampPct(isFinite(parseFloat(el.dataset.x))?parseFloat(el.dataset.x):d.x),
+        y:clampPct(isFinite(parseFloat(el.dataset.y))?parseFloat(el.dataset.y):d.y)
+      };
+    });
+    laySave(L);
+    // 兼容旧设置项：技能键同步成「自定义」，雷达位置标记为「自定义」
+    try{ lsSet('gunSkillXY', {x:L.skill.x, y:L.skill.y}); }catch(e){}
+    try{
+      const jmEl=document.getElementById('setJoyMode');
+      lsSet('gunSettings', Object.assign(lsGet('gunSettings',{}), {
+        skillPos:'free',
+        joyMode: (jmEl && jmEl.value) || 'fixed',
+        radarPos:'free'
+      }));
+    }catch(e){}
+    const rp=document.getElementById('setRadarPos'); if(rp) rp.value='free';
     applySettings();
     document.getElementById('layoutScreen').classList.add('hidden');
     document.getElementById('menuScreen').classList.remove('hidden'); renderRankBar();
-    toastMsg('技能键位置已保存');
+    toastMsg('布局已保存');
   });
 })();
 
@@ -7727,6 +7913,9 @@ function applySettings(){
   document.getElementById('setJoyPos').value = s.joyPos||'left';
   document.getElementById('setFirePos').value = s.firePos||'right';
   document.getElementById('setSkillPos').value = s.skillPos||'left';
+  // 摇杆模式：固定位置（可在布局编辑里拖动）/ 跟随手指
+  state.joyMode = (s.joyMode==='follow') ? 'follow' : 'fixed';
+  const jmEl=document.getElementById('setJoyMode'); if(jmEl) jmEl.value = state.joyMode;
   document.getElementById('setSkillDir').value = s.skillDir||'aim';
   const skinEl=document.getElementById('setSkin'); if(skinEl) skinEl.value = currentSkin().id;
   document.getElementById('setAutoFire').value = s.autoFire||'off';
@@ -7742,6 +7931,8 @@ function applySettings(){
     alpha: +(s.radarAlpha||92),
     pos: s.radarPos||'right'
   };
+  // 自由布局：把摇杆底座 / 开火 / 技能 / 恢复 / 雷达 / 退出键摆到玩家拖好的位置
+  try{ layApply(); }catch(e){}
 }
 function saveSettings(){
   lsSet('gunSettings', ({
@@ -7754,6 +7945,7 @@ function saveSettings(){
     joyPos: document.getElementById('setJoyPos').value,
     firePos: document.getElementById('setFirePos').value,
     skillPos: document.getElementById('setSkillPos').value,
+    joyMode: document.getElementById('setJoyMode').value,
     autoFire: document.getElementById('setAutoFire').value,
     holdFire: document.getElementById('setHoldFire').value,
     autoAim: document.getElementById('setAutoAim').value,
@@ -7763,6 +7955,15 @@ function saveSettings(){
     radarAlpha: +document.getElementById('setRadarAlpha').value,
     radarPos: document.getElementById('setRadarPos').value
   }));
+  // 雷达位置下拉：已有自定义布局时，选左上/右上也要真的挪过去（同时更新拖动坐标）
+  try{
+    const rp=document.getElementById('setRadarPos');
+    if(rp && (rp.value==='left'||rp.value==='right') && layCustom()){
+      const L=layEnsure();
+      const nx=rp.value==='left'?0.16:0.84;
+      if(Math.abs(L.radar.x-nx)>0.002 || Math.abs(L.radar.y-0.15)>0.002){ L.radar={x:nx,y:0.15}; laySave(L); }
+    }
+  }catch(e){}
   const skEl=document.getElementById('setSkin');
   if(skEl){
     const want=skEl.value;
@@ -7774,7 +7975,7 @@ function saveSettings(){
   }
   applySettings();
 }
-['setJoy','setFire','setAlpha','setSens','setJoyPos','setFirePos','setSkillPos','setAutoFire','setHoldFire','setAutoAim','setRadarShow','setRadarSize','setRadarAlpha','setRadarPos','setSkin','setAimStick','setGap','setSkillDir'].forEach(id=>{
+['setJoy','setFire','setAlpha','setSens','setJoyPos','setFirePos','setSkillPos','setJoyMode','setAutoFire','setHoldFire','setAutoAim','setRadarShow','setRadarSize','setRadarAlpha','setRadarPos','setSkin','setAimStick','setGap','setSkillDir'].forEach(id=>{
   document.getElementById(id).addEventListener('input', ()=>{ saveSettings(); applySettings(); });
 });
 /* 有 overlay 打开时给 body 打标记，隐藏对局 HUD/触控键。
