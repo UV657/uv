@@ -1281,7 +1281,7 @@ body.is-touch .nhTime{display:none !important}
       </div>
     </div>
     <div class="overlay hidden" id="settingsScreen">
-      <div class="title">自定义设置 <span id="verTag" style="font-size:11px;color:#7d8aa8;font-weight:400;display:block;margin-top:2px">v2.9.8</span></div>
+      <div class="title">自定义设置 <span id="verTag" style="font-size:11px;color:#7d8aa8;font-weight:400;display:block;margin-top:2px">v2.9.9</span></div>
       <div class="rowBtns" style="justify-content:center;flex-wrap:wrap;margin:2px auto 8px;max-width:320px;width:100%">
         <button class="btn" id="btnSettingsDoneTop">完成</button>
         <button class="btn ghost" id="btnSettingsExitTop">退出</button>
@@ -1336,6 +1336,7 @@ body.is-touch .nhTime{display:none !important}
         <div id="historyBox" style="display:none;margin-top:10px;border-top:1px solid rgba(255,255,255,.1);padding-top:10px">
           <div style="font-size:13px;font-weight:800;color:#67e8f9;margin-bottom:6px">修改历史</div>
           <div style="line-height:1.8">
+            <div><b style="color:#ffd34d">v2.9.9</b>　修复联机准备室：双方准备却不开局、房主选不了地图（房主身份改由本机稳定标记判定，收到 joined 不再被降级；两边各自触发开局）</div>
             <div><b style="color:#ffd34d">v2.9.8</b>　新增 3 把武器（火箭筒/火焰喷枪/连发狙击，终端可调冷却）；新增 1 张 5V5 地图「双桥夹击」</div>
             <div><b style="color:#ffd34d">v2.9.7</b>　新增角色「狂战士」（血怒：增伤+减伤）；新增 6 把武器（左轮/迷你冲锋/独头弹/十字弩/双持手枪/电弧枪，终端可调冷却）；新增 2 张地图（十字回廊/双环哨位）</div>
             <div><b style="color:#ffd34d">v2.9.6</b>　设置页顶部新增固定「完成/退出」按钮；新增 3 个角色（鹰眼/守护者/捕兽人）与 6 张地图（双环回廊/四象限/锯齿通道/三柱阵/侧翼回环/窄口博弈）</div>
@@ -4540,6 +4541,10 @@ function runSelfCheck(){
   ok('狂战士血怒机制齐全', !!(ROLES.berserker&&ROLES.berserker.skill.rageDur>0&&ROLES.berserker.skill.rageDmgMul>1&&ROLES.berserker.skill.rageDr>0&&skillKind(ROLES.berserker.skill)==='rage'));
   ok('新武器特性到位（栓狙/拖慢/爆破）', WEAPONS.falcon.dmgMul>=2.4 && WEAPONS.rivetgun.slowHit>0 && !!(WEAPONS.breaker.explode&&WEAPONS.breaker.explode.r>0) && typeof explodeBullet==='function');
   ok('准备室可锁定地图与角色武器', typeof prepSend==='function' && String(prepRender).indexOf('data-prep-map')>=0 && String(prepRender).indexOf('data-prep-role')>=0);
+  ok('房主身份用稳定 isHost 判定（不受网络消息改写）', typeof prepIsHost==='function' && String(prepRender).indexOf('prepIsHost()')>=0 && String(prepGo).indexOf('prepIsHost()')>=0 && 'isHost' in NET);
+  ok('双方准备即可各自开局（不依赖单一房主触发）', String(netOnMsg).indexOf('if(PREP.ready && PREP.foeReady){ prepSend(); prepGo(); }')>=0);
+  ok('joined 不会把房主降级成客机', String(netOnMsg).indexOf('if(NET.isHost){ prepSend(); return; }')>=0);
+  ok('重连只补订自己收件主题（不收到自己的回环消息）', !/role==='a'\?'b':'a'/.test(String(netOpen)));
   ok('霰弹枪 5 弹丸', WEAPONS.shotgun.pellets===5);
   ok('三把新武器弹道与调参齐全', ['carbine','railgun','scatter'].every(k=>!!TRACER_STYLE[k] && TUNE_LIM[k+'CdMul']) && WEAPONS.scatter.pellets===7);
   ok('六把新武器弹道与调参齐全', ['revolver','mp9','slug','crossbow','twin','tesla'].every(k=>!!TRACER_STYLE[k] && TUNE_LIM[k+'CdMul'] && WEAPONS[k].dmgMul>0) && WEAPONS.twin.pellets===2 && WEAPONS.tesla.slowHit>0);
@@ -4661,7 +4666,10 @@ window.__selfCheck = runSelfCheck;
  * 同步：我方每 50ms 推一次位置/朝向/血量；命中由攻击方判定并下发 dmg，受击方扣血。
  * 这样每颗子弹只结算一次，不会出现两边各扣一遍的双重伤害。
  */
-const NET = { foeUid:null, foeName:null,  ws:null, role:null, code:null, peer:null, peerOnline:false, lastSend:0, want:false };
+const NET = { foeUid:null, foeName:null,  ws:null, role:null, code:null, peer:null, peerOnline:false, lastSend:0, want:false,
+  isHost:false };   // isHost 只在“建房/匹配到房主以外的人”时由本机动作设定，收到任何网络消息都不会翻成 false
+/* 房主身份以本机动作设定的 isHost 为准，role 会被握手消息改写，不能作为房主判据 */
+function prepIsHost(){ return NET.isHost===true; }
 function netUrl(){ return ''; }   // 统一走公共中转，不再需要用户填服务器
 function netStatus(txt, color){
   const el=document.getElementById('netHint');
@@ -4724,10 +4732,11 @@ function netOpen(){
           clearTimeout(t); settled=true;
           NET.client=cli; NET.want=true; NET.broker=url;
           if(first){ first=false; netStatus('已连接中转（'+tag+'）','#5eead4'); }
-          else {     // 断线后重连：clean 会话丢订阅，房间主题要补回来
+          else {                 // 断线后重连：clean 会话丢订阅，只补订“自己的收件主题”
+            // 关键：绝不能订对方主题，否则会收到自己发出去的消息（如 joined/预 prep），
+            // 主机收到自己发的 joined 会被 netOnMsg 误判成客机 → 地图被锁、双方准备却无人开局
             netStatus('连接已恢复（'+tag+'）','#5eead4');
-            try{ if(NET.code && NET.role) cli.subscribe(netTopic(NET.code, NET.role==='a'?'a':'b'), {qos:1}); }catch(e){}
-            try{ if(NET.code) cli.subscribe(netTopic(NET.code, NET.role==='a'?'b':'a'), {qos:1}); }catch(e){}
+            try{ if(NET.code) cli.subscribe(netTopic(NET.code, prepIsHost()?'a':'b'), {qos:1}); }catch(e){}
           }
           netBind();
           if(!done.__x){ done.__x=1; done(cli); }
@@ -4856,8 +4865,8 @@ function prepRender(){
   if(mrow){
     const maps=(MAPS['1v1']||[]);
     mrow.innerHTML=maps.map((m,i)=>
-      '<button class="diffChip'+(i===PREP.map?' sel':'')+'" data-prep-map="'+i+'"'+(NET.role==='a'?'':' disabled style="opacity:.55"')+'>'+m.name+'</button>').join('');
-    if(mlab) mlab.textContent='战场地图·'+(NET.role==='a'?'房主选择（你能改）':'房主选择（对方决定）');
+      '<button class="diffChip'+(i===PREP.map?' sel':'')+'" data-prep-map="'+i+'"'+(prepIsHost()?'':' disabled style="opacity:.55"')+'>'+m.name+'</button>').join('');
+    if(mlab) mlab.textContent='战场地图·'+(prepIsHost()?'房主选择（你能改）':'房主选择（对方决定）');
   }
   const rrow=prepEl('prepRoleRow');
   if(rrow) rrow.innerHTML=ROLE_IDS.map(r=>{
@@ -4895,7 +4904,7 @@ function prepGo(){
   PREP.started=true;
   if(PREP_TIMER){ clearInterval(PREP_TIMER); PREP_TIMER=null; }
   // 房主宣布开局：把最终地图一起发给加入方，两边同时倒计时
-  if(NET.role==='a'){ PREP.map=(PREP.map|0); netSend({t:'go', map:PREP.map}, 1); }
+  if(prepIsHost()){ PREP.map=(PREP.map|0); netSend({t:'go', map:PREP.map}, 1); }
   const sec=(TUNE.prepSec||3);
   toastMsg('双方已准备，'+sec+' 秒后开局');
   setTimeout(()=>{ try{ startNetMatch(); }catch(e){} }, sec*1000);
@@ -4905,7 +4914,7 @@ document.addEventListener('click',(e)=>{
   const t=e.target.closest ? e.target.closest('[data-prep-map],[data-prep-role],[data-prep-w],#btnPrepReady,#btnPrepLeave') : null;
   if(!t) return;
   if(t.hasAttribute('data-prep-map')){
-    if(NET.role!=='a'){ toastMsg('地图由房主选，等房主定下来'); return; }
+    if(!prepIsHost()){ toastMsg('地图由房主选，等房主定下来'); return; }
     PREP.map=+t.getAttribute('data-prep-map'); sClick(); prepSend(); prepRender(); return;
   }
   if(t.hasAttribute('data-prep-role')){
@@ -4917,7 +4926,8 @@ document.addEventListener('click',(e)=>{
   }
   if(t.id==='btnPrepReady'){
     sClick(); PREP.ready=!PREP.ready; prepSend(); prepRender();
-    if(PREP.ready && PREP.foeReady && NET.role==='a') prepGo();
+    // 两边各自判断“双方已准备”即可开局，不再只靠房主那一边触发（角色值可能被握手消息改写）
+    if(PREP.ready && PREP.foeReady){ prepSend(); prepGo(); }
     return;
   }
   if(t.id==='btnPrepLeave'){
@@ -4934,9 +4944,16 @@ document.addEventListener('click',(e)=>{
 
 function netOnMsg(m){
   NET.lastRcv=performance.now();
-    if(m.t==='room'){ NET.code=m.code; NET.role='a'; netShowCode(m.code,'把房间码发给好友，等他进来'); }
+    if(m.t==='room'){ NET.code=m.code; NET.role='a'; NET.isHost=true; netShowCode(m.code,'把房间码发给好友，等他进来'); }
     else if(m.t==='joined'){
-      NET.code=m.code; NET.role='b';
+      // 关键修复：只有“我确实是加入方”才把身份设成客机。
+      // 房主若因重连订阅到对方主题而收到自己发出的 joined，必须忽略，否则会被降级成客机：
+      // 地图按钮被锁、双方准备后没人调用 prepGo → 表现为“准备了却不开局 + 房主选不了地图”。
+      if(NET.isHost){ prepSend(); return; }
+      NET.code=m.code; NET.role='b'; NET.isHost=false;
+      // QoS1 可能重复投递 joined：已经在准备室就只刷新信息，别把已点好的准备状态清掉
+      const alreadyIn = NET.prepEntered && !prepEl('prepScreen').classList.contains('hidden');
+      if(alreadyIn){ if(m.name) PREP.foeName=m.name; prepSend(); prepRender(); return; }
       netStatus('已进房，进准备室选角色和武器','#5eead4');
       PREP.foeName=NET.foeName||'房主'; PREP.ready=false;   // 自己重新准备，对手信息保留（房主可能已经先发过 prep）
       prepOpen(); prepSend();
@@ -5013,9 +5030,10 @@ function netOnMsg(m){
       PREP.foeWeapon = WEAPONS[m.weapon] ? m.weapon : PREP.foeWeapon;
       PREP.foeReady = !!m.ready;
       if(m.name) PREP.foeName=m.name;
-      if(NET.role!=='a' && typeof m.map==='number' && MAPS['1v1'][m.map]) PREP.map=m.map;   // 客机跟随房主地图
+      if(!prepIsHost() && typeof m.map==='number' && MAPS['1v1'][m.map]) PREP.map=m.map;   // 客机跟随房主地图
       prepRender();
-      if(PREP.ready && PREP.foeReady && NET.role==='a'){ prepSend(); prepGo(); }
+      // 双方都准备就各自开局，不依赖 NET.role（它可能被 joined 等消息改写）
+      if(PREP.ready && PREP.foeReady){ prepSend(); prepGo(); }
     }
     else if(m.t==='go'){ if(typeof m.map==='number' && MAPS['1v1'][m.map]) PREP.map=m.map; prepGo(); }
     else if(m.t==='bye'){ toastMsg('对手离开了房间'); }
@@ -5068,7 +5086,7 @@ function readLobbyBoard(myUid, skipCode){
 function parkAsHost(){
   if(!NET.client || !NET.client.connected) return;
   const myUid=fwKey(FW.uid||ensureUid());
-  NET.role='a'; NET.code=genRoomCode();
+  NET.role='a'; NET.isHost=true; NET.code=genRoomCode();
   try{ NET.client.subscribe(netTopic(NET.code,'a'),{qos:1}); }catch(e){}
   netShowCode(NET.code, '正在等人匹配…也可以把房号发给好友');
   const beacon=()=>lobbyPublish({code:NET.code, nick:currentNick(), uid:FW.uid||ensureUid(), ts:Date.now()});
@@ -5086,15 +5104,18 @@ function parkAsHost(){
     toastMsg('没匹配到真人，先跟人机练一局');
     startGame();
   }, 12000);
-  // 两边同时点匹配会互相看不见：挂牌后再看一次板，谁后挂谁让位
+  // 两边同时点匹配会互相看见对方的挂牌：按房间码大小定唯一房主，避免两边都让位结果都是客机、谁都不开局
   setTimeout(async ()=>{
-    if(state.netMode || NET.role!=='a' || !NET.code) return;
+    if(state.netMode || !prepIsHost() || !NET.code) return;
     const other=await readLobbyBoard(myUid, NET.code);
-    if(other && !state.netMode){ lobbyClear(); netJoinByLobby(other); }
+    if(!other || state.netMode || !prepIsHost()) return;
+    // 房间码字典序大的一方让位当客机，小的一方保持房主；两边算出的结果一致，不会出现双客机或双房主
+    if(String(other.code) < String(NET.code)){ lobbyClear(); netJoinByLobby(other); }
+    else lobbyClear();   // 我方保持房主，清掉对方残留挂牌即可
   }, 1700);
 }
 function netJoinByLobby(hit){
-  NET.role='b'; NET.code=hit.code;
+  NET.role='b'; NET.isHost=false; NET.code=hit.code;
   try{ NET.client.subscribe(netTopic(hit.code,'b'),{qos:1}); }catch(e){}
   try{ NET.client.publish(netTopic(hit.code,'a'), JSON.stringify({t:'join', name:currentNick(), role:state.roleP1, uid:ensureUid()}), {qos:1}); }catch(e){}
   netShowCode(hit.code, '已匹配到 '+hit.nick+'，正在进房…');
@@ -5112,7 +5133,7 @@ function netQuickMatch(){
     try{ lobbyClear(); }catch(e){}
     try{ if(NET.client && NET.code) NET.client.unsubscribe(netTopic(NET.code,'a')); }catch(e){}
     if(NET.lobbyTimer){ clearInterval(NET.lobbyTimer); NET.lobbyTimer=null; }
-    NET.code=null; NET.role=null;
+    NET.code=null; NET.role=null; NET.isHost=false;
     document.querySelectorAll('.overlay').forEach(e=>e.classList.add('hidden'));
     state.netMode=false; state.mode='1v1';
     toastMsg('没匹配到真人，先跟人机练一局');
@@ -5120,7 +5141,7 @@ function netQuickMatch(){
   }, 12000);
   return new Promise(async (resolve)=>{
     if(!await netOpen()){ resolve(false); return; }
-    NET.role='a'; NET.quit=false;
+    NET.role='a'; NET.isHost=true; NET.quit=false;   // 先假定房主；命中公告板改客机时 netJoinByLobby 会把 isHost 置回 false
     netStatus('正在找对手…','#8fa1bf');
     const myUid=fwKey(FW.uid||ensureUid());
     const hit=await readLobbyBoard(myUid, null);
@@ -5633,7 +5654,7 @@ function maintGoLogin(){
   try{ lobbyClear(); }catch(e){}
   try{ if(NET.ws){ NET.ws.send(JSON.stringify({t:'leave'})); } }catch(e){}
   try{ if(NET.client && NET.code) NET.client.unsubscribe(netTopic(NET.code,'a')); }catch(e){}
-  NET.code=null; NET.role=null; NET.code=null;
+  NET.code=null; NET.role=null; NET.isHost=false; NET.prepEntered=false;
   try{ state.netMode=false; state.running=false; state.ended=false; state.paused=false; }catch(e){}
   document.body.classList.remove('in-game'); document.body.classList.remove('ended');
   document.querySelectorAll('.overlay').forEach(el=>el.classList.add('hidden'));
@@ -6959,7 +6980,7 @@ document.getElementById('btnNetHost').addEventListener('click', async ()=>{
   if(useMqtt()){
     if(!NET.client || !NET.client.connected){ if(!await netOpen()) return; }
     document.getElementById('netJoinBox').classList.add('hidden');
-    NET.role='a'; NET.code=genRoomCode();
+    NET.role='a'; NET.isHost=true; NET.code=genRoomCode();
     NET.client.subscribe(netTopic(NET.code,'a'), {qos:1});
     netShowCode(NET.code, '把房间码发给好友，等他进来');
     prepOpen();       // 房主建完房直接进准备室：先选图、选角色，边等对手边配
@@ -6982,7 +7003,7 @@ document.getElementById('btnNetJoin').addEventListener('click', async ()=>{
   if(code.length!==5){ netStatus('房间码是 5 位字母或数字','#ff9f9f'); return; }
   if(useMqtt()){
     if(!NET.client){ if(!await netOpen()) return; }
-    NET.role='b'; NET.code=code;
+    NET.role='b'; NET.isHost=false; NET.code=code;
     NET.client.subscribe(netTopic(code,'b'), {qos:1});
     NET.client.publish(netTopic(code,'a'), JSON.stringify({t:'join', name:currentNick(), role:state.roleP1, uid:ensureUid()}), {qos:1});
     netStatus('正在敲门，等房主回应…','#8fa1bf');
