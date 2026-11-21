@@ -1340,7 +1340,7 @@ body.layout-free #btnFire.on{transform:translate(-50%,-50%) scale(.94) !importan
       </div>
     </div>
     <div class="overlay hidden" id="settingsScreen">
-      <div class="title">自定义设置 <span id="verTag" style="font-size:11px;color:#7d8aa8;font-weight:400;display:block;margin-top:2px">v2.9.15</span></div>
+      <div class="title">自定义设置 <span id="verTag" style="font-size:11px;color:#7d8aa8;font-weight:400;display:block;margin-top:2px">v2.9.16</span></div>
       <div class="rowBtns" style="justify-content:center;flex-wrap:wrap;margin:2px auto 8px;max-width:320px;width:100%">
         <button class="btn" id="btnSettingsDoneTop">完成</button>
         <button class="btn ghost" id="btnSettingsExitTop">退出</button>
@@ -1397,6 +1397,7 @@ body.layout-free #btnFire.on{transform:translate(-50%,-50%) scale(.94) !importan
         <div id="historyBox" style="display:none;margin-top:10px;border-top:1px solid rgba(255,255,255,.1);padding-top:10px">
           <div style="font-size:13px;font-weight:800;color:#67e8f9;margin-bottom:6px">修改历史</div>
           <div style="line-height:1.8">
+            <div><b style="color:#ffd34d">v2.9.16</b>　通用恢复技能改为<b>回满自身 80% 最大生命</b>：5 秒内持续回血、每 0.5 秒回 8%，升级加血后总量自动跟着涨，最多补到满血即停；恢复不再是免死金牌——血量被打空照样阵亡，死亡瞬间恢复立刻中断</div>
             <div><b style="color:#ffd34d">v2.9.15</b>　手机端 5V5 久战防卡死：新增画质三档（自动/高清/流畅），掉帧自动降分辨率与特效、内存吃紧自动清临时对象；HUD 改为 10Hz 刷新不再每帧改 DOM；竖屏视野外的角色/子弹/粒子直接不画；角色渐变缓存、音效节点用完断开、屏幕旋转防抖，减少发热与闪退</div>
             <div><b style="color:#ffd34d">v2.9.14</b>　修复两个问题：①恢复技能不再每次复活就刷新，死亡等待期间冷却照常走；②联机开局显示对方挂机/无法正常玩——开局重置掉线计时、掉线判胜放宽到 12 秒，客机漏收「开局」消息时收到对方状态会自动跟上，开局指令补发三次</div>
             <div><b style="color:#ffd34d">v2.9.13</b>　手机端控件全面可拖：设置页「调整按键 / 雷达位置」里，摇杆、开火、技能、恢复、雷达、退出键都能按住拖动，坐标存成百分比，横竖屏切换不跑位；雷达可摆到屏幕任意位置；摇杆新增「固定位置 / 跟随手指」模式</div>
@@ -1546,9 +1547,12 @@ const DIFFS = {
   hard:   { aimError:0.09, fireMul:1.0, engageMin:105 },
 };
 
-/* 通用恢复技能（独立按键，全角色可用）：只作用于自己，持续回血，累计封顶 */
-const RECOVER = { total:50,   // 累计最多回复 50 点生命
-                  rate:10,    // 每秒回复
+/* 通用恢复技能（独立按键，全角色可用）：只作用于自己，持续回血
+   回血总量 = 自身最大生命 × 80%（升级加血后自动跟着涨），最多补到满血为止。
+   恢复期间不是无敌：血被打空照样死，死亡瞬间恢复立刻中断。 */
+const RECOVER = { pct:0.8,    // 本次最多回复「最大生命 × 80%」
+                  dur:5,      // 总共持续 5 秒
+                  steps:10,   // 0.5 秒结算一次（每口 8% 最大生命），血条不会一下跳一大截
                   cd:35 };    // 冷却（秒）
 
 /* 战场地图：每种模式 3 张不同掩体布局（尺寸/出生点沿用模式，仅换障碍物） */
@@ -1874,7 +1878,8 @@ function makePlayer(team, idx, role0, name, isHuman){  const spawns = team==='re
     kills:0, deaths:0, dmgDealt:0, shots:0, hits:0, // 结算统计：总伤害 / 开火数 / 命中数
     shield:0, shieldTimer:0, dashT:0, dashVX:0, dashVY:0, snipeReady:false, rageT:0,
     regenT:0, regenTick:0,
-    recoverLeft:0, recoverTick:0, recoverCD:0,   // 通用恢复：剩余可回血量 / 每秒结算计时 / 冷却
+    recoverLeft:0, recoverTick:0, recoverCD:0,   // 通用恢复：剩余可回血量 / 结算计时 / 冷却
+    recoverTotal:0, recoverRate:0,               // 本次总量（按钮环进度用）/ 每口回复量（按 80% 最大生命分摊）
     strafeDir:1, strafeT:0, wanderT:0, lastX:s.x, lastY:s.y,
     burstLeft:0, restT:0,  // AI 点射节奏：本波剩余子弹 / 波后停顿时间
     stuckT:0, detourT:0, detourDir:1,  // AI 避障：卡住计时 / 绕行剩余时间 / 绕行方向
@@ -2385,7 +2390,7 @@ function castSkill(p){
   p.skillCD=s.cd;
   if(p.isHuman){ dailyProgress('skill', 1); if(state.netMode) { try{ netSend({t:'skill', k:skillKind(s)}, 0); }catch(e){} } }
 }
-/* 通用恢复技能：独立按键，只给自己回血，持续回血直到累计回复 RECOVER.total 点 */
+/* 通用恢复技能：独立按键，只给自己回血，5 秒内回满「最大生命 × 80%」 */
 function castRecover(p){
   if(!p || !p.alive) return false;
   if(p.recoverCD>0){
@@ -2395,12 +2400,15 @@ function castRecover(p){
   if(p.recoverLeft>0){ if(p.isHuman) toastMsg('正在恢复中'); return false; }
   const cap=p.maxHp||CFG.maxHp;
   if(p.hp>=cap){ if(p.isHuman) toastMsg('生命值已满'); return false; }
-  p.recoverLeft=RECOVER.total;
+  const total=Math.max(1, Math.round(cap*RECOVER.pct)); // 80% 最大生命（升级加血后跟着涨）
+  p.recoverTotal=total;
+  p.recoverLeft=total;
+  p.recoverRate=total/RECOVER.steps;   // 每 0.5 秒一口
   p.recoverTick=0;          // 按下即立刻回第一口，手感更跟手
   p.recoverCD=RECOVER.cd;
   if(p.isHuman){
     sHeal();
-    addFloater(p.x,p.y-30,'恢复','#86efac');
+    addFloater(p.x,p.y-30,'恢复 80%','#86efac');
     if(state.netMode){ try{ netSend({t:'recover'}, 0); }catch(e){} }
   }
   spawnRing(p.x,p.y,'#86efac',58);
@@ -2408,16 +2416,17 @@ function castRecover(p){
     spawnParticle(p.x+Math.cos(a)*12,p.y+Math.sin(a)*12,Math.cos(a)*sp,Math.sin(a)*sp,'#86efac',0.45+rng()*0.3,3); }
   return true;
 }
-/* 每帧推进恢复：每秒结算一次，累计不超过 RECOVER.total，血满即停 */
+/* 每帧推进恢复：每 0.5 秒结算一口，累计不超过本次总量，血满即停。
+   注意这里只加血，不减伤：hp 归零由 update() 里的死亡判定先处理（恢复不是免死金牌）。 */
 function updateRecover(p,dt){
   if(p.recoverCD>0) p.recoverCD=Math.max(0,p.recoverCD-dt);
   if(p.recoverLeft<=0) return;
   p.recoverTick-=dt;
   if(p.recoverTick>0) return;
-  p.recoverTick+=1;
+  p.recoverTick+=RECOVER.dur/RECOVER.steps;   // 固定 0.5 秒一口，负余量带到下一口
   const cap=p.maxHp||CFG.maxHp;
   if(p.hp>=cap){ p.recoverLeft=0; return; }   // 血满了就收手，不浪费剩余额度
-  const gain=Math.min(RECOVER.rate, p.recoverLeft, cap-p.hp);
+  const gain=Math.min(p.recoverRate||10, p.recoverLeft, cap-p.hp);
   p.hp=Math.round(Math.min(cap, p.hp+gain));
   p.recoverLeft=Math.max(0, p.recoverLeft-gain);
   addFloater(p.x,p.y-26,'+'+Math.round(gain),'#86efac');
@@ -2786,7 +2795,7 @@ function hasLOS(ax,ay,bx,by){
 const AI_SPEED_MUL = 1.0; // AI 移速系数：与玩家完全一致（角色的 speed 就是最终移速，不再打折扣）
 function updateAI(p,dt){
   const aiMoveDt = isTouch ? dt : dt*AI_SPEED_MUL; // AI 移动专用 dt：手机端已有 0.62 全局缩放，不再叠加
-  // 通用恢复：AI 与玩家同一套规则（血量低于 55% 且不在恢复中、冷却已好就用）
+  // 通用恢复：AI 与玩家同一套规则（血量低于 55% 且不在恢复中、冷却已好就用，回满 80% 最大生命）
   // 放在选目标之前，避免「附近没有敌人直接 return」时低血也不回血
   if(p.recoverCD<=0 && p.recoverLeft<=0 && p.hp < (p.maxHp||CFG.maxHp)*0.55) castRecover(p);
   let best=null, bd=Infinity;
@@ -2953,6 +2962,8 @@ function playKillFx(team,streak){
 function killPlayer(victim,killer){
   if(!victim.alive) return; // 同帧多颗子弹命中，只结算一次
   victim.alive=false; victim.hp=0; victim.respawn=CFG.respawnTime; victim.deaths++;
+  // 恢复不是免死金牌：血被打空的这一瞬间，正在进行的恢复立即中断（不会躺着继续回血）
+  victim.recoverLeft=0; victim.recoverTick=0;
   if(!killer || killer.team===victim.team) return; // 无击杀者/友伤：不计分不崩
   killer.kills++;
   if(killer.isHuman) addDailyKill();
@@ -3109,7 +3120,7 @@ function update(dt, rawDt){
       if(p.respawn<=0){ const s=(p.team==='red'?state.world.redSpawn:state.world.blueSpawn)[p.idx];
         p.x=s.x; p.y=s.y; p.hp=p.maxHp||CFG.maxHp; p.alive=true; p.invuln=CFG.spawnProtect; p.shield=0;
         p.regenT=0; p.regenTick=0; // 复活时打断上一次的持续恢复，避免刚出生就跳治疗数字
-        p.recoverLeft=0; p.recoverTick=0; // 只清掉没用完的治疗量，冷却按原时间继续走（不刷新）
+        p.recoverLeft=0; p.recoverTick=0; p.recoverRate=0; p.recoverTotal=0; // 只清掉没用完的治疗量，冷却按原时间继续走（不刷新）
         p.respawnRing=1; spawnRing(p.x,p.y,p.team==='red'?'#ff5b6e':'#4dc3ff',64); } // 复活光环
       continue;
     }
@@ -3906,8 +3917,8 @@ function updateRecoverBtn(){
   const lbl=document.getElementById('recLabel');
   const left=Math.max(0,p.recoverLeft||0), cd=Math.max(0,p.recoverCD||0);
   let prog=1;
-  if(left>0){                       // 恢复中：环按「已回 / 总量」推进
-    prog=clamp(1-left/RECOVER.total,0,1);
+  if(left>0){                       // 恢复中：环按「已回 / 本次总量」推进
+    prog=clamp(1-left/(p.recoverTotal||1),0,1);
     num.textContent=Math.ceil(left);
     btn.classList.add('ing'); btn.classList.remove('on');
     ring.style.opacity='1';
@@ -3933,7 +3944,7 @@ function updateRecoverHint(){
   const p=localP();
   if(!p){ el.textContent=''; return; }
   const left=Math.max(0,p.recoverLeft||0), cd=Math.max(0,p.recoverCD||0);
-  if(left>0) el.textContent='恢复中 '+Math.round(RECOVER.total-left)+'/'+RECOVER.total;
+  if(left>0) el.textContent='恢复中 '+Math.round((p.recoverTotal||0)-left)+'/'+Math.round(p.recoverTotal||0);
   else if(cd>0) el.textContent='恢复 冷却 '+Math.ceil(cd)+'s';
   else el.textContent='['+kbName(KB.recover)+'] 恢复';
 }
@@ -4962,11 +4973,13 @@ function runSelfCheck(){
     && String(skillKind).indexOf("'regen'")>=0
     && String(netGhostSkill).indexOf("m.k==='regen'")>=0), 'regenHeal='+(ROLES.surgeon&&ROLES.surgeon.skill.regenHeal)+' dur='+(ROLES.surgeon&&ROLES.surgeon.skill.regenDur));
   ok('帧步长钳制且冲击波半径不为负（防止 arc 抛异常中断渲染）', String(tick).indexOf('Math.max(0,((t-state.lastT)/1000)')>=0 && String(drawParticles).indexOf('Math.max(0,2+pt.size*k)')>=0);
-  ok('通用恢复技能齐全（独立按键F/手机按钮/只对自己/累计封顶50/冷却35s）', RECOVER.total===50 && RECOVER.rate>0 && RECOVER.cd>0
+  ok('通用恢复技能齐全（独立按键F/手机按钮/只对自己/回满自身80%生命/冷却35s）', RECOVER.pct===0.8 && RECOVER.dur>0 && RECOVER.steps>0 && RECOVER.cd>0
     && typeof castRecover==='function' && typeof updateRecover==='function'
     && KB_DEF.recover==='KeyF' && !!document.getElementById('btnRecover')
-    && String(castRecover).indexOf('p.recoverLeft=RECOVER.total')>=0
-    && String(updateRecover).indexOf('RECOVER.rate')>=0, 'total='+RECOVER.total+' rate='+RECOVER.rate+' cd='+RECOVER.cd);
+    && String(castRecover).indexOf('RECOVER.pct')>=0
+    && String(updateRecover).indexOf('p.recoverRate')>=0, 'pct='+RECOVER.pct+' dur='+RECOVER.dur+' steps='+RECOVER.steps+' cd='+RECOVER.cd);
+  ok('恢复期间不是无敌（血空即死并中断恢复）', String(killPlayer).indexOf('victim.recoverLeft=0')>=0
+    && String(update).indexOf('p.hp<=0){ killPlayer')>=0);
   ok('AI 开火攻速与移速与玩家一致（无 1.8 倍射速惩罚、无 0.7 移速折扣）', CFG.aiFireMul===1 && AI_SPEED_MUL===1
     && DIFFS.easy.fireMul===1 && DIFFS.normal.fireMul===1 && DIFFS.hard.fireMul===1, 'aiFireMul='+CFG.aiFireMul+' aiSpeedMul='+AI_SPEED_MUL);
   ok('复活不刷新恢复冷却（死亡期间冷却照常走）', String(update).indexOf('p.recoverCD=0')<0
@@ -8366,7 +8379,7 @@ function buildHelp(){
     '<h5>五、规则说明</h5>'+
     '<div>· 每人 100 点血量，死亡后 3 秒复活，复活后短暂无敌。<br>'+
     '· 击杀对方得 1 分；技能有冷却时间，冷却结束前不能重复释放。<br>'+
-    '· <b>恢复</b>：所有角色通用，独立按键/按钮。按下后每秒回 10 点血，<b>累计最多回 50 点</b>就自动停止；只作用于自己，不治疗队友；冷却 35 秒，血满时按下无效。<br>'+
+    '· <b>恢复</b>：所有角色通用，独立按键/按钮。按下后 5 秒内持续回血，总量为<b>自身最大生命的 80%</b>（每 0.5 秒回 8%），最多补到满血即停；只作用于自己，不治疗队友；冷却 35 秒，血满时按下无效。<b>恢复期间不是无敌</b>——被集火打到血量归零照样阵亡，死亡瞬间恢复立即中断。<br>'+
     '· 结算界面展示双方伤害、命中率与全场最佳 MVP。</div>'
     +'<h5>六、账号与名字</h5>'
     +'<div>· <b>昵称全网唯一</b>：先注册先得，一个名字只能用一次，别人再输同一个名字会被直接拒绝。<br>'
@@ -8382,11 +8395,11 @@ function buildHelp(){
     +'<span class="mobile-only">· <b>手机移动</b>：左半屏任意位置拖动就是摇杆，手指松开回中；摇杆大小、透明度、离边距离都能在「自定义设置」里调。<br>'
     +'· <b>手机开火</b>：右下红色大键，按下即开火并自动瞄准最近敌人；按住可连发。<br>'
     +'· <b>手机技能</b>：开火键上方的黄色小键，冷却好了会亮起；技能可设为朝敌人放或跟摇杆方向放（设置里切换）。<br>'
-    +'· <b>手机恢复</b>：右下开火键上方那颗绿色键，点一下持续回血（最多回 50）；恢复中显示剩余可回量，冷却时显示秒数。<br>'
+    +'· <b>手机恢复</b>：右下开火键上方那颗绿色键，点一下持续回血（回满自身 80% 生命）；恢复中显示剩余可回量，冷却时显示秒数。<br>'
     +'· <b>手机退出</b>：左上角 ✕ 随时退出本局回主菜单；暂停需要双方同意，掉线直接判对方胜。<br>'
     +'· <b>手机显示</b>：竖屏拿起来会自动转横屏；顶部左右两侧是双方角色与血量，血条绿>黄>红；雷达在左上角，只显示你自己和已探测到的对手。<br>'
     +'· <b>手机手感</b>：开火键大小、雷达大小、界面间距都可在设置里改；已禁用双指缩放和长按复制，只有档案号那一处点一下可复制。<br></span>'
-    +'<span class="pc-only">· 电脑：W A S D 移动、鼠标瞄准、左键开火、E 放技能、F 恢复（持续回血，最多回 50）、P 暂停、M 静音。<br></span>'
+    +'<span class="pc-only">· 电脑：W A S D 移动、鼠标瞄准、左键开火、E 放技能、F 恢复（持续回血，回满自身 80% 生命）、P 暂停、M 静音。<br></span>'
     +'· 竖屏可以玩，横屏视野更广。</div>'
     +'<h5>八、好友与明信片</h5>'
     +'<div>· 主菜单「好友」里输名字或档案号就能搜人，搜到直接看到对方的明信片（签名、段位、击杀、胜率）。<br>'
