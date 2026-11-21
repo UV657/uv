@@ -1281,7 +1281,7 @@ body.is-touch .nhTime{display:none !important}
       </div>
     </div>
     <div class="overlay hidden" id="settingsScreen">
-      <div class="title">自定义设置 <span id="verTag" style="font-size:11px;color:#7d8aa8;font-weight:400;display:block;margin-top:2px">v2.9.10</span></div>
+      <div class="title">自定义设置 <span id="verTag" style="font-size:11px;color:#7d8aa8;font-weight:400;display:block;margin-top:2px">v2.9.11</span></div>
       <div class="rowBtns" style="justify-content:center;flex-wrap:wrap;margin:2px auto 8px;max-width:320px;width:100%">
         <button class="btn" id="btnSettingsDoneTop">完成</button>
         <button class="btn ghost" id="btnSettingsExitTop">退出</button>
@@ -1336,6 +1336,7 @@ body.is-touch .nhTime{display:none !important}
         <div id="historyBox" style="display:none;margin-top:10px;border-top:1px solid rgba(255,255,255,.1);padding-top:10px">
           <div style="font-size:13px;font-weight:800;color:#67e8f9;margin-bottom:6px">修改历史</div>
           <div style="line-height:1.8">
+            <div><b style="color:#ffd34d">v2.9.11</b>　新增角色「战地医师」（💉 持续恢复：6 秒内每秒回 9 血、共 54 血，恢复期间照常移动射击），与医疗兵的瞬时回血互补；终端角色调参与玩法说明已自动接入</div>
             <div><b style="color:#ffd34d">v2.9.10</b>　修复“进入房间后无法正常对决”：对局开始后，迟到的准备消息会把准备室重新弹到画面上并重置状态；现已在对局中忽略准备消息，并冻结阵营与收发主题</div>
             <div><b style="color:#ffd34d">v2.9.9</b>　修复联机准备室：双方准备却不开局、房主选不了地图（房主身份改由本机稳定标记判定，收到 joined 不再被降级；两边各自触发开局）</div>
             <div><b style="color:#ffd34d">v2.9.8</b>　新增 3 把武器（火箭筒/火焰喷枪/连发狙击，终端可调冷却）；新增 1 张 5V5 地图「双桥夹击」</div>
@@ -1653,6 +1654,11 @@ const ROLES = {
     skill:{name:'血怒', key:'E', cd:9, rageDur:5, rageDmgMul:1.6, rageDr:0.35,
       desc:'5 秒血怒：伤害提升 60%，同时受到的伤害减少 35%，正面对拼无敌', tag:'爆发'},
     ai:{ rage:true } },
+  surgeon: { id:'surgeon', name:'战地医师', icon:'💉', color:'#a7f3d0',
+    speed:256, dmg:11, fireCD:0.31, bulletSpeed:770, bulletLife:1.2,
+    skill:{name:'持续恢复', key:'E', cd:12, regenHeal:9, regenDur:6,
+      desc:'6 秒内每秒恢复 9 点生命（共 54），恢复期间照常移动射击', tag:'支援'},
+    ai:{ regen:{hp:68} } },
 };
 const ROLE_IDS = Object.keys(ROLES);
 /* 角色出厂数值：终端删掉某角色的调参后能真正还原回默认 */
@@ -1796,6 +1802,7 @@ function makePlayer(team, idx, role0, name, isHuman){  const spawns = team==='re
     cooldown:0, respawn:0, invuln:0, skillCD:0,
     kills:0, deaths:0, dmgDealt:0, shots:0, hits:0, // 结算统计：总伤害 / 开火数 / 命中数
     shield:0, shieldTimer:0, dashT:0, dashVX:0, dashVY:0, snipeReady:false, rageT:0,
+    regenT:0, regenTick:0,
     strafeDir:1, strafeT:0, wanderT:0, lastX:s.x, lastY:s.y,
     burstLeft:0, restT:0,  // AI 点射节奏：本波剩余子弹 / 波后停顿时间
     stuckT:0, detourT:0, detourDir:1,  // AI 避障：卡住计时 / 绕行剩余时间 / 绕行方向
@@ -2168,6 +2175,7 @@ function skillKind(s){
   if(s.bombDmg) return 'bomb';
   if(s.supR) return 'supply';
   if(s.heal) return 'heal';
+  if(s.regenHeal) return 'regen';
   return 'none';
 }
 /* 对方的技能只放视觉，不重复结算伤害/护盾 */
@@ -2184,6 +2192,7 @@ function netGhostSkill(m){
   else if(m.k==='bomb'){ spawnRing(f.x,f.y,'#ffa07a',30); }
   else if(m.k==='supply'){ spawnRing(f.x,f.y,'#ffd9a0',42); }
   else if(m.k==='heal'){ for(let i=0;i<12;i++){ const a=Math.random()*Math.PI*2; spawnParticle(f.x,f.y,Math.cos(a)*(60+Math.random()*120),Math.sin(a)*(60+Math.random()*120),'#86efac',0.45,3); } }
+  else if(m.k==='regen'){ f.regenT=(f.role&&f.role.skill&&f.role.skill.regenDur)||6; f.regenTick=1; spawnRing(f.x,f.y,'#a7f3d0',46); }
 }
 function castSkill(p){
   if(!p.alive) return;
@@ -2292,6 +2301,13 @@ function castSkill(p){
     }
     for(let i=0;i<12;i++){ const a=rng()*Math.PI*2, sp=60+rng()*120;
       spawnParticle(p.x,p.y,Math.cos(a)*sp,Math.sin(a)*sp,'#86efac',0.4+rng()*0.3,3); }
+    sHeal();
+  } else if(s.regenHeal){ // 战地医师：持续恢复（HoT）
+    p.regenT=(s.regenDur||6); p.regenTick=1;
+    addFloater(p.x,p.y-26,'持续恢复','#a7f3d0');
+    spawnRing(p.x,p.y,'#a7f3d0',52);
+    for(let i=0;i<14;i++){ const a=rng()*Math.PI*2, sp=50+rng()*120;
+      spawnParticle(p.x,p.y,Math.cos(a)*sp,Math.sin(a)*sp,'#a7f3d0',0.5+rng()*0.35,3); }
     sHeal();
   }
   p.skillCD=s.cd;
@@ -2594,6 +2610,7 @@ function updateAI(p,dt){
     const s=p.role.skill, ai=p.role.ai||{};
     if(s.shield && ai.shield && p.hp<ai.shield.hp && p.shield<=0) castSkill(p);
     else if(s.heal && ai.heal && p.hp<ai.heal.hp) castSkill(p);
+    else if(s.regenHeal && ai.regen && p.hp<ai.regen.hp && p.regenT<=0) castSkill(p);
     else if(s.dmg && ai.snipe && bdPx>ai.snipe.dist) castSkill(p);
     else if(s.dash && ai.dash && bdPx>ai.dash.min && bdPx<ai.dash.max && p.hp>55 && rng()>0.55) castSkill(p);
     else if(s.front && ai.front && p.hp<72 && p.frontT<=0) castSkill(p);
@@ -2777,7 +2794,9 @@ function addFloater(x,y,text,color){
 function tick(t){
   requestAnimationFrame(tick);
   if(!state.running || state.paused || state.ended) return;
-  let dt=Math.min(0.033,((t-state.lastT)/1000)||0.016);
+  // 时间戳可能回退（切标签页/系统休眠/CDP 干预），dt 必须钳在 [0, 0.033]：
+  // 否则负 dt 会让粒子寿命反向增长、半径变负，arc() 抛异常直接中断整帧渲染（画面卡死）
+  let dt=Math.min(0.033, Math.max(0,((t-state.lastT)/1000)||0.016));
   const rawDt=dt; // 真实时间：复活等待、UI 计时不该被节奏缩放拉长
   if(isTouch) dt*=0.62; // 手机触屏操作精度低，整体节奏放慢，电脑端不受影响
   state.lastT=t;
@@ -2807,10 +2826,29 @@ function update(dt, rawDt){
     if(p.slowT>0) p.slowT-=dt;
     if(p.ghostT>0) p.ghostT-=dt;
     if(p.rageT>0) p.rageT-=dt;
+    // 战地医师：持续恢复（每秒结算一次，保持血量为整数，浮字按实际回复量）
+    if(p.regenT>0){
+      p.regenT-=dt; p.regenTick-=dt;
+      const _rs=p.role&&p.role.skill;
+      if(p.regenTick<=0 && p.alive && _rs && _rs.regenHeal){
+        p.regenTick+=1;
+        const _cap=p.maxHp||CFG.maxHp, _before=p.hp;
+        p.hp=Math.min(_cap, p.hp+_rs.regenHeal);
+        const _gain=Math.round(p.hp-_before);
+        if(_gain>0){
+          addFloater(p.x,p.y-26,'+'+_gain,'#86efac');
+          for(let i=0;i<3;i++){ const a=rng()*Math.PI*2, sp=40+rng()*70;
+            spawnParticle(p.x+Math.cos(a)*10,p.y+Math.sin(a)*10,Math.cos(a)*sp,Math.sin(a)*sp,'#a7f3d0',0.45,3); }
+          if(p.isHuman) sHeal();
+        }
+      }
+      if(p.regenT<=0){ p.regenT=0; p.regenTick=0; }
+    }
     if(!p.alive){
       p.respawn-=realDt; // 复活等待按真实秒数算，手机端不再被拖成 3 秒多
       if(p.respawn<=0){ const s=(p.team==='red'?state.world.redSpawn:state.world.blueSpawn)[p.idx];
         p.x=s.x; p.y=s.y; p.hp=p.maxHp||CFG.maxHp; p.alive=true; p.invuln=CFG.spawnProtect; p.shield=0;
+        p.regenT=0; p.regenTick=0; // 复活时打断上一次的持续恢复，避免刚出生就跳治疗数字
         p.respawnRing=1; spawnRing(p.x,p.y,p.team==='red'?'#ff5b6e':'#4dc3ff',64); } // 复活光环
       continue;
     }
@@ -3388,7 +3426,7 @@ function drawPlayers(){
     ctx2d.fillStyle='hsl('+(120*ratio)+',85%,55%)'; ctx2d.fillRect(bx,by,bw*ratio,bh);
     // 名字：5V5 混战用兵种单字，一眼分得清队友是什么职业
     ctx2d.font='bold 12px "Microsoft YaHei",sans-serif';
-    const shortRole={assault:'突',tank:'重',sniper:'神',medic:'医',bulwark:'堡',engineer:'铁',jammer:'静',recon:'幽',demo:'炮',rivet:'铆',hunter:'鹰',guardian:'守',trapper:'捕',berserker:'狂'}[p.role.id]||'';
+    const shortRole={assault:'突',tank:'重',sniper:'神',medic:'医',bulwark:'堡',engineer:'铁',jammer:'静',recon:'幽',demo:'炮',rivet:'铆',hunter:'鹰',guardian:'守',trapper:'捕',berserker:'狂',surgeon:'愈'}[p.role.id]||'';
     const label=state.mode==='5v5'?(p.isHuman?(currentNick().slice(0,5)||'你'):shortRole):p.name;
     ctx2d.lineWidth=2.5; ctx2d.strokeStyle='rgba(0,0,0,.65)'; ctx2d.strokeText(label,px,by-6); // 深色描边保证压在掩体上也看得清
     ctx2d.fillStyle=p.isHuman?'#ffd34d':(p.team==='red'?'#ffb3bd':'#a9ddff');
@@ -3439,7 +3477,7 @@ function drawParticles(){
     if(pt.ring){ // 冲击波圆环：由内向外扩散
       ctx2d.globalAlpha=clamp(pt.life/pt.maxLife,0,1)*0.9;
       ctx2d.strokeStyle=pt.color; ctx2d.lineWidth=Math.max(1,4*(1-k));
-      ctx2d.beginPath(); ctx2d.arc(pt.x,pt.y,2+pt.size*k,0,Math.PI*2); ctx2d.stroke();
+      ctx2d.beginPath(); ctx2d.arc(pt.x,pt.y,Math.max(0,2+pt.size*k),0,Math.PI*2); ctx2d.stroke();
     } else {
       ctx2d.globalAlpha=clamp(pt.life/pt.maxLife,0,1);
       ctx2d.fillStyle=pt.color;
@@ -4514,7 +4552,7 @@ function runSelfCheck(){
   ok('血量配置正常', CFG.maxHp>0 && CFG.respawnTime>0, 'HP'+CFG.maxHp+' 复活'+CFG.respawnTime+'s');
   ok('两种模式都注册', !!(CFG.modes['5v5'] && CFG.modes['1v1']));
   ok('地图数据完整（5V5 十张 / 1V1 九张，含十字回廊/双环哨位/双桥夹击）', !!(MAPS['5v5'] && MAPS['1v1'] && MAPS['5v5'].length>=10 && MAPS['1v1'].length>=9 && MAPS['5v5'].every(m=>Array.isArray(m.obs)) && MAPS['5v5'].some(m=>m.name==='十字回廊') && MAPS['5v5'].some(m=>m.name==='双桥夹击') && MAPS['1v1'].some(m=>m.name==='双环哨位')));
-  ok('角色表 14 个且数值合法（含堡垒/铁匠/静默/幽灵/炮锤/铆钉/鹰眼/守护者/捕兽人/狂战士）', ROLE_IDS.length===14 && ROLE_IDS.every(id=>ROLES[id].dmg>0 && ROLES[id].speed>0 && ROLES[id].fireCD>0), ROLE_IDS.join('/'));
+  ok('角色表 15 个且数值合法（含堡垒/铁匠/静默/幽灵/炮锤/铆钉/鹰眼/守护者/捕兽人/狂战士/战地医师）', ROLE_IDS.length===15 && ROLE_IDS.every(id=>ROLES[id].dmg>0 && ROLES[id].speed>0 && ROLES[id].fireCD>0), ROLE_IDS.join('/'));
 
   // 4. 命名与身份
   const n9=pickAINames(9,'测试名');
@@ -4539,6 +4577,11 @@ function runSelfCheck(){
   ok('对局参数含角色项', TUNE.frontReduce>0&&TUNE.mineDmg>0&&TUNE.jamDur>0&&TUNE.mineMax>0);
   ok('新角色技能链路齐全（潜行/炸药/补给）', !!(ROLES.recon.skill.ghostDur && ROLES.demo.skill.bombDmg && ROLES.rivet.skill.supR && typeof castBomb==='function' && typeof updateBombs==='function' && typeof updateSupplies==='function' && typeof drawBombs==='function' && typeof drawSupplies==='function'));
   ok('新增三角色技能齐全（猎鹰之眼/守护力场/捕兽夹）', !!(ROLES.hunter&&ROLES.hunter.skill.dmg&&ROLES.guardian&&ROLES.guardian.skill.shield&&ROLES.trapper&&ROLES.trapper.skill.mineDmg));
+  ok('战地医师「持续恢复」技能链齐全（施放/每秒结算/联机同步）', !!(ROLES.surgeon && ROLES.surgeon.skill.regenHeal>0 && ROLES.surgeon.skill.regenDur>0
+    && String(castSkill).indexOf('p.regenT=')>=0
+    && String(skillKind).indexOf("'regen'")>=0
+    && String(netGhostSkill).indexOf("m.k==='regen'")>=0), 'regenHeal='+(ROLES.surgeon&&ROLES.surgeon.skill.regenHeal)+' dur='+(ROLES.surgeon&&ROLES.surgeon.skill.regenDur));
+  ok('帧步长钳制且冲击波半径不为负（防止 arc 抛异常中断渲染）', String(tick).indexOf('Math.max(0,((t-state.lastT)/1000)')>=0 && String(drawParticles).indexOf('Math.max(0,2+pt.size*k)')>=0);
   ok('狂战士血怒机制齐全', !!(ROLES.berserker&&ROLES.berserker.skill.rageDur>0&&ROLES.berserker.skill.rageDmgMul>1&&ROLES.berserker.skill.rageDr>0&&skillKind(ROLES.berserker.skill)==='rage'));
   ok('新武器特性到位（栓狙/拖慢/爆破）', WEAPONS.falcon.dmgMul>=2.4 && WEAPONS.rivetgun.slowHit>0 && !!(WEAPONS.breaker.explode&&WEAPONS.breaker.explode.r>0) && typeof explodeBullet==='function');
   ok('准备室可锁定地图与角色武器', typeof prepSend==='function' && String(prepRender).indexOf('data-prep-map')>=0 && String(prepRender).indexOf('data-prep-role')>=0);
