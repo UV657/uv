@@ -898,6 +898,9 @@ body.is-touch .nhTime{display:none !important}
               <label class="admField">十字弩冷却倍率<input id="admTuneCrossbow" type="number" min="1" max="8" step="0.1" class="admInput"></label>
               <label class="admField">双持手枪冷却倍率<input id="admTuneTwin" type="number" min="0.2" max="2" step="0.05" class="admInput"></label>
               <label class="admField">电弧枪冷却倍率<input id="admTuneTesla" type="number" min="0.3" max="3" step="0.05" class="admInput"></label>
+              <label class="admField">火箭筒冷却倍率<input id="admTuneRocket" type="number" min="1" max="9" step="0.1" class="admInput"></label>
+              <label class="admField">火焰喷枪冷却倍率<input id="admTuneFlamer" type="number" min="0.2" max="2.5" step="0.05" class="admInput"></label>
+              <label class="admField">连发狙击冷却倍率<input id="admTuneRepeater" type="number" min="0.3" max="4" step="0.05" class="admInput"></label>
               <label class="admField">准备室倒计时（秒）<input id="admTunePrep" type="number" min="2" max="10" step="1" class="admInput"></label>
               <label class="admField">堡垒正面减伤（0-1）<input id="admTuneFront" type="number" min="0.3" max="0.85" step="0.05" class="admInput"></label>
               <label class="admField">地雷伤害<input id="admTuneMine" type="number" min="20" max="120" step="5" class="admInput"></label>
@@ -1278,7 +1281,7 @@ body.is-touch .nhTime{display:none !important}
       </div>
     </div>
     <div class="overlay hidden" id="settingsScreen">
-      <div class="title">自定义设置 <span id="verTag" style="font-size:11px;color:#7d8aa8;font-weight:400;display:block;margin-top:2px">v2.9.7</span></div>
+      <div class="title">自定义设置 <span id="verTag" style="font-size:11px;color:#7d8aa8;font-weight:400;display:block;margin-top:2px">v2.9.8</span></div>
       <div class="rowBtns" style="justify-content:center;flex-wrap:wrap;margin:2px auto 8px;max-width:320px;width:100%">
         <button class="btn" id="btnSettingsDoneTop">完成</button>
         <button class="btn ghost" id="btnSettingsExitTop">退出</button>
@@ -1333,6 +1336,7 @@ body.is-touch .nhTime{display:none !important}
         <div id="historyBox" style="display:none;margin-top:10px;border-top:1px solid rgba(255,255,255,.1);padding-top:10px">
           <div style="font-size:13px;font-weight:800;color:#67e8f9;margin-bottom:6px">修改历史</div>
           <div style="line-height:1.8">
+            <div><b style="color:#ffd34d">v2.9.8</b>　新增 3 把武器（火箭筒/火焰喷枪/连发狙击，终端可调冷却）；新增 1 张 5V5 地图「双桥夹击」</div>
             <div><b style="color:#ffd34d">v2.9.7</b>　新增角色「狂战士」（血怒：增伤+减伤）；新增 6 把武器（左轮/迷你冲锋/独头弹/十字弩/双持手枪/电弧枪，终端可调冷却）；新增 2 张地图（十字回廊/双环哨位）</div>
             <div><b style="color:#ffd34d">v2.9.6</b>　设置页顶部新增固定「完成/退出」按钮；新增 3 个角色（鹰眼/守护者/捕兽人）与 6 张地图（双环回廊/四象限/锯齿通道/三柱阵/侧翼回环/窄口博弈）</div>
             <div><b style="color:#ffd34d">v2.9.5</b>　电脑端新增键位自定义：设置页里能改前进/后退/左移/右移/射击/技能/暂停/静音 8 个键，点「改」再按一下新键就生效，保存在本机，可一键恢复默认（手机端不显示这一块）
@@ -1526,6 +1530,12 @@ const MAPS = {
         {x:500,y:300,w:80,h:200},{x:700,y:300,w:80,h:200},
         {x:600,y:370,w:80,h:60},
       ]},
+    { name:'双桥夹击', obs:[
+        {x:240,y:180,w:340,h:70},{x:700,y:180,w:340,h:70},
+        {x:240,y:530,w:340,h:70},{x:700,y:530,w:340,h:70},
+        {x:160,y:350,w:80,h:90},{x:1040,y:350,w:80,h:90},
+        {x:600,y:355,w:80,h:90},
+      ]},
   ],
   '1v1': [
     { name:'对称十字', obs:CFG.modes['1v1'].obs },
@@ -1672,6 +1682,9 @@ const WEAPONS = {
   crossbow:{ id:'crossbow',name:'十字弩',  dmgMul:2.35, cdMul:2.80, spread:0.002,pellets:1, lifeMul:1.7,  spdMul:1.35, desc:'弩箭无声、精准高伤，射速慢需预判' },
   twin:   { id:'twin',    name:'双持手枪', dmgMul:0.62, cdMul:0.48, spread:0.07, pellets:2, lifeMul:0.8,  spdMul:1.00, desc:'双枪齐射，命中率高、中近距离灵活' },
   tesla:  { id:'tesla',   name:'电弧枪',   dmgMul:0.82, cdMul:0.85, spread:0.04, pellets:1, lifeMul:0.9,  spdMul:1.20, slowHit:0.6, desc:'电弧命中使对手减速，追击与拉扯利器' },
+  rocket: { id:'rocket',  name:'火箭筒',   dmgMul:1.50, cdMul:4.20, spread:0.010,pellets:1, lifeMul:1.8,  spdMul:0.55, explode:{r:95,selfMul:0.5}, desc:'火箭弹大范围爆炸，射速慢，近距离当心自伤' },
+  flamer: { id:'flamer',  name:'火焰喷枪', dmgMul:0.16, cdMul:0.65, spread:0.24, pellets:12, lifeMul:0.28, spdMul:0.62, desc:'近距扇形十二火舌，贴脸压制，射程很短' },
+  repeater:{ id:'repeater',name:'连发狙击', dmgMul:1.38, cdMul:1.10, spread:0.025,pellets:1, lifeMul:1.5,  spdMul:1.30, desc:'半自动精确射手，连发节奏，中远距离收割' },
 };
 const WEAPON_IDS = Object.keys(WEAPONS);
 /* 每把枪的弹道光束参数：粗细 / 长度 / 存活时长 / 拖尾形状 */
@@ -1694,7 +1707,10 @@ const TRACER_STYLE = {
   slug:   { wid:5.2, len:205, ms:280, core:0.95, halo:0.30 },
   crossbow:{ wid:3.2, len:380, ms:400, core:1.0, halo:0.18 },
   twin:   { wid:3.0, len:195, ms:235, core:0.85, halo:0.22, beams:2 },
-  tesla:  { wid:3.6, len:210, ms:260, core:0.88, halo:0.38 }
+  tesla:  { wid:3.6, len:210, ms:260, core:0.88, halo:0.38 },
+  rocket: { wid:6.2, len:260, ms:330, core:1.0, halo:0.45 },
+  flamer: { wid:3.2, len:120, ms:180, core:0.7, halo:0.35, beams:6 },
+  repeater:{ wid:4.4, len:350, ms:330, core:1.0, halo:0.28 }
 };
 function tracerStyle(id){ return TRACER_STYLE[id] || TRACER_STYLE.rifle; }
 function currentWeapon(){ return WEAPONS[lsGetRaw('gunWeapon')] ? WEAPONS[lsGetRaw('gunWeapon')] : WEAPONS.rifle; }
@@ -4495,7 +4511,7 @@ function runSelfCheck(){
   // 3. 配置合法性
   ok('血量配置正常', CFG.maxHp>0 && CFG.respawnTime>0, 'HP'+CFG.maxHp+' 复活'+CFG.respawnTime+'s');
   ok('两种模式都注册', !!(CFG.modes['5v5'] && CFG.modes['1v1']));
-  ok('地图数据完整（两模式各 9 张，含十字回廊/双环哨位）', !!(MAPS['5v5'] && MAPS['1v1'] && MAPS['5v5'].length>=9 && MAPS['1v1'].length>=9 && MAPS['5v5'].every(m=>Array.isArray(m.obs)) && MAPS['5v5'].some(m=>m.name==='十字回廊') && MAPS['1v1'].some(m=>m.name==='双环哨位')));
+  ok('地图数据完整（5V5 十张 / 1V1 九张，含十字回廊/双环哨位/双桥夹击）', !!(MAPS['5v5'] && MAPS['1v1'] && MAPS['5v5'].length>=10 && MAPS['1v1'].length>=9 && MAPS['5v5'].every(m=>Array.isArray(m.obs)) && MAPS['5v5'].some(m=>m.name==='十字回廊') && MAPS['5v5'].some(m=>m.name==='双桥夹击') && MAPS['1v1'].some(m=>m.name==='双环哨位')));
   ok('角色表 14 个且数值合法（含堡垒/铁匠/静默/幽灵/炮锤/铆钉/鹰眼/守护者/捕兽人/狂战士）', ROLE_IDS.length===14 && ROLE_IDS.every(id=>ROLES[id].dmg>0 && ROLES[id].speed>0 && ROLES[id].fireCD>0), ROLE_IDS.join('/'));
 
   // 4. 命名与身份
@@ -4514,7 +4530,7 @@ function runSelfCheck(){
   })());
 
   // 4.5 新增系统：武器 / 段位 / 皮肤 / 技能键自定义
-  ok('武器表 19 把齐全（含左轮/迷你冲锋/独头弹/十字弩/双持手枪/电弧枪）', WEAPON_IDS.length===19 && !!WEAPONS.lmg && !!WEAPONS.db && !!WEAPONS.pistol && !!WEAPONS.falcon && !!WEAPONS.rivetgun && !!WEAPONS.breaker && !!WEAPONS.carbine && !!WEAPONS.railgun && !!WEAPONS.scatter && !!WEAPONS.revolver && !!WEAPONS.mp9 && !!WEAPONS.slug && !!WEAPONS.crossbow && !!WEAPONS.twin && !!WEAPONS.tesla, WEAPON_IDS.map(k=>WEAPONS[k].name).join('/'));
+  ok('武器表 22 把齐全（含左轮/迷你冲锋/独头弹/十字弩/双持手枪/电弧枪/火箭筒/火焰喷枪/连发狙击）', WEAPON_IDS.length===22 && !!WEAPONS.lmg && !!WEAPONS.db && !!WEAPONS.pistol && !!WEAPONS.falcon && !!WEAPONS.rivetgun && !!WEAPONS.breaker && !!WEAPONS.carbine && !!WEAPONS.railgun && !!WEAPONS.scatter && !!WEAPONS.revolver && !!WEAPONS.mp9 && !!WEAPONS.slug && !!WEAPONS.crossbow && !!WEAPONS.twin && !!WEAPONS.tesla && !!WEAPONS.rocket && !!WEAPONS.flamer && !!WEAPONS.repeater, WEAPON_IDS.map(k=>WEAPONS[k].name).join('/'));
   ok('轻机枪有热量机制', !!WEAPONS.lmg.overheat && (TUNE.lmgHeatShots>0));
   ok('准备室模块齐全', typeof prepOpen==='function' && typeof prepRender==='function' && typeof prepGo==='function' && !!document.getElementById('prepScreen'));
   ok('新角色技能齐全（举盾/地雷/禁技）', !!(ROLES.bulwark.skill.front&&ROLES.engineer.skill.mineDmg&&ROLES.jammer.skill.jamRange&&typeof updateMines==='function'&&typeof drawMines==='function'));
@@ -4527,6 +4543,7 @@ function runSelfCheck(){
   ok('霰弹枪 5 弹丸', WEAPONS.shotgun.pellets===5);
   ok('三把新武器弹道与调参齐全', ['carbine','railgun','scatter'].every(k=>!!TRACER_STYLE[k] && TUNE_LIM[k+'CdMul']) && WEAPONS.scatter.pellets===7);
   ok('六把新武器弹道与调参齐全', ['revolver','mp9','slug','crossbow','twin','tesla'].every(k=>!!TRACER_STYLE[k] && TUNE_LIM[k+'CdMul'] && WEAPONS[k].dmgMul>0) && WEAPONS.twin.pellets===2 && WEAPONS.tesla.slowHit>0);
+  ok('三把新增武器弹道/调参/机制齐全', ['rocket','flamer','repeater'].every(k=>!!TRACER_STYLE[k] && TUNE_LIM[k+'CdMul'] && WEAPONS[k].dmgMul>0) && WEAPONS.rocket.explode.r>=60 && WEAPONS.flamer.pellets>=10 && WEAPONS.repeater.dmgMul>1);
   ok('武器伤害倍率合法', WEAPON_IDS.every(k=>WEAPONS[k].dmgMul>0&&WEAPONS[k].cdMul>0));
   ok('段位表 6 档递增', RANKS.length===6 && RANKS.every((r,i)=>i===0||r.min>RANKS[i-1].min));
   ok('段位胜利加分', ({S:26,A:20,B:14,C:9})[gradeOf(true,12,3,800,'5v5')]>0);
@@ -4757,10 +4774,12 @@ function netBind(){
 const TUNE_DEF={ lmgHeatShots:14, lmgOverheatCd:1.0, dbCdMul:1.75, pistolCdMul:0.70, prepSec:3,
   carbineCdMul:0.58, railgunCdMul:3.20, scatterCdMul:0.95,
   revolverCdMul:1.20, mp9CdMul:0.30, slugCdMul:1.50, crossbowCdMul:2.80, twinCdMul:0.48, teslaCdMul:0.85,
+  rocketCdMul:4.20, flamerCdMul:0.65, repeaterCdMul:1.10,
   frontReduce:0.6, mineDmg:55, mineMax:3, jamDur:3 };
 const TUNE_LIM={ lmgHeatShots:[6,40], lmgOverheatCd:[0.4,3.0], dbCdMul:[1.0,3.0], pistolCdMul:[0.3,1.5], prepSec:[2,10],
   carbineCdMul:[0.2,2.0], railgunCdMul:[1.0,8.0], scatterCdMul:[0.3,3.0],
   revolverCdMul:[0.5,3.0], mp9CdMul:[0.15,1.0], slugCdMul:[0.5,4.0], crossbowCdMul:[1.0,8.0], twinCdMul:[0.2,2.0], teslaCdMul:[0.3,3.0],
+  rocketCdMul:[1.0,9.0], flamerCdMul:[0.2,2.5], repeaterCdMul:[0.3,4.0],
   frontReduce:[0.3,0.85], mineDmg:[20,120], mineMax:[1,6], jamDur:[1,8] };
 const TUNE={...TUNE_DEF};
 const TUNE_TOPIC='gunfight9/tune';
@@ -4788,6 +4807,9 @@ function tuneApply(t){
   if(WEAPONS.crossbow) WEAPONS.crossbow.cdMul = TUNE.crossbowCdMul;
   if(WEAPONS.twin) WEAPONS.twin.cdMul = TUNE.twinCdMul;
   if(WEAPONS.tesla) WEAPONS.tesla.cdMul = TUNE.teslaCdMul;
+  if(WEAPONS.rocket) WEAPONS.rocket.cdMul = TUNE.rocketCdMul;
+  if(WEAPONS.flamer) WEAPONS.flamer.cdMul = TUNE.flamerCdMul;
+  if(WEAPONS.repeater) WEAPONS.repeater.cdMul = TUNE.repeaterCdMul;
   if(WEAPONS.lmg){ WEAPONS.lmg.overheat = TUNE.lmgHeatShots; WEAPONS.lmg.overheatCd = TUNE.lmgOverheatCd; }
   if(ROLES.bulwark && ROLES.bulwark.skill){ ROLES.bulwark.skill.front = TUNE.frontReduce; }
   if(ROLES.engineer && ROLES.engineer.skill){ ROLES.engineer.skill.mineDmg = TUNE.mineDmg; ROLES.engineer.skill.maxMines = Math.round(TUNE.mineMax); }
@@ -6244,6 +6266,9 @@ function admGameFill(){
     set('admTuneCrossbow', TUNE.crossbowCdMul);
     set('admTuneTwin', TUNE.twinCdMul);
     set('admTuneTesla', TUNE.teslaCdMul);
+    set('admTuneRocket', TUNE.rocketCdMul);
+    set('admTuneFlamer', TUNE.flamerCdMul);
+    set('admTuneRepeater', TUNE.repeaterCdMul);
     set('admTunePrep', TUNE.prepSec);
     set('admTuneFront', TUNE.frontReduce); set('admTuneMine', TUNE.mineDmg);
     set('admTuneMineMax', TUNE.mineMax); set('admTuneJam', TUNE.jamDur);
@@ -6258,6 +6283,8 @@ function admGameRead(){
               revolverCdMul:num('admTuneRevolver',TUNE.revolverCdMul), mp9CdMul:num('admTuneMp9',TUNE.mp9CdMul),
               slugCdMul:num('admTuneSlug',TUNE.slugCdMul), crossbowCdMul:num('admTuneCrossbow',TUNE.crossbowCdMul),
               twinCdMul:num('admTuneTwin',TUNE.twinCdMul), teslaCdMul:num('admTuneTesla',TUNE.teslaCdMul),
+              rocketCdMul:num('admTuneRocket',TUNE.rocketCdMul), flamerCdMul:num('admTuneFlamer',TUNE.flamerCdMul),
+              repeaterCdMul:num('admTuneRepeater',TUNE.repeaterCdMul),
               prepSec:num('admTunePrep',TUNE.prepSec),
               frontReduce:num('admTuneFront',TUNE.frontReduce), mineDmg:num('admTuneMine',TUNE.mineDmg),
               mineMax:num('admTuneMineMax',TUNE.mineMax), jamDur:num('admTuneJam',TUNE.jamDur) };
@@ -7729,6 +7756,7 @@ function buildHelp(){
     ['1V1','侧翼回环','四角掩体加中央大掩体形成回环','绕中央大掩体兜圈，从侧翼切进去'],
     ['1V1','窄口博弈','两侧掩体夹出中央窄口','远距离卡窄口对枪，绕侧翼打破僵局'],
     ['1V1','双环哨位','四角掩体加中路双柱，形成左右两道环线','借中路双柱卡视野，绕环线侧翼切入'],
+    ['5V5','双桥夹击','上下两道长墙断成双桥，中央枢纽配两侧小掩体','抢中央枢纽视野，或从两翼长墙缺口绕后夹击'],
   ].map(r=>{
     const mode = r[0]==='5V5' ? '5v5' : '1v1';
     const conf = CFG.modes[mode];
